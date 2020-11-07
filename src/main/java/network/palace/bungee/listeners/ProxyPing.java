@@ -23,16 +23,12 @@ public class ProxyPing implements Listener {
 
             if (remoteProtocol > ProtocolConstants.HIGHEST_VERSION.getProtocolId()) {
                 p.setProtocol(ProtocolConstants.HIGHEST_VERSION.getProtocolId());
-            } else if (remoteProtocol < ProtocolConstants.LOWEST_VERSION.getProtocolId()) {
-                p.setProtocol(ProtocolConstants.LOWEST_VERSION.getProtocolId());
-            } else {
-                p.setProtocol(remoteProtocol);
-            }
+            } else p.setProtocol(Math.max(remoteProtocol, ProtocolConstants.LOWEST_VERSION.getProtocolId()));
 
             p.setName(ProtocolConstants.getVersionString());
 
             event.setResponse(new ServerPing(p, new ServerPing.Players(2000, PalaceBungee.getInstance().getProxy().getOnlineCount(), null),
-                    "", ""));
+                    PalaceBungee.getConfigUtil().getMotdComponent(), PalaceBungee.getConfigUtil().getFavicon()));
 
 //            if (TinkOS.isMaintenance()) {
 //                event.setResponse(new ServerPing(p, new ServerPing.Players(0, 0, infolist),

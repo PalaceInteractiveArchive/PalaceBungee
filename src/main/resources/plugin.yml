@@ -1,0 +1,5 @@
+name: PalaceBungee
+main: network.palace.bungee.PalaceBungee
+version: 1.0-SNAPSHOT
+description: Palace Bungee Plugin
+author: Palace Interactive Development
