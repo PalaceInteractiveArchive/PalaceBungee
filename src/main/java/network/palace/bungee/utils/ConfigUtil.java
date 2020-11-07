@@ -17,6 +17,6 @@ public class ConfigUtil {
 
     public ConfigUtil() throws IOException {
         this.favicon = Favicon.create(ImageIO.read(new File("server-icon.png")));
-        this.motdComponent = new TextComponent(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "     &8&l>>   &d&lPalace Network &8| &71.12.2-1.15.2   &8&l<<                &a&lSupports    &d&l1.12&7/&b&l1.13&7/&6&l1.14&7/&e&l1.15")));
+        this.motdComponent = new TextComponent(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "     &8&l>>   &d&lPalace Network &8| &71.12.2-1.15.2   &8&l<<                &a&lSupports &d&l1.12&7/&b&l1.13&7/&6&l1.14&7/&e&l1.15")));
     }
 }

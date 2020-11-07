@@ -17,7 +17,7 @@ public class PalaceBungee extends Plugin {
         instance = this;
 
         ProtocolConstants.setHighVersion(753, "1.16.3");
-        ProtocolConstants.setLowVersion(735, "1.16");
+        ProtocolConstants.setLowVersion(573, "1.15");
 
         try {
             configUtil = new ConfigUtil();
