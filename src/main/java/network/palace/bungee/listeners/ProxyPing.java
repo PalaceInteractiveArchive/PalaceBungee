@@ -12,7 +12,7 @@ public class ProxyPing implements Listener {
     @EventHandler
     public void onProxyPing(ProxyPingEvent event) {
         try {
-//            List<String> info = new ArrayList<>(TinkOS.getInfo());
+//            List<String> info = new ArrayList<>(PalaceBungee.getInfo());
 //            ServerPing.PlayerInfo[] infolist = new ServerPing.PlayerInfo[info.size()];
 //            for (int i = 0; i < info.size(); i++) {
 //                infolist[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', info.get(i)), "");
@@ -30,14 +30,14 @@ public class ProxyPing implements Listener {
             event.setResponse(new ServerPing(p, new ServerPing.Players(2000, PalaceBungee.getInstance().getProxy().getOnlineCount(), null),
                     PalaceBungee.getConfigUtil().getMotdComponent(), PalaceBungee.getConfigUtil().getFavicon()));
 
-//            if (TinkOS.isMaintenance()) {
+//            if (PalaceBungee.isMaintenance()) {
 //                event.setResponse(new ServerPing(p, new ServerPing.Players(0, 0, infolist),
-//                        ChatColor.translateAlternateColorCodes('&', TinkOS.getMOTDMmaintenance()),
-//                        TinkOS.getServerIcon()));
+//                        ChatColor.translateAlternateColorCodes('&', PalaceBungee.getMOTDMmaintenance()),
+//                        PalaceBungee.getServerIcon()));
 //            } else {
 //                event.setResponse(new ServerPing(p, new ServerPing.Players(2000,
-//                        tracker ? TinkOS.getProxyServer().getOnlineCount() : TinkOS.getOnlineCount(), infolist),
-//                        ChatColor.translateAlternateColorCodes('&', TinkOS.getMOTD()), TinkOS.getServerIcon()));
+//                        tracker ? PalaceBungee.getProxyServer().getOnlineCount() : PalaceBungee.getOnlineCount(), infolist),
+//                        ChatColor.translateAlternateColorCodes('&', PalaceBungee.getMOTD()), PalaceBungee.getServerIcon()));
 //            }
         } catch (Exception ignored) {
         }

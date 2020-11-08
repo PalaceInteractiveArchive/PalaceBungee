@@ -1,16 +1,37 @@
 package network.palace.bungee;
 
 import lombok.Getter;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.plugin.PluginManager;
+import network.palace.bungee.commands.MsgCommand;
+import network.palace.bungee.commands.admin.GuideLogCommand;
+import network.palace.bungee.commands.chat.AdminChatCommand;
+import network.palace.bungee.commands.chat.StaffChatCommand;
+import network.palace.bungee.commands.staff.BroadcastCommand;
+import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
+import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
+import network.palace.bungee.messages.MessageHandler;
+import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.utils.ConfigUtil;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 public class PalaceBungee extends Plugin {
     @Getter private static PalaceBungee instance;
     @Getter private static ConfigUtil configUtil;
+
+    @Getter private static MongoHandler mongoHandler;
+    @Getter private static MessageHandler messageHandler;
+
+    @Getter private static final long startTime = System.currentTimeMillis();
+    private final static HashMap<UUID, Player> players = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -25,14 +46,74 @@ public class PalaceBungee extends Plugin {
             e.printStackTrace();
         }
 
+        mongoHandler = new MongoHandler();
+
+        try {
+            messageHandler = new MessageHandler();
+        } catch (IOException | TimeoutException e) {
+            e.printStackTrace();
+        }
+
         registerListeners();
+        registerCommands();
     }
 
     @Override
     public void onDisable() {
+        if (messageHandler != null) messageHandler.shutdown();
     }
 
     private void registerListeners() {
-        getProxy().getPluginManager().registerListener(this, new ProxyPing());
+        PluginManager pm = getProxy().getPluginManager();
+        pm.registerListener(this, new ProxyPing());
+        pm.registerListener(this, new PlayerJoinAndLeave());
+    }
+
+    private void registerCommands() {
+        PluginManager pm = getProxy().getPluginManager();
+        /* Admin Commands */
+        pm.registerCommand(this, new GuideLogCommand());
+        /* Chat Commands */
+        pm.registerCommand(this, new AdminChatCommand());
+        pm.registerCommand(this, new StaffChatCommand());
+        /* Guide Commands */
+        /* Moderation Commands */
+        /* Staff Commands */
+        pm.registerCommand(this, new BroadcastCommand());
+        /* General Commands */
+        pm.registerCommand(this, new MsgCommand());
+    }
+
+    public static ProxyServer getProxyServer() {
+        return instance.getProxy();
+    }
+
+    public static Player getPlayer(UUID uuid) {
+        return players.get(uuid);
+    }
+
+    public static Player getPlayer(String name) {
+        Player p = null;
+        for (Player tp : players.values()) {
+            if (tp.getUsername().equalsIgnoreCase(name)) {
+                p = tp;
+                break;
+            }
+        }
+        return p;
+    }
+
+    public static void login(Player player) {
+        players.put(player.getUniqueId(), player);
+        mongoHandler.login(player.getUniqueId());
+    }
+
+    public static void logout(UUID uuid) {
+        players.remove(uuid);
+        mongoHandler.logout(uuid);
+    }
+
+    public static Collection<Player> getOnlinePlayers() {
+        return players.values();
     }
 }

@@ -389,7 +389,7 @@ public class DashboardConnection {
                                 tags.append(",");
                             }
                         }
-                        PacketPlayerListInfo.Player pl = new PacketPlayerListInfo.Player(p.getUniqueId(), p.getName(),
+                        PacketPlayerListInfo.Player pl = new PacketPlayerListInfo.Player(p.getUniqueId(), p.getUsername(),
                                 p.getAddress(), p.getServerName(), p.getRank().getDBName(), tags.toString(), tp.getPendingConnection().getVersion());
                         list.add(pl);
                     }
