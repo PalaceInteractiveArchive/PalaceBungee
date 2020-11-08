@@ -132,7 +132,8 @@ public class MessageHandler {
         try (Connection connection = factory.newConnection()) {
             Channel channel = connection.createChannel();
             channel.exchangeDeclare(exchange, exchangeType);
-            channel.basicPublish(exchange, "", null, packet.toBytes());
+            AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().contentEncoding("application/json").build();
+            channel.basicPublish(exchange, "", props, packet.toBytes());
         }
     }
 
