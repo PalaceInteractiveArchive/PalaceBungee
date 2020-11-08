@@ -114,7 +114,7 @@ public class MongoHandler {
     }
 
     public void login(UUID uuid) {
-        playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.set("online", new Document("proxy", "bungee1").append("server", "Hub1")));
+        playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.set("online", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1")));
     }
 
     public void logout(UUID uuid) {
@@ -144,6 +144,12 @@ public class MongoHandler {
                 config.getBoolean("dmEnabled"), config.getBoolean("strictChat"), config.getDouble("strictThreshold"),
                 config.getInteger("maxVersion"), config.getInteger("minVersion"), config.getString("maxVersionString"),
                 config.getString("minVersionString"));
+    }
+
+    public UUID findPlayer(String username) {
+        Document doc = playerCollection.find(Filters.and(MongoFilter.USERNAME.getFilter(username), Filters.exists("online"))).projection(new Document("online", true)).first();
+        if (doc == null || !doc.containsKey("online.proxy")) return null;
+        return UUID.fromString(doc.getString("online.proxy"));
     }
 
     public enum MongoFilter {

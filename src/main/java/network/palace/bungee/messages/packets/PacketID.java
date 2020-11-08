@@ -7,7 +7,7 @@ public class PacketID {
 
     @AllArgsConstructor
     enum Global {
-        BROADCAST(1), STAFFCHAT(2), PROXYRELOAD(3);
+        BROADCAST(1), STAFFCHAT(2), PROXYRELOAD(3), DM(4);
 
         @Getter private final int id;
     }

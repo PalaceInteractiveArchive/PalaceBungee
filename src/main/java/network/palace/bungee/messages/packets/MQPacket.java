@@ -5,10 +5,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public abstract class MQPacket {
     @Getter private int id;
+    @Getter protected UUID sendingProxy = null;
 
     protected MQPacket(int id, JsonObject object) {
         this.id = id;
@@ -24,6 +26,7 @@ public abstract class MQPacket {
     protected JsonObject getBaseJSON() {
         JsonObject object = new JsonObject();
         object.addProperty("id", id);
+        if (sendingProxy != null) object.addProperty("proxyID", sendingProxy.toString());
         return object;
     }
 

@@ -5,18 +5,17 @@ import com.google.gson.JsonParser;
 import com.rabbitmq.client.*;
 import net.md_5.bungee.api.ChatColor;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
-import network.palace.bungee.messages.packets.BroadcastPacket;
-import network.palace.bungee.messages.packets.MQPacket;
-import network.palace.bungee.messages.packets.MessageByRankPacket;
-import network.palace.bungee.messages.packets.ProxyReloadPacket;
+import network.palace.bungee.messages.packets.*;
 import network.palace.bungee.utils.ConfigUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 public class MessageHandler {
@@ -34,7 +33,7 @@ public class MessageHandler {
         CancelCallback doNothing = consumerTag -> {
         };
 
-        registerConsumer("all_proxies", "fanout", (consumerTag, delivery) -> {
+        registerConsumer("all_proxies", "fanout", "", (consumerTag, delivery) -> {
             try {
                 JsonObject object = parseDelivery(delivery);
                 switch (object.get("id").getAsInt()) {
@@ -75,6 +74,41 @@ public class MessageHandler {
                 handleError(consumerTag, delivery, e);
             }
         }, doNothing);
+
+        registerConsumer("proxy_direct", "direct", PalaceBungee.getProxyID().toString(), (consumerTag, delivery) -> {
+            try {
+                JsonObject object = parseDelivery(delivery);
+                //noinspection SwitchStatementWithTooFewBranches
+                switch (object.get("id").getAsInt()) {
+                    // DM
+                    case 4: {
+                        DMPacket packet = new DMPacket(object);
+                        Player player = PalaceBungee.getPlayer(packet.getTo());
+                        if (packet.isInitialSend()) {
+                            // message to target
+                            DMPacket response;
+                            if (player == null) {
+                                response = new DMPacket("", packet.getFrom(), "", PalaceBungee.getProxyID(), false);
+                            } else {
+                                player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
+                                response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), PalaceBungee.getProxyID(), false);
+                            }
+                            sendToProxy(response, packet.getSendingProxy());
+                        } else {
+                            // confirmation to sender
+                            if (player == null) return;
+                            if (packet.getFrom().isEmpty()) {
+                                player.sendMessage(ChatColor.RED + "Player not found!");
+                            } else {
+                                player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                handleError(consumerTag, delivery, e);
+            }
+        }, doNothing);
     }
 
     private void handleError(String consumerTag, Delivery delivery, Exception e) {
@@ -105,9 +139,7 @@ public class MessageHandler {
      * @throws IOException      on IOException
      * @throws TimeoutException on TimeoutException
      */
-    public String registerConsumer(String exchange, String exchangeType, DeliverCallback deliverCallback, CancelCallback cancelCallback) throws IOException, TimeoutException {
-        String routingKey = "";
-
+    public String registerConsumer(String exchange, String exchangeType, String routingKey, DeliverCallback deliverCallback, CancelCallback cancelCallback) throws IOException, TimeoutException {
         Connection connection = factory.newConnection();
 
         Channel channel = connection.createChannel();
@@ -123,7 +155,7 @@ public class MessageHandler {
         return queueName;
     }
 
-    public void unregisterListener(String queueName) throws IOException {
+    public void unregisterConsumer(String queueName) throws IOException {
         Channel channel = channels.remove(queueName);
         if (channel != null) {
             channel.basicCancel(queueName);
@@ -143,11 +175,15 @@ public class MessageHandler {
     }
 
     public void sendMessage(MQPacket packet, String exchange, String exchangeType) throws Exception {
+        sendMessage(packet, exchange, exchangeType, "");
+    }
+
+    public void sendMessage(MQPacket packet, String exchange, String exchangeType, String routingKey) throws Exception {
         try (Connection connection = factory.newConnection()) {
             Channel channel = connection.createChannel();
             channel.exchangeDeclare(exchange, exchangeType);
             AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().contentEncoding("application/json").build();
-            channel.basicPublish(exchange, "", props, packet.toBytes());
+            channel.basicPublish(exchange, routingKey, props, packet.toBytes());
         }
     }
 
@@ -155,5 +191,9 @@ public class MessageHandler {
         MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.RED + "STAFF" +
                 ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false);
         sendMessage(packet, "all_proxies", "fanout");
+    }
+
+    public void sendToProxy(DMPacket packet, UUID targetProxy) throws Exception {
+        sendMessage(packet, "proxy_direct", "direct", targetProxy.toString());
     }
 }

@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 public class PalaceBungee extends Plugin {
+    @Getter private static final UUID proxyID = UUID.randomUUID();
     @Getter private static PalaceBungee instance;
     @Getter private static ConfigUtil configUtil;
 
