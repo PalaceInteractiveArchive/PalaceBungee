@@ -3,23 +3,27 @@ package network.palace.bungee.messages.packets;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
 
 public class MessageByRankPacket extends MQPacket {
     @Getter private final String message;
     @Getter private final Rank rank;
+    @Getter private final RankTag tag;
     @Getter private final boolean exact;
 
     public MessageByRankPacket(JsonObject object) {
         super(PacketID.Global.STAFFCHAT.getId(), object);
         this.message = object.get("message").getAsString();
         this.rank = Rank.fromString(object.get("rank").getAsString());
+        this.tag = object.has("tag") ? RankTag.fromString(object.get("tag").getAsString()) : null;
         this.exact = object.get("exact").getAsBoolean();
     }
 
-    public MessageByRankPacket(String message, Rank rank, boolean exact) {
+    public MessageByRankPacket(String message, Rank rank, RankTag tag, boolean exact) {
         super(PacketID.Global.STAFFCHAT.getId(), null);
         this.message = message;
         this.rank = rank;
+        this.tag = tag;
         this.exact = exact;
     }
 
@@ -28,6 +32,7 @@ public class MessageByRankPacket extends MQPacket {
         JsonObject object = getBaseJSON();
         object.addProperty("message", message);
         object.addProperty("rank", rank.getDBName());
+        if (tag != null) object.addProperty("tag", tag.getDBName());
         object.addProperty("exact", exact);
         return object;
     }

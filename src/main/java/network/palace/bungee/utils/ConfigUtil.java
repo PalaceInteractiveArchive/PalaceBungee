@@ -2,34 +2,54 @@ package network.palace.bungee.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.ProtocolConstants;
 
-import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
+@SuppressWarnings("MismatchedReadAndWriteOfArray")
+@Getter
 public class ConfigUtil {
-    @Getter @Setter private Favicon favicon;
-    @Getter @Setter private BaseComponent motdComponent;
-
-    public ConfigUtil() throws IOException {
-        reload();
-    }
+    private Favicon favicon;
+    private String motd;
+    private ServerPing.PlayerInfo[] motdInfo;
+    private String maintenanceMotd;
+    private boolean maintenance;
+    private int chatDelay;
+    private boolean parkChatMuted;
+    private boolean dmEnabled;
+    private boolean strictChat;
+    private double strictThreshold;
 
     public String getDashboardURL() {
         return "null";
     }
 
     public void reload() throws IOException {
-        this.favicon = Favicon.create(ImageIO.read(new File("server-icon.png")));
-        this.motdComponent = new TextComponent(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "     &8&l>>   &d&lPalace Network &8| &71.12.2-1.15.2   &8&l<<                &a&lSupports &d&l1.12&7/&b&l1.13&7/&6&l1.14&7/&e&l1.15")));
+        BungeeConfig config = getBungeeConfig();
+        this.favicon = config.favicon;
+        this.motd = config.motd;
+        this.motdInfo = new ServerPing.PlayerInfo[config.motdInfo.length];
+        for (int i = 0; i < config.motdInfo.length; i++) {
+            this.motdInfo[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', config.motdInfo[i]), "");
+        }
+        this.maintenanceMotd = config.maintenanceMotd;
+        this.maintenance = config.maintenance;
+        this.chatDelay = config.chatDelay;
+        this.parkChatMuted = config.parkChatMuted;
+        this.dmEnabled = config.dmEnabled;
+        this.strictChat = config.strictChat;
+        this.strictThreshold = config.strictThreshold;
+
+        ProtocolConstants.setHighVersion(config.maxVersion, config.maxVersionString);
+        ProtocolConstants.setLowVersion(config.minVersion, config.minVersionString);
     }
 
     public DatabaseConnection getRabbitMQInfo() {
@@ -52,6 +72,15 @@ public class ConfigUtil {
         }
     }
 
+    public BungeeConfig getBungeeConfig() {
+        try {
+            return PalaceBungee.getMongoHandler().getBungeeConfig();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BungeeConfig(null, "", new String[0], "", false, 2, true, false, false, 0.8, 0, 0, "", "");
+        }
+    }
+
     public Configuration getConfig() throws IOException {
         return ConfigurationProvider.getProvider(YamlConfiguration.class).load(getConfigFile());
     }
@@ -71,8 +100,26 @@ public class ConfigUtil {
     @Getter
     @AllArgsConstructor
     public static class DatabaseConnection {
+        private final String host, username, password, database;
+        private final int port;
+    }
 
-        private String host, username, password, database;
-        private int port;
+    @Getter
+    @AllArgsConstructor
+    public static class BungeeConfig {
+        private final Favicon favicon;
+        private final String motd;
+        private final String[] motdInfo;
+        private final String maintenanceMotd;
+        private final boolean maintenance;
+        private final int chatDelay;
+        private final boolean parkChatMuted;
+        private final boolean dmEnabled;
+        private final boolean strictChat;
+        private final double strictThreshold;
+        private final int maxVersion;
+        private final int minVersion;
+        private final String maxVersionString;
+        private final String minVersionString;
     }
 }

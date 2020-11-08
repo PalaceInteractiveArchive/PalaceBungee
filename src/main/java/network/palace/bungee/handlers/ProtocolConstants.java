@@ -48,8 +48,8 @@ public class ProtocolConstants {
     @Getter
     @AllArgsConstructor
     public static class MinecraftVersion {
-        private int protocolId;
-        private String versionName;
+        private final int protocolId;
+        private final String versionName;
 
         @Override
         public String toString() {

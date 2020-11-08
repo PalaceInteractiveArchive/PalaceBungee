@@ -5,23 +5,24 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.messages.packets.MessageByRankPacket;
 
-public class AdminChatCommand extends PalaceCommand {
+public class GuideChatCommand extends PalaceCommand {
 
-    public AdminChatCommand() {
-        super("ho", Rank.DEVELOPER);
+    public GuideChatCommand() {
+        super("gc", Rank.TRAINEE, RankTag.GUIDE);
     }
 
     @Override
     public void execute(Player player, String[] args) {
         if (args.length < 1) {
-            player.sendMessage(ChatColor.RED + "/ho [Message]");
+            player.sendMessage(ChatColor.RED + "/gc [Message]");
             return;
         }
         try {
-            MessageByRankPacket packet = new MessageByRankPacket(ChatColor.RED + "[ADMIN CHAT] " + ChatColor.GRAY + player.getUsername() + ": " + ChatColor.WHITE +
-                    ChatColor.translateAlternateColorCodes('&', String.join(" ", args)), Rank.DEVELOPER, null, false);
+            MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.DARK_GREEN + "GUIDE" +
+                    ChatColor.WHITE + "] " + String.join(" ", args), Rank.TRAINEE, RankTag.GUIDE, false);
             PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
         } catch (Exception e) {
             e.printStackTrace();

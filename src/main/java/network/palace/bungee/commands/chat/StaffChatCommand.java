@@ -20,13 +20,9 @@ public class StaffChatCommand extends PalaceCommand {
             return;
         }
         try {
-            StringBuilder message = new StringBuilder();
-            for (String arg : args) {
-                message.append(arg).append(" ");
-            }
             PalaceBungee.getMessageHandler().sendStaffMessage(RankTag.format(player.getTags()) + player.getRank().getFormattedName() +
                     " " + ChatColor.GRAY + player.getUsername() + ": " + ChatColor.GOLD +
-                    ChatColor.translateAlternateColorCodes('&', message.toString().trim()));
+                    ChatColor.translateAlternateColorCodes('&', String.join(" ", args)));
         } catch (Exception e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "There was an error executing this command!");

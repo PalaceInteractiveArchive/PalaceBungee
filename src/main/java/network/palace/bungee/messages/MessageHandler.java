@@ -6,9 +6,11 @@ import com.rabbitmq.client.*;
 import net.md_5.bungee.api.ChatColor;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.messages.packets.BroadcastPacket;
 import network.palace.bungee.messages.packets.MQPacket;
 import network.palace.bungee.messages.packets.MessageByRankPacket;
+import network.palace.bungee.messages.packets.ProxyReloadPacket;
 import network.palace.bungee.utils.ConfigUtil;
 
 import java.io.IOException;
@@ -53,7 +55,19 @@ public class MessageHandler {
                     // Message by rank
                     case 2: {
                         MessageByRankPacket packet = new MessageByRankPacket(object);
-                        PalaceBungee.getOnlinePlayers().stream().filter(p -> packet.isExact() ? p.getRank().equals(packet.getRank()) : p.getRank().getRankId() >= packet.getRank().getRankId()).forEach(player -> player.sendMessage(packet.getMessage()));
+                        RankTag tag = packet.getTag();
+                        PalaceBungee.getOnlinePlayers().stream().filter(p -> {
+                            if (packet.isExact())
+                                return p.getRank().equals(packet.getRank()) || (tag != null && p.getTags().contains(packet.getTag()));
+                            else
+                                return p.getRank().getRankId() >= packet.getRank().getRankId() || (tag != null && p.getTags().contains(packet.getTag()));
+                        }).forEach(player -> player.sendMessage(packet.getMessage()));
+                        break;
+                    }
+                    // Proxy reload
+                    case 3: {
+                        ProxyReloadPacket packet = new ProxyReloadPacket(object);
+                        PalaceBungee.getConfigUtil().reload();
                         break;
                     }
                 }
@@ -139,7 +153,7 @@ public class MessageHandler {
 
     public void sendStaffMessage(String message) throws Exception {
         MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.RED + "STAFF" +
-                ChatColor.WHITE + "] " + message, Rank.TRAINEE, false);
+                ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false);
         sendMessage(packet, "all_proxies", "fanout");
     }
 }

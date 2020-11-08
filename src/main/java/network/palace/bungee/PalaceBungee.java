@@ -6,7 +6,9 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import network.palace.bungee.commands.MsgCommand;
 import network.palace.bungee.commands.admin.GuideLogCommand;
+import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.AdminChatCommand;
+import network.palace.bungee.commands.chat.GuideChatCommand;
 import network.palace.bungee.commands.chat.StaffChatCommand;
 import network.palace.bungee.commands.staff.BroadcastCommand;
 import network.palace.bungee.handlers.Player;
@@ -40,13 +42,13 @@ public class PalaceBungee extends Plugin {
         ProtocolConstants.setHighVersion(753, "1.16.3");
         ProtocolConstants.setLowVersion(573, "1.15");
 
+        configUtil = new ConfigUtil();
+
         try {
-            configUtil = new ConfigUtil();
+            mongoHandler = new MongoHandler();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        mongoHandler = new MongoHandler();
 
         try {
             messageHandler = new MessageHandler();
@@ -73,8 +75,10 @@ public class PalaceBungee extends Plugin {
         PluginManager pm = getProxy().getPluginManager();
         /* Admin Commands */
         pm.registerCommand(this, new GuideLogCommand());
+        pm.registerCommand(this, new ProxyReloadCommand());
         /* Chat Commands */
         pm.registerCommand(this, new AdminChatCommand());
+        pm.registerCommand(this, new GuideChatCommand());
         pm.registerCommand(this, new StaffChatCommand());
         /* Guide Commands */
         /* Moderation Commands */

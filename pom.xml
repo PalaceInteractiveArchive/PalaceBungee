@@ -8,6 +8,10 @@
     <artifactId>PalaceBungee</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <repositories>
         <repository>
             <id>md-5</id>
@@ -34,13 +38,13 @@
             <artifactId>lombok</artifactId>
             <version>1.18.12</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.netty</groupId>-->
-<!--            <artifactId>netty-codec-http</artifactId>-->
-<!--            <version>4.1.0.CR3</version>-->
-<!--            <type>jar</type>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.netty</groupId>-->
+        <!--            <artifactId>netty-codec-http</artifactId>-->
+        <!--            <version>4.1.0.CR3</version>-->
+        <!--            <type>jar</type>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>javax.websocket</groupId>
             <artifactId>javax.websocket-api</artifactId>
