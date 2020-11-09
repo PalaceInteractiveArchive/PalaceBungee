@@ -22,9 +22,9 @@ public class MsgCommand extends PalaceCommand {
             player.sendMessage(ChatColor.GREEN + "Example: " + ChatColor.YELLOW + "/msg " + player.getUsername() + " Hello there!");
             return;
         }
-        String message = "";
+        StringBuilder message = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
-            message = args[i] + " ";
+            message.append(args[i]).append(" ");
         }
         message.substring(0, message.length() - 1);
         Player targetPlayer = PalaceBungee.getPlayer(args[0]);
@@ -39,7 +39,7 @@ public class MsgCommand extends PalaceCommand {
                     player.sendMessage(ChatColor.RED + "Player not found!");
                     return;
                 }
-                DMPacket packet = new DMPacket(player.getUsername(), target, message, PalaceBungee.getProxyID(), true);
+                DMPacket packet = new DMPacket(player.getUsername(), target, message.toString(), PalaceBungee.getProxyID(), true);
                 PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);
             } catch (Exception e) {
                 e.printStackTrace();

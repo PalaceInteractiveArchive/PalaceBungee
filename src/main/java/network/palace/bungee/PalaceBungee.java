@@ -47,6 +47,7 @@ public class PalaceBungee extends Plugin {
 
         try {
             mongoHandler = new MongoHandler();
+            PalaceBungee.getConfigUtil().reload();
         } catch (IOException e) {
             e.printStackTrace();
         }

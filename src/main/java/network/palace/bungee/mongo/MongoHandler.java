@@ -14,7 +14,6 @@ import network.palace.bungee.handlers.AddressBan;
 import network.palace.bungee.handlers.Ban;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -45,8 +44,6 @@ public class MongoHandler {
         bansCollection = database.getCollection("bans");
         playerCollection = database.getCollection("players");
         serviceConfigCollection = database.getCollection("service_configs");
-
-        PalaceBungee.getConfigUtil().reload();
     }
 
     public void stop() {
@@ -61,7 +58,7 @@ public class MongoHandler {
      * @return a Document with the limited data
      */
     public Document getPlayer(UUID uuid, Document limit) {
-        FindIterable<Document> doc = playerCollection.find(MongoFilter.UUID.getFilter(uuid.toString())).projection(limit);
+        FindIterable<Document> doc = playerCollection.find(Filters.eq("uuid", uuid.toString())).projection(limit);
         if (doc == null) return null;
         return doc.first();
     }
@@ -147,24 +144,9 @@ public class MongoHandler {
     }
 
     public UUID findPlayer(String username) {
-        Document doc = playerCollection.find(Filters.and(MongoFilter.USERNAME.getFilter(username), Filters.exists("online"))).projection(new Document("online", true)).first();
-        if (doc == null || !doc.containsKey("online.proxy")) return null;
-        return UUID.fromString(doc.getString("online.proxy"));
-    }
-
-    public enum MongoFilter {
-        UUID, USERNAME, RANK;
-
-        public Bson getFilter(String s) {
-            switch (this) {
-                case UUID:
-                    return Filters.eq("uuid", s);
-                case USERNAME:
-                    return Filters.regex("username", "^" + s + "$", "i");
-                case RANK:
-                    return Filters.eq("rank", s);
-            }
+        Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.exists("online"))).projection(new Document("online", true).append("uuid", true)).first();
+        if (doc == null || !doc.containsKey("online") || !doc.get("online", Document.class).containsKey("proxy"))
             return null;
-        }
+        return UUID.fromString(doc.get("online", Document.class).getString("proxy"));
     }
 }
