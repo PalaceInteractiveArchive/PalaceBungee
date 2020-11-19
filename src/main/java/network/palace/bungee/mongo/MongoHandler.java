@@ -10,8 +10,7 @@ import com.mongodb.client.model.Updates;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.AddressBan;
-import network.palace.bungee.handlers.Ban;
+import network.palace.bungee.handlers.*;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
 
@@ -23,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @SuppressWarnings("rawtypes")
 public class MongoHandler {
@@ -32,6 +33,7 @@ public class MongoHandler {
     private final MongoCollection<Document> bansCollection;
     private final MongoCollection<Document> playerCollection;
     private final MongoCollection<Document> serviceConfigCollection;
+    private final MongoCollection<Document> spamIpWhitelist;
 
     public MongoHandler() throws IOException {
         ConfigUtil.DatabaseConnection mongo = PalaceBungee.getConfigUtil().getMongoDBInfo();
@@ -44,6 +46,7 @@ public class MongoHandler {
         bansCollection = database.getCollection("bans");
         playerCollection = database.getCollection("players");
         serviceConfigCollection = database.getCollection("service_configs");
+        spamIpWhitelist = database.getCollection("spamipwhitelist");
     }
 
     public void stop() {
@@ -59,6 +62,19 @@ public class MongoHandler {
      */
     public Document getPlayer(UUID uuid, Document limit) {
         FindIterable<Document> doc = playerCollection.find(Filters.eq("uuid", uuid.toString())).projection(limit);
+        if (doc == null) return null;
+        return doc.first();
+    }
+
+    /**
+     * Get a specific set of a player's data from the database
+     *
+     * @param username the username
+     * @param limit    a Document specifying which keys to return from the database
+     * @return a Document with the limited data
+     */
+    public Document getPlayer(String username, Document limit) {
+        FindIterable<Document> doc = playerCollection.find(Filters.eq("username", username)).projection(limit);
         if (doc == null) return null;
         return doc.first();
     }
@@ -143,10 +159,126 @@ public class MongoHandler {
                 config.getString("minVersionString"));
     }
 
+    /**
+     * Get the proxyID for the proxy the player is connected to
+     *
+     * @param username the username
+     * @return the proxyID for the proxy the player is connected to, or null if they are offline
+     */
     public UUID findPlayer(String username) {
         Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.exists("online"))).projection(new Document("online", true).append("uuid", true)).first();
         if (doc == null || !doc.containsKey("online") || !doc.get("online", Document.class).containsKey("proxy"))
             return null;
         return UUID.fromString(doc.get("online", Document.class).getString("proxy"));
+    }
+
+    /**
+     * Get a player's UUID from their username
+     *
+     * @param username the username
+     * @return the UUID, or null if not found
+     */
+    public UUID usernameToUUID(String username) {
+        Document doc = playerCollection.find(Filters.eq("username", username)).projection(new Document("uuid", 1)).first();
+        if (doc == null || !doc.containsKey("uuid")) return null;
+        return UUID.fromString(doc.getString("uuid"));
+    }
+
+    /**
+     * Get a player's username from their UUID
+     *
+     * @param uuid the uuid
+     * @return the username, or null if not found
+     */
+    public String uuidToUsername(UUID uuid) {
+        Document doc = playerCollection.find(Filters.eq("uuid", uuid.toString())).projection(new Document("username", 1)).first();
+        if (doc == null || !doc.containsKey("username")) return null;
+        return doc.getString("username");
+    }
+
+    public boolean isPlayerMuted(UUID uuid) {
+        Mute m = getCurrentMute(uuid);
+        return m != null && m.isMuted();
+    }
+
+    public boolean isPlayerBanned(UUID uuid) {
+        return getCurrentBan(uuid) != null;
+    }
+
+    public Mute getCurrentMute(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("mutes", 1));
+        for (Object o : doc.get("mutes", ArrayList.class)) {
+            Document muteDoc = (Document) o;
+            if (muteDoc == null || !muteDoc.getBoolean("active")) continue;
+            return new Mute(uuid, true, muteDoc.getLong("created"), muteDoc.getLong("expires"),
+                    muteDoc.getString("reason"), muteDoc.getString("source"));
+        }
+        return null;
+    }
+
+    public String verifyModerationSource(String source) {
+        source = source.trim();
+        if (source.length() == 36) {
+            try {
+                UUID sourceUUID = UUID.fromString(source);
+                String name = PalaceBungee.getUsernameCache().get(sourceUUID);
+                if (name == null) {
+                    name = uuidToUsername(sourceUUID);
+                    if (name == null) {
+                        name = "Unknown";
+                    } else {
+                        PalaceBungee.getUsernameCache().put(sourceUUID, name);
+                    }
+                }
+                source = name;
+            } catch (Exception ignored) {
+            }
+        }
+        return source;
+    }
+
+    public void addSpamIPWhitelist(SpamIPWhitelist whitelist) {
+        spamIpWhitelist.insertOne(new Document("ip", whitelist.getAddress()).append("limit", whitelist.getLimit()));
+    }
+
+    public SpamIPWhitelist getSpamIPWhitelist(String address) {
+        Document doc = spamIpWhitelist.find(Filters.eq("ip", address)).first();
+        if (doc == null) return null;
+        return new SpamIPWhitelist(doc.getString("ip"), doc.getInteger("limit"));
+    }
+
+    public void removeSpamIPWhitelist(String address) {
+        spamIpWhitelist.deleteMany(Filters.eq("ip", address));
+    }
+
+    public List<String> getPlayersFromIP(String ip) {
+        List<String> players = new ArrayList<>();
+
+        playerCollection.find(Filters.eq("ip", ip)).projection(new Document("username", 1))
+                .forEach((Consumer<Document>) document -> players.add(document.getString("username")));
+        return players;
+    }
+
+    public List<UUID> getPlayersByRank(Rank... ranks) {
+        List<UUID> foundPlayers = new ArrayList<>();
+        for (Rank rank : ranks) {
+            playerCollection.find(Filters.eq("rank", rank.getDBName())).forEach((Consumer<Document>) document ->
+                    foundPlayers.add(UUID.fromString(document.getString("uuid"))));
+        }
+        return foundPlayers;
+    }
+
+    public List<String> getPlayerNamesFromRank(Rank rank) {
+        List<String> list = new ArrayList<>();
+        playerCollection.find(Filters.eq("rank", rank.getDBName())).projection(new Document("username", 1))
+                .forEach((Consumer<Document>) d -> list.add(d.getString("username")));
+        return list;
+    }
+
+    public List<UUID> getPlayerUUIDsFromRank(Rank rank) {
+        List<UUID> list = new ArrayList<>();
+        playerCollection.find(Filters.eq("rank", rank.getDBName())).projection(new Document("uuid", 1))
+                .forEach((Consumer<Document>) d -> list.add(UUID.fromString(d.getString("uuid"))));
+        return list;
     }
 }

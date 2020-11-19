@@ -4,12 +4,17 @@ import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
+import network.palace.bungee.commands.ApplyCommand;
+import network.palace.bungee.commands.BugCommand;
 import network.palace.bungee.commands.MsgCommand;
 import network.palace.bungee.commands.admin.GuideLogCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.AdminChatCommand;
 import network.palace.bungee.commands.chat.GuideChatCommand;
 import network.palace.bungee.commands.chat.StaffChatCommand;
+import network.palace.bungee.commands.moderation.AltAccountsCommand;
+import network.palace.bungee.commands.moderation.LookupCommand;
+import network.palace.bungee.commands.moderation.NamecheckCommand;
 import network.palace.bungee.commands.staff.BroadcastCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
@@ -35,6 +40,8 @@ public class PalaceBungee extends Plugin {
 
     @Getter private static final long startTime = System.currentTimeMillis();
     private final static HashMap<UUID, Player> players = new HashMap<>();
+
+    @Getter private final static HashMap<UUID, String> usernameCache = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -84,9 +91,14 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new StaffChatCommand());
         /* Guide Commands */
         /* Moderation Commands */
+        pm.registerCommand(this, new AltAccountsCommand());
+        pm.registerCommand(this, new LookupCommand());
+        pm.registerCommand(this, new NamecheckCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
         /* General Commands */
+        pm.registerCommand(this, new ApplyCommand());
+        pm.registerCommand(this, new BugCommand());
         pm.registerCommand(this, new MsgCommand());
     }
 

@@ -1,12 +1,9 @@
 package network.palace.bungee.commands.admin;
 
 import net.md_5.bungee.api.ChatColor;
-import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
-
-import java.util.UUID;
 
 public class GuideLogCommand extends PalaceCommand {
 

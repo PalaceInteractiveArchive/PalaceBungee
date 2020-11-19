@@ -28,7 +28,8 @@ public class Player {
     @Getter @Setter @NonNull private Rank rank;
     @NonNull private List<RankTag> tags;
     @Getter private final String address;
-    @Getter private final long created = System.currentTimeMillis();
+    @Getter private final long loginTime = System.currentTimeMillis();
+    @Getter private Mute mute;
     @Getter private boolean kicking = false;
     @Getter private final int protocolVersion;
     @Getter @Setter private ProxiedPlayer proxiedPlayer;
