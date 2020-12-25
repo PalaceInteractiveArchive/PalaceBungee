@@ -12,7 +12,7 @@ public class MessageByRankPacket extends MQPacket {
     @Getter private final boolean exact;
 
     public MessageByRankPacket(JsonObject object) {
-        super(PacketID.Global.STAFFCHAT.getId(), object);
+        super(PacketID.Global.MESSAGEBYRANK.getId(), object);
         this.message = object.get("message").getAsString();
         this.rank = Rank.fromString(object.get("rank").getAsString());
         this.tag = object.has("tag") ? RankTag.fromString(object.get("tag").getAsString()) : null;
@@ -20,7 +20,7 @@ public class MessageByRankPacket extends MQPacket {
     }
 
     public MessageByRankPacket(String message, Rank rank, RankTag tag, boolean exact) {
-        super(PacketID.Global.STAFFCHAT.getId(), null);
+        super(PacketID.Global.MESSAGEBYRANK.getId(), null);
         this.message = message;
         this.rank = rank;
         this.tag = tag;

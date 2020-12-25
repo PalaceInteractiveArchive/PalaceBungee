@@ -22,6 +22,7 @@ import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
+import network.palace.bungee.party.PartyUtil;
 import network.palace.bungee.utils.ConfigUtil;
 
 import java.io.IOException;
@@ -34,6 +35,8 @@ public class PalaceBungee extends Plugin {
     @Getter private static final UUID proxyID = UUID.randomUUID();
     @Getter private static PalaceBungee instance;
     @Getter private static ConfigUtil configUtil;
+
+    @Getter private static PartyUtil partyUtil;
 
     @Getter private static MongoHandler mongoHandler;
     @Getter private static MessageHandler messageHandler;
@@ -64,6 +67,8 @@ public class PalaceBungee extends Plugin {
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
+
+        partyUtil = new PartyUtil();
 
         registerListeners();
         registerCommands();
