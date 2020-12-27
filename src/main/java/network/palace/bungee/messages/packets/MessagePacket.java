@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,13 +30,19 @@ public class MessagePacket extends MQPacket {
         this.players = players;
     }
 
+    public MessagePacket(String message, UUID... players) {
+        super(PacketID.Global.MESSAGE.getId(), null);
+        this.message = message;
+        this.players = new ArrayList<>(Arrays.asList(players));
+    }
+
     @Override
     public JsonObject getJSON() {
         JsonObject object = getBaseJSON();
         object.addProperty("message", message);
 
         JsonArray players = new JsonArray();
-        players.forEach(p -> players.add(p.toString()));
+        this.players.forEach(p -> players.add(p.toString()));
         object.add("players", players);
 
         return object;

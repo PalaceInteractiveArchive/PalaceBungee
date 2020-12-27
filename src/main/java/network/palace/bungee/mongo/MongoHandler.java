@@ -11,8 +11,10 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
+import network.palace.bungee.party.Party;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,10 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 @SuppressWarnings("rawtypes")
@@ -31,6 +30,7 @@ public class MongoHandler {
 
     private final MongoClient client;
     private final MongoCollection<Document> bansCollection;
+    private final MongoCollection<Document> partyCollection;
     private final MongoCollection<Document> playerCollection;
     private final MongoCollection<Document> serviceConfigCollection;
     private final MongoCollection<Document> spamIpWhitelist;
@@ -44,6 +44,7 @@ public class MongoHandler {
         client = new MongoClient(connectionString);
         MongoDatabase database = client.getDatabase("palace");
         bansCollection = database.getCollection("bans");
+        partyCollection = database.getCollection("parties");
         playerCollection = database.getCollection("players");
         serviceConfigCollection = database.getCollection("service_configs");
         spamIpWhitelist = database.getCollection("spamipwhitelist");
@@ -81,6 +82,10 @@ public class MongoHandler {
 
     public boolean isPlayerInDB(UUID uuid) {
         return getPlayer(uuid, new Document("uuid", 1)) != null;
+    }
+
+    public boolean isPlayerOnline(UUID uuid) {
+        return playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.exists("online"))).first() != null;
     }
 
     public boolean isBanned(UUID uuid) {
@@ -280,5 +285,45 @@ public class MongoHandler {
         playerCollection.find(Filters.eq("rank", rank.getDBName())).projection(new Document("uuid", 1))
                 .forEach((Consumer<Document>) d -> list.add(UUID.fromString(d.getString("uuid"))));
         return list;
+    }
+
+    public Party getPartyById(String partyId) throws Exception {
+        Document doc = partyCollection.find(Filters.eq("_id", new ObjectId(partyId))).first();
+        if (doc == null) return null;
+        return new Party(doc);
+    }
+
+    public Party getPartyByLeader(UUID leader) throws Exception {
+        Document doc = partyCollection.find(Filters.eq("leader", leader.toString())).first();
+        if (doc == null) return null;
+        return new Party(doc);
+    }
+
+    public Party getPartyByMember(UUID member) throws Exception {
+        Document doc = partyCollection.find(Filters.elemMatch("members", new Document("$eq", member.toString()))).first();
+        if (doc == null) return null;
+        return new Party(doc);
+    }
+
+    public Party createParty(UUID leader) throws Exception {
+        Document doc = new Document("leader", leader.toString()).append("members", Collections.singletonList(leader.toString()))
+                .append("createdOn", System.currentTimeMillis()).append("invited", new ArrayList<>());
+        partyCollection.insertOne(doc);
+        doc = partyCollection.find(Filters.eq("leader", leader.toString())).first();
+        return new Party(doc.getObjectId("_id").toHexString(), leader, new HashMap<>(), new HashMap<>());
+    }
+
+    public boolean hasPendingInvite(UUID uuid) {
+        return partyCollection.find(Filters.elemMatch("invited", Filters.eq("uuid", uuid.toString()))).first() != null;
+    }
+
+    public void addPartyInvite(String partyID, UUID uuid, long expires) {
+        Document doc = new Document("uuid", uuid.toString()).append("expires", expires);
+        partyCollection.updateOne(Filters.eq("_id", new ObjectId(partyID)), Updates.push("invited", doc));
+    }
+
+    public void removePartyInvite(UUID uuid) {
+        partyCollection.updateMany(Filters.elemMatch("invited", Filters.eq("uuid", uuid.toString())),
+                Updates.pull("invited", Filters.eq("uuid", uuid.toString())));
     }
 }

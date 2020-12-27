@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rabbitmq.client.*;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
@@ -36,6 +38,7 @@ public class MessageHandler {
         registerConsumer("all_proxies", "fanout", "", (consumerTag, delivery) -> {
             try {
                 JsonObject object = parseDelivery(delivery);
+                PalaceBungee.getProxyServer().getLogger().warning(object.toString());
                 switch (object.get("id").getAsInt()) {
                     // Broadcast
                     case 1: {
@@ -69,6 +72,25 @@ public class MessageHandler {
                         PalaceBungee.getConfigUtil().reload();
                         break;
                     }
+                    // Message
+                    case 5: {
+                        MessagePacket packet = new MessagePacket(object);
+                        for (UUID uuid : packet.getPlayers()) {
+                            Player tp = PalaceBungee.getPlayer(uuid);
+                            tp.sendMessage(packet.getMessage());
+                        }
+                        break;
+                    }
+                    // Component Message
+                    case 6: {
+                        ComponentMessagePacket packet = new ComponentMessagePacket(object);
+                        BaseComponent[] components = ComponentSerializer.parse(packet.getSerializedMessage());
+                        for (UUID uuid : packet.getPlayers()) {
+                            Player tp = PalaceBungee.getPlayer(uuid);
+                            tp.sendMessage(components);
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -78,6 +100,7 @@ public class MessageHandler {
         registerConsumer("proxy_direct", "direct", PalaceBungee.getProxyID().toString(), (consumerTag, delivery) -> {
             try {
                 JsonObject object = parseDelivery(delivery);
+                PalaceBungee.getProxyServer().getLogger().severe(object.toString());
                 //noinspection SwitchStatementWithTooFewBranches
                 switch (object.get("id").getAsInt()) {
                     // DM
@@ -190,6 +213,16 @@ public class MessageHandler {
     public void sendStaffMessage(String message) throws Exception {
         MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.RED + "STAFF" +
                 ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false);
+        sendMessage(packet, "all_proxies", "fanout");
+    }
+
+    public void sendMessageToPlayer(UUID uuid, String message) throws Exception {
+        Player player = PalaceBungee.getPlayer(uuid);
+        if (player != null) {
+            player.sendMessage(message);
+            return;
+        }
+        MessagePacket packet = new MessagePacket(message, uuid);
         sendMessage(packet, "all_proxies", "fanout");
     }
 

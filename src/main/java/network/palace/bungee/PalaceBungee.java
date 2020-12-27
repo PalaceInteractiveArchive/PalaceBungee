@@ -2,11 +2,13 @@ package network.palace.bungee;
 
 import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import network.palace.bungee.commands.ApplyCommand;
 import network.palace.bungee.commands.BugCommand;
 import network.palace.bungee.commands.MsgCommand;
+import network.palace.bungee.commands.PartyCommand;
 import network.palace.bungee.commands.admin.GuideLogCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.AdminChatCommand;
@@ -105,6 +107,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new BugCommand());
         pm.registerCommand(this, new MsgCommand());
+        pm.registerCommand(this, new PartyCommand());
     }
 
     public static ProxyServer getProxyServer() {
@@ -138,5 +141,24 @@ public class PalaceBungee extends Plugin {
 
     public static Collection<Player> getOnlinePlayers() {
         return players.values();
+    }
+
+    public static String getUsername(UUID uuid) {
+        String name = usernameCache.get(uuid);
+        if (name == null) {
+            name = mongoHandler.uuidToUsername(uuid);
+            if (name == null) {
+                name = "Unknown";
+            } else {
+                PalaceBungee.getUsernameCache().put(uuid, name);
+            }
+        }
+        return name;
+    }
+
+    public static UUID getUUID(String username) {
+        ProxiedPlayer p = getProxyServer().getPlayer(username);
+        if (p != null) return p.getUniqueId();
+        return mongoHandler.usernameToUUID(username);
     }
 }

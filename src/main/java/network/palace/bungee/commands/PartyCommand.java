@@ -18,6 +18,14 @@ public class PartyCommand extends PalaceCommand {
                 case "help":
                     helpMenu(player);
                     return;
+                case "create":
+                    try {
+                        PalaceBungee.getPartyUtil().createParty(player);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while creating a party! Please try again in a few minutes.");
+                    }
+                    return;
                 case "accept":
                     PalaceBungee.getPartyUtil().acceptRequest(player);
                     return;
@@ -37,7 +45,14 @@ public class PartyCommand extends PalaceCommand {
                     PalaceBungee.getPartyUtil().warpParty(player);
                     return;
                 case "remove":
-                    PalaceBungee.getPartyUtil().removeFromParty(player);
+                    if (args.length > 1) {
+                        try {
+                            PalaceBungee.getPartyUtil().removeFromParty(player, args[1]);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            player.sendMessage(ChatColor.RED + "An error occurred while removing that player from your party! Please try again in a few minutes.");
+                        }
+                    }
                     return;
                 case "promote":
                     PalaceBungee.getPartyUtil().promoteToLeader(player);
@@ -46,25 +61,35 @@ public class PartyCommand extends PalaceCommand {
                     PalaceBungee.getPartyUtil().chat(player);
                     return;
                 case "invite":
-                    PalaceBungee.getPartyUtil().inviteToParty(player);
-                    return;
+                    if (args.length > 1) {
+                        try {
+                            PalaceBungee.getPartyUtil().inviteToParty(player, args[1]);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            player.sendMessage(ChatColor.RED + "An error occurred while inviting that player to your party! Please try again in a few minutes.");
+                        }
+                        return;
+                    }
             }
         }
         helpMenu(player);
     }
 
     public void helpMenu(Player player) {
-        String dash = ChatColor.GREEN + "- " + ChatColor.AQUA;
+        String dash = "\n" + ChatColor.GREEN + "- " + ChatColor.AQUA;
         String y = ChatColor.YELLOW.toString();
-        player.sendMessage(y + "Party Commands:\n" + dash + "/party help " + y + "- Shows this help menu\n" + dash +
-                "/party invite [player] " + y + "- Invite a player to your Party\n" + dash + "/party leave " + y +
-                "- Leave your current Party\n" + dash + "/party list " + y + "- List all of the members in your Party\n"
-                + dash + "/party promote [player] " + y + "- Promote a player to Party Leader\n" + dash +
-                "/party accept " + y + "- Accept a Party invite from a player\n" + dash + "/party deny " + y +
-                "- Deny a Party Request\n" + dash + "/party warp " + y +
-                "- Brings the members of your Party to your server\n" + dash + "/party remove [player] " + y +
-                "- Removes a player from your Party\n" + dash + "/pchat [message] " + y +
-                "- Message members of your Party\n" + dash + "/party close " + y +
-                "- Close your Party");
+        player.sendMessage(y + "Party Commands:" +
+                dash + "/party help " + y + "- Shows this help menu" +
+                dash + "/party create " + y + "- Create a new Party" +
+                dash + "/party invite [player] " + y + "- Invite a player to your Party" +
+                dash + "/party leave " + y + "- Leave your current Party" +
+                dash + "/party list " + y + "- List all of the members in your Party" +
+                dash + "/party promote [player] " + y + "- Promote a player to Party Leader" +
+                dash + "/party accept " + y + "- Accept a Party invite from a player" +
+                dash + "/party deny " + y + "- Deny a Party Request" +
+                dash + "/party warp " + y + "- Brings the members of your Party to your server" +
+                dash + "/party remove [player] " + y + "- Removes a player from your Party" +
+                dash + "/pchat [message] " + y + "- Message members of your Party" +
+                dash + "/party close " + y + "- Close your Party");
     }
 }
