@@ -16,6 +16,7 @@ import network.palace.bungee.commands.moderation.AltAccountsCommand;
 import network.palace.bungee.commands.moderation.LookupCommand;
 import network.palace.bungee.commands.moderation.NamecheckCommand;
 import network.palace.bungee.commands.staff.BroadcastCommand;
+import network.palace.bungee.commands.staff.StaffListCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
 import network.palace.bungee.listeners.PlayerJoinAndLeave;
@@ -104,6 +105,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new NamecheckCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
+        pm.registerCommand(this, new StaffListCommand());
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new BugCommand());

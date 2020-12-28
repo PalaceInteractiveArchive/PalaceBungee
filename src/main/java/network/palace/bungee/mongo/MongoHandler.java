@@ -85,7 +85,7 @@ public class MongoHandler {
     }
 
     public boolean isPlayerOnline(UUID uuid) {
-        return playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.exists("online"))).first() != null;
+        return playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("online", true))).first() != null;
     }
 
     public boolean isBanned(UUID uuid) {
@@ -128,15 +128,19 @@ public class MongoHandler {
     }
 
     public int getOnlineCount() {
-        return (int) playerCollection.count(Filters.exists("online"));
+        return (int) playerCollection.count(Filters.eq("online", true));
     }
 
     public void login(UUID uuid) {
-        playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.set("online", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1")));
+        playerCollection.updateOne(new Document("uuid", uuid.toString()), new Document("$set",
+                new Document("online", true)
+                        .append("onlineData", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1"))
+        ));
     }
 
     public void logout(UUID uuid) {
-        playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.unset("online"));
+        playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.set("online", false));
+        playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.unset("onlineData"));
     }
 
     public ConfigUtil.BungeeConfig getBungeeConfig() throws Exception {
@@ -182,10 +186,9 @@ public class MongoHandler {
      * @return the proxyID for the proxy the player is connected to, or null if they are offline
      */
     public UUID findPlayer(String username) {
-        Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.exists("online"))).projection(new Document("online", true).append("uuid", true)).first();
-        if (doc == null || !doc.containsKey("online") || !doc.get("online", Document.class).containsKey("proxy"))
-            return null;
-        return UUID.fromString(doc.get("online", Document.class).getString("proxy"));
+        Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.eq("online", true))).projection(new Document("online", true).append("uuid", true)).first();
+        if (doc == null) return null;
+        return UUID.fromString(doc.get("onlineData", Document.class).getString("proxy"));
     }
 
     /**
@@ -392,5 +395,23 @@ public class MongoHandler {
 
     public void setPartyLeader(String partyID, UUID currentLeader, UUID newLeader) {
         partyCollection.updateOne(Filters.and(Filters.eq("_id", new ObjectId(partyID)), Filters.eq("leader", currentLeader.toString())), Updates.set("leader", newLeader.toString()));
+    }
+
+    public TreeMap<Rank, Set<String>> getStaffList() {
+        TreeMap<Rank, Set<String>> players = new TreeMap<>(Comparator.comparingInt(Enum::ordinal));
+        List<String> staffRanks = new ArrayList<>();
+        Arrays.stream(Rank.values()).filter(rank -> rank.getRankId() >= Rank.TRAINEE.getRankId()).forEach(r -> staffRanks.add(r.getDBName()));
+        FindIterable<Document> list = playerCollection.find(Filters.and(Filters.in("rank", staffRanks), Filters.eq("online", true)))
+                .projection(new Document("username", true).append("rank", true).append("onlineData", true));
+        for (Document doc : list) {
+            Rank rank = Rank.fromString(doc.getString("rank"));
+//            if (rank.getRankId() < Rank.TRAINEE.getRankId()) continue;
+
+            if (rank.equals(Rank.TRAINEEBUILD) || rank.equals(Rank.TRAINEETECH)) rank = Rank.TRAINEE;
+            Set<String> l = players.getOrDefault(rank, new TreeSet<>(Comparator.comparing(String::toLowerCase)));
+            l.add(doc.getString("username") + ":" + doc.get("onlineData", Document.class).getString("server"));
+            if (!players.containsKey(rank)) players.put(rank, l);
+        }
+        return players;
     }
 }

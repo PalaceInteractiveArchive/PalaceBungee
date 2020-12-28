@@ -29,7 +29,7 @@ public class PlayerJoinAndLeave implements Listener {
 
         Document doc = PalaceBungee.getMongoHandler().getPlayer(connection.getUniqueId(), new Document("rank", true).append("tags", true).append("online", true));
 
-        if (doc.containsKey("online")) {
+        if (doc != null && doc.containsKey("online") && doc.getBoolean("online")) {
             event.setCancelled(true);
             event.setCancelReason(new ComponentBuilder("This account is already connected to this server!").color(ChatColor.RED).create());
             return;
