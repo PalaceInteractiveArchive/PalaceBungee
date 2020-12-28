@@ -164,6 +164,17 @@ public class MongoHandler {
                 config.getString("minVersionString"));
     }
 
+    public void setBungeeConfig(ConfigUtil.BungeeConfig config) throws Exception {
+        serviceConfigCollection.updateOne(Filters.eq("type", "bungeecord"), new Document("$set",
+                new Document("maintenance", config.isMaintenance())
+                        .append("chatDelay", config.getChatDelay())
+                        .append("parkChatMuted", config.isParkChatMuted())
+                        .append("dmEnabled", config.isDmEnabled())
+                        .append("strictChat", config.isStrictChat())
+                        .append("strictThreshold", config.getStrictThreshold())
+        ));
+    }
+
     /**
      * Get the proxyID for the proxy the player is connected to
      *

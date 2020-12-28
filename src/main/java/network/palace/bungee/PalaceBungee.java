@@ -92,6 +92,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new ProxyReloadCommand());
         /* Chat Commands */
         pm.registerCommand(this, new AdminChatCommand());
+        pm.registerCommand(this, new ChatDelayCommand());
         pm.registerCommand(this, new ClearChatCommand());
         pm.registerCommand(this, new GuideChatCommand());
         pm.registerCommand(this, new PartyChatCommand());

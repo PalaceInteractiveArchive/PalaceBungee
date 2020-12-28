@@ -10,6 +10,7 @@ import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.ProtocolConstants;
+import network.palace.bungee.messages.packets.ProxyReloadPacket;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,6 +96,19 @@ public class ConfigUtil {
         }
 
         return file;
+    }
+
+    public void setChatDelay(int seconds) throws Exception {
+        this.chatDelay = seconds;
+        saveConfigChanges();
+    }
+
+    private void saveConfigChanges() throws Exception {
+        BungeeConfig config = new BungeeConfig(null, null, null, null,
+                maintenance, chatDelay, parkChatMuted, dmEnabled, strictChat, strictThreshold,
+                0, 0, null, null);
+        PalaceBungee.getMongoHandler().setBungeeConfig(config);
+        PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), "all_proxies", "fanout");
     }
 
     @Getter
