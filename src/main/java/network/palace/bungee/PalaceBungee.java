@@ -12,10 +12,12 @@ import network.palace.bungee.commands.PartyCommand;
 import network.palace.bungee.commands.admin.GuideLogCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.*;
+import network.palace.bungee.commands.guide.GuideListCommand;
 import network.palace.bungee.commands.moderation.AltAccountsCommand;
 import network.palace.bungee.commands.moderation.LookupCommand;
 import network.palace.bungee.commands.moderation.NamecheckCommand;
 import network.palace.bungee.commands.staff.BroadcastCommand;
+import network.palace.bungee.commands.staff.SGListCommand;
 import network.palace.bungee.commands.staff.StaffListCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
@@ -99,12 +101,14 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new PartyChatCommand());
         pm.registerCommand(this, new StaffChatCommand());
         /* Guide Commands */
+        pm.registerCommand(this, new GuideListCommand());
         /* Moderation Commands */
         pm.registerCommand(this, new AltAccountsCommand());
         pm.registerCommand(this, new LookupCommand());
         pm.registerCommand(this, new NamecheckCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
+        pm.registerCommand(this, new SGListCommand());
         pm.registerCommand(this, new StaffListCommand());
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());

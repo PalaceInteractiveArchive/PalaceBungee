@@ -1,4 +1,4 @@
-package network.palace.bungee.commands.staff;
+package network.palace.bungee.commands.guide;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -7,30 +7,28 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-public class StaffListCommand extends PalaceCommand {
+public class GuideListCommand extends PalaceCommand {
 
-    public StaffListCommand() {
-        super("stafflist", Rank.TRAINEE);
+    public GuideListCommand() {
+        super("guidelist", Rank.TRAINEE, RankTag.GUIDE);
     }
 
     @Override
     public void execute(Player player, String[] args) {
-        TreeMap<Rank, Set<String>> players = PalaceBungee.getMongoHandler().getRankList(rank -> rank.getRankId() >= Rank.TRAINEE.getRankId());
-        player.sendMessage(ChatColor.GREEN + "Online Staff Members:");
-        for (Map.Entry<Rank, Set<String>> entry : players.entrySet()) {
-            sendRankMessage(player, entry.getKey(), entry.getValue());
+        TreeMap<RankTag, Set<String>> players = PalaceBungee.getMongoHandler().getRankTagList(tag -> tag.equals(RankTag.GUIDE));
+        Set<String> members = players.get(RankTag.GUIDE);
+        if (members == null || members.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "There are no Guides online!");
+            return;
         }
-    }
-
-    private void sendRankMessage(Player player, Rank rank, Set<String> members) {
-        ComponentBuilder comp = new ComponentBuilder(rank.getName() +
-                (rank.equals(Rank.MEDIA) ? "" : "s") +
-                ": (" + members.size() + ") ").color(rank.getTagColor());
+        ComponentBuilder comp = new ComponentBuilder("Online Guides (" + members.size() + "): ").color(RankTag.GUIDE.getColor());
         int i = 0;
         for (String s : members) {
             String[] list = s.split(":");

@@ -8,29 +8,24 @@ import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-public class StaffListCommand extends PalaceCommand {
+public class SGListCommand extends PalaceCommand {
 
-    public StaffListCommand() {
-        super("stafflist", Rank.TRAINEE);
+    public SGListCommand() {
+        super("sglist", Rank.TRAINEE);
     }
 
     @Override
     public void execute(Player player, String[] args) {
-        TreeMap<Rank, Set<String>> players = PalaceBungee.getMongoHandler().getRankList(rank -> rank.getRankId() >= Rank.TRAINEE.getRankId());
-        player.sendMessage(ChatColor.GREEN + "Online Staff Members:");
-        for (Map.Entry<Rank, Set<String>> entry : players.entrySet()) {
-            sendRankMessage(player, entry.getKey(), entry.getValue());
+        TreeMap<Rank, Set<String>> players = PalaceBungee.getMongoHandler().getRankList(rank -> rank.equals(Rank.SPECIALGUEST));
+        Set<String> members = players.get(Rank.SPECIALGUEST);
+        if (members == null || members.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "There are no Special Guests online!");
+            return;
         }
-    }
-
-    private void sendRankMessage(Player player, Rank rank, Set<String> members) {
-        ComponentBuilder comp = new ComponentBuilder(rank.getName() +
-                (rank.equals(Rank.MEDIA) ? "" : "s") +
-                ": (" + members.size() + ") ").color(rank.getTagColor());
+        ComponentBuilder comp = new ComponentBuilder("Online Special Guests (" + members.size() + "): ").color(Rank.SPECIALGUEST.getTagColor());
         int i = 0;
         for (String s : members) {
             String[] list = s.split(":");

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 @SuppressWarnings("rawtypes")
 public class MongoHandler {
@@ -397,20 +398,42 @@ public class MongoHandler {
         partyCollection.updateOne(Filters.and(Filters.eq("_id", new ObjectId(partyID)), Filters.eq("leader", currentLeader.toString())), Updates.set("leader", newLeader.toString()));
     }
 
-    public TreeMap<Rank, Set<String>> getStaffList() {
+    public TreeMap<Rank, Set<String>> getRankList(Predicate<? super Rank> rankPredicate) {
         TreeMap<Rank, Set<String>> players = new TreeMap<>(Comparator.comparingInt(Enum::ordinal));
-        List<String> staffRanks = new ArrayList<>();
-        Arrays.stream(Rank.values()).filter(rank -> rank.getRankId() >= Rank.TRAINEE.getRankId()).forEach(r -> staffRanks.add(r.getDBName()));
-        FindIterable<Document> list = playerCollection.find(Filters.and(Filters.in("rank", staffRanks), Filters.eq("online", true)))
+        List<String> ranks = new ArrayList<>();
+        Arrays.stream(Rank.values()).filter(rankPredicate).forEach(r -> ranks.add(r.getDBName()));
+        FindIterable<Document> list = playerCollection.find(Filters.and(Filters.in("rank", ranks), Filters.eq("online", true)))
                 .projection(new Document("username", true).append("rank", true).append("onlineData", true));
         for (Document doc : list) {
-            Rank rank = Rank.fromString(doc.getString("rank"));
-//            if (rank.getRankId() < Rank.TRAINEE.getRankId()) continue;
+            try {
+                Rank rank = Rank.fromString(doc.getString("rank"));
+                if (rank.equals(Rank.TRAINEEBUILD) || rank.equals(Rank.TRAINEETECH)) rank = Rank.TRAINEE;
+                Set<String> l = players.getOrDefault(rank, new TreeSet<>(Comparator.comparing(String::toLowerCase)));
+                l.add(doc.getString("username") + ":" + doc.get("onlineData", Document.class).getString("server"));
+                if (!players.containsKey(rank)) players.put(rank, l);
+            } catch (Exception ignored) {
+            }
+        }
+        return players;
+    }
 
-            if (rank.equals(Rank.TRAINEEBUILD) || rank.equals(Rank.TRAINEETECH)) rank = Rank.TRAINEE;
-            Set<String> l = players.getOrDefault(rank, new TreeSet<>(Comparator.comparing(String::toLowerCase)));
-            l.add(doc.getString("username") + ":" + doc.get("onlineData", Document.class).getString("server"));
-            if (!players.containsKey(rank)) players.put(rank, l);
+    public TreeMap<RankTag, Set<String>> getRankTagList(Predicate<? super RankTag> rankTagPredicate) {
+        TreeMap<RankTag, Set<String>> players = new TreeMap<>(Comparator.comparingInt(Enum::ordinal));
+        List<String> tags = new ArrayList<>();
+        Arrays.stream(RankTag.values()).filter(rankTagPredicate).forEach(t -> tags.add(t.getDBName()));
+        FindIterable<Document> list = playerCollection.find(Filters.and(Filters.in("tags", tags), Filters.eq("online", true)))
+                .projection(new Document("username", true).append("tags", true).append("onlineData", true));
+        for (Document doc : list) {
+            for (Object o : doc.get("tags", ArrayList.class)) {
+                try {
+                    String tag = (String) o;
+                    RankTag rankTag = RankTag.fromString(tag);
+                    Set<String> l = players.getOrDefault(rankTag, new TreeSet<>(Comparator.comparing(String::toLowerCase)));
+                    l.add(doc.getString("username") + ":" + doc.get("onlineData", Document.class).getString("server"));
+                    if (!players.containsKey(rankTag)) players.put(rankTag, l);
+                } catch (Exception ignored) {
+                }
+            }
         }
         return players;
     }
