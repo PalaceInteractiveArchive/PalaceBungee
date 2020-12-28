@@ -7,7 +7,7 @@ import net.md_5.bungee.api.ChatColor;
 @Getter
 @AllArgsConstructor
 public enum Subsystem {
-    PARTY("Party", ChatColor.BLUE);
+    PARTY("Party", ChatColor.BLUE), CHAT("Palace Chat", ChatColor.GREEN);
 
     String name;
     ChatColor color;

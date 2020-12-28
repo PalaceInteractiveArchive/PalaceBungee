@@ -10,6 +10,7 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
+import network.palace.bungee.handlers.Subsystem;
 import network.palace.bungee.messages.packets.*;
 import network.palace.bungee.utils.ConfigUtil;
 
@@ -23,6 +24,10 @@ import java.util.concurrent.TimeoutException;
 public class MessageHandler {
     private final ConnectionFactory factory;
     private final HashMap<String, Channel> channels = new HashMap<>();
+
+    /* Chat Clear Data */
+    private final HashMap<String, Long> lastCleared = new HashMap<>();
+    private final String clearMessage = "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 
     public MessageHandler() throws IOException, TimeoutException {
         factory = new ConnectionFactory();
@@ -90,6 +95,41 @@ public class MessageHandler {
                             if (tp != null) tp.sendMessage(components);
                         }
                         break;
+                    }
+                    // Chat Clear
+                    case 7: {
+                        ClearChatPacket packet = new ClearChatPacket(object);
+                        String chat = packet.getChat();
+                        UUID target = packet.getTarget();
+                        if (target != null) {
+                            String username = PalaceBungee.getUsername(target);
+                            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                                if (tp.getRank().getRankId() >= Rank.TRAINEE.getRankId()) {
+                                    tp.sendMessage("\n" + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + username + "'s chat has been cleared by " + packet.getSource());
+                                }
+                            }
+                            Player tp = PalaceBungee.getPlayer(target);
+                            if (tp != null && tp.getRank().getRankId() < Rank.TRAINEE.getRankId())
+                                tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
+                            return;
+                        }
+                        if (System.currentTimeMillis() - (lastCleared.getOrDefault(chat, 0L)) < 2000) {
+                            //if this chat was last cleared up to 2 seconds ago, prevent it from being cleared again
+                            Player player = PalaceBungee.getPlayer(packet.getSource());
+                            if (player != null)
+                                player.sendMessage(ChatColor.YELLOW + "It hasn't been 2 seconds since the last chat clear!");
+                            return;
+                        }
+                        lastCleared.put(chat, System.currentTimeMillis());
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if (tp.getServerName().equals(chat)) {
+                                if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
+                                    tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
+                                } else {
+                                    tp.sendMessage("\n" + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared by " + packet.getSource());
+                                }
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
