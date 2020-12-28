@@ -77,7 +77,7 @@ public class MessageHandler {
                         MessagePacket packet = new MessagePacket(object);
                         for (UUID uuid : packet.getPlayers()) {
                             Player tp = PalaceBungee.getPlayer(uuid);
-                            tp.sendMessage(packet.getMessage());
+                            if (tp != null) tp.sendMessage(packet.getMessage());
                         }
                         break;
                     }
@@ -87,7 +87,7 @@ public class MessageHandler {
                         BaseComponent[] components = ComponentSerializer.parse(packet.getSerializedMessage());
                         for (UUID uuid : packet.getPlayers()) {
                             Player tp = PalaceBungee.getPlayer(uuid);
-                            tp.sendMessage(components);
+                            if (tp != null) tp.sendMessage(components);
                         }
                         break;
                     }

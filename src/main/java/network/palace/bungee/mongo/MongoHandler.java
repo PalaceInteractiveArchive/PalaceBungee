@@ -287,6 +287,10 @@ public class MongoHandler {
         return list;
     }
 
+    /*
+    Party Methods
+     */
+
     public Party getPartyById(String partyId) throws Exception {
         Document doc = partyCollection.find(Filters.eq("_id", new ObjectId(partyId))).first();
         if (doc == null) return null;
@@ -314,6 +318,10 @@ public class MongoHandler {
     }
 
     public boolean hasPendingInvite(UUID uuid) {
+        Document doc = partyCollection.find(Filters.elemMatch("invited", Filters.eq("uuid", uuid.toString()))).first();
+        if (doc == null) return false;
+        String id = doc.getObjectId("_id").toHexString();
+        removeExpiredInvites(id);
         return partyCollection.find(Filters.elemMatch("invited", Filters.eq("uuid", uuid.toString()))).first() != null;
     }
 
@@ -325,5 +333,53 @@ public class MongoHandler {
     public void removePartyInvite(UUID uuid) {
         partyCollection.updateMany(Filters.elemMatch("invited", Filters.eq("uuid", uuid.toString())),
                 Updates.pull("invited", Filters.eq("uuid", uuid.toString())));
+    }
+
+    public void removeExpiredInvites() {
+        long time = System.currentTimeMillis();
+        partyCollection.updateMany(Filters.elemMatch("invited", Filters.lte("expires", time)),
+                Updates.pull("invited", Filters.lte("expires", time)));
+    }
+
+    public void removeExpiredInvites(String id) {
+        partyCollection.updateOne(Filters.eq("_id", new ObjectId(id)),
+                Updates.pull("invited", Filters.lte("expires", System.currentTimeMillis())));
+    }
+
+    public boolean acceptPartyInvite(UUID uuid) {
+        Document doc = partyCollection.find(Filters.elemMatch("invited", Filters.eq("uuid", uuid.toString()))).first();
+        if (doc == null) return false;
+        for (Object o : doc.get("invited", ArrayList.class)) {
+            Document inviteDoc = (Document) o;
+            if (inviteDoc.getString("uuid").equals(uuid.toString())) {
+                long expires = inviteDoc.getLong("expires");
+                partyCollection.updateOne(Filters.eq("_id", doc.getObjectId("_id")),
+                        Updates.pull("invited", Filters.eq("uuid", uuid.toString())));
+                if (System.currentTimeMillis() < expires) {
+                    partyCollection.updateOne(Filters.eq("_id", doc.getObjectId("_id")),
+                            Updates.push("members", uuid.toString()));
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public void removePartyMember(String partyID, UUID uuid) {
+        partyCollection.updateOne(Filters.eq("_id", new ObjectId(partyID)), Updates.pull("members", uuid.toString()));
+    }
+
+    public void closeParty(String partyID) {
+        partyCollection.deleteOne(Filters.eq("_id", new ObjectId(partyID)));
+    }
+
+    public void closePartyByLeader(UUID leader) {
+        partyCollection.deleteOne(Filters.eq("leader", leader.toString()));
+    }
+
+    public void setPartyLeader(String partyID, UUID currentLeader, UUID newLeader) {
+        partyCollection.updateOne(Filters.and(Filters.eq("_id", new ObjectId(partyID)), Filters.eq("leader", currentLeader.toString())), Updates.set("leader", newLeader.toString()));
     }
 }

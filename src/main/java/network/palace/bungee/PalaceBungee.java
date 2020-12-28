@@ -13,6 +13,7 @@ import network.palace.bungee.commands.admin.GuideLogCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.AdminChatCommand;
 import network.palace.bungee.commands.chat.GuideChatCommand;
+import network.palace.bungee.commands.chat.PartyChatCommand;
 import network.palace.bungee.commands.chat.StaffChatCommand;
 import network.palace.bungee.commands.moderation.AltAccountsCommand;
 import network.palace.bungee.commands.moderation.LookupCommand;
@@ -95,6 +96,7 @@ public class PalaceBungee extends Plugin {
         /* Chat Commands */
         pm.registerCommand(this, new AdminChatCommand());
         pm.registerCommand(this, new GuideChatCommand());
+        pm.registerCommand(this, new PartyChatCommand());
         pm.registerCommand(this, new StaffChatCommand());
         /* Guide Commands */
         /* Moderation Commands */

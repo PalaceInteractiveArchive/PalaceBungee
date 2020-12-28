@@ -88,9 +88,6 @@ public class Party {
 
     public void messageAllMembers(String message, boolean bars) throws Exception {
         if (bars) message = MESSAGE_BARS + "\n" + message + "\n" + MESSAGE_BARS;
-        PalaceBungee.getProxyServer().getLogger().severe("A " + getMembers().size());
-        getMembers().forEach(m -> PalaceBungee.getProxyServer().getLogger().severe(m.toString()));
-        PalaceBungee.getProxyServer().getLogger().severe("B");
         PalaceBungee.getMessageHandler().sendMessage(new MessagePacket(message, getMembers()), "all_proxies", "fanout");
     }
 

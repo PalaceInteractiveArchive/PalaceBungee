@@ -74,6 +74,10 @@ public class Player {
         }
     }
 
+    public void sendSubsystemMessage(Subsystem subsystem, String message) {
+        sendMessage(subsystem.getPrefix() + message);
+    }
+
     public void kickPlayer(String reason) {
         kickPlayer(reason, true);
     }

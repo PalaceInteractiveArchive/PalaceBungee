@@ -27,22 +27,44 @@ public class PartyCommand extends PalaceCommand {
                     }
                     return;
                 case "accept":
-                    PalaceBungee.getPartyUtil().acceptRequest(player);
-                    return;
-                case "deny":
-                    PalaceBungee.getPartyUtil().denyRequest(player);
+                    try {
+                        PalaceBungee.getPartyUtil().acceptRequest(player);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while accepting that party invite!");
+                    }
                     return;
                 case "close":
-                    PalaceBungee.getPartyUtil().closeParty(player);
+                    try {
+                        PalaceBungee.getPartyUtil().closeParty(player);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while closing the party! Please try again in a few minutes.");
+                    }
                     return;
                 case "leave":
-                    PalaceBungee.getPartyUtil().leaveParty(player);
+                    try {
+                        PalaceBungee.getPartyUtil().leaveParty(player);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while leaving the party! Please try again in a few minutes.");
+                    }
                     return;
                 case "list":
-                    PalaceBungee.getPartyUtil().listParty(player);
+                    try {
+                        PalaceBungee.getPartyUtil().listParty(player);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while listing party members! Please try again in a few minutes.");
+                    }
                     return;
                 case "warp":
-                    PalaceBungee.getPartyUtil().warpParty(player);
+                    try {
+                        PalaceBungee.getPartyUtil().warpParty(player);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while warping party members to your server! Please try again in a few minutes.");
+                    }
                     return;
                 case "remove":
                     if (args.length > 1) {
@@ -55,10 +77,27 @@ public class PartyCommand extends PalaceCommand {
                     }
                     return;
                 case "promote":
-                    PalaceBungee.getPartyUtil().promoteToLeader(player);
+                    if (args.length > 1) {
+                        try {
+                            PalaceBungee.getPartyUtil().promoteToLeader(player, args[1]);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            player.sendMessage(ChatColor.RED + "An error occurred while promoting a new party leader! Please try again in a few minutes.");
+                        }
+                    }
                     return;
                 case "chat":
-                    PalaceBungee.getPartyUtil().chat(player);
+                    try {
+                        String message = "";
+                        StringBuilder msg = new StringBuilder();
+                        for (int i = 1; i < args.length; i++) {
+                            msg.append(args[i]).append(" ");
+                        }
+                        PalaceBungee.getPartyUtil().chat(player, msg.toString().trim());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        player.sendMessage(ChatColor.RED + "An error occurred while sending your party chat message! Please try again in a few minutes.");
+                    }
                     return;
                 case "invite":
                     if (args.length > 1) {
@@ -86,7 +125,6 @@ public class PartyCommand extends PalaceCommand {
                 dash + "/party list " + y + "- List all of the members in your Party" +
                 dash + "/party promote [player] " + y + "- Promote a player to Party Leader" +
                 dash + "/party accept " + y + "- Accept a Party invite from a player" +
-                dash + "/party deny " + y + "- Deny a Party Request" +
                 dash + "/party warp " + y + "- Brings the members of your Party to your server" +
                 dash + "/party remove [player] " + y + "- Removes a player from your Party" +
                 dash + "/pchat [message] " + y + "- Message members of your Party" +
