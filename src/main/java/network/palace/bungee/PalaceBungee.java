@@ -5,10 +5,7 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
-import network.palace.bungee.commands.ApplyCommand;
-import network.palace.bungee.commands.BugCommand;
-import network.palace.bungee.commands.MsgCommand;
-import network.palace.bungee.commands.PartyCommand;
+import network.palace.bungee.commands.*;
 import network.palace.bungee.commands.admin.GuideLogCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.*;
@@ -122,7 +119,12 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new BugCommand());
         pm.registerCommand(this, new MsgCommand());
+        pm.registerCommand(this, new OnlineCountCommand());
         pm.registerCommand(this, new PartyCommand());
+        pm.registerCommand(this, new RulesCommand());
+        pm.registerCommand(this, new SocialCommand());
+        pm.registerCommand(this, new StoreCommand());
+        pm.registerCommand(this, new WhereAmICommand());
     }
 
     public static ProxyServer getProxyServer() {
