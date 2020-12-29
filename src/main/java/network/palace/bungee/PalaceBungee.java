@@ -18,6 +18,7 @@ import network.palace.bungee.commands.moderation.LookupCommand;
 import network.palace.bungee.commands.moderation.NamecheckCommand;
 import network.palace.bungee.commands.staff.BroadcastCommand;
 import network.palace.bungee.commands.staff.SGListCommand;
+import network.palace.bungee.commands.staff.ServerCommand;
 import network.palace.bungee.commands.staff.StaffListCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
@@ -27,6 +28,7 @@ import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.party.PartyUtil;
 import network.palace.bungee.utils.ConfigUtil;
+import network.palace.bungee.utils.ServerUtil;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -38,6 +40,7 @@ public class PalaceBungee extends Plugin {
     @Getter private static final UUID proxyID = UUID.randomUUID();
     @Getter private static PalaceBungee instance;
     @Getter private static ConfigUtil configUtil;
+    @Getter private static ServerUtil serverUtil;
 
     @Getter private static PartyUtil partyUtil;
 
@@ -48,6 +51,8 @@ public class PalaceBungee extends Plugin {
     private final static HashMap<UUID, Player> players = new HashMap<>();
 
     @Getter private final static HashMap<UUID, String> usernameCache = new HashMap<>();
+
+    @Getter private final static boolean testNetwork = true;
 
     @Override
     public void onEnable() {
@@ -64,6 +69,8 @@ public class PalaceBungee extends Plugin {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        serverUtil = new ServerUtil();
 
         try {
             messageHandler = new MessageHandler();
@@ -108,6 +115,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new NamecheckCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
+        pm.registerCommand(this, new ServerCommand());
         pm.registerCommand(this, new SGListCommand());
         pm.registerCommand(this, new StaffListCommand());
         /* General Commands */

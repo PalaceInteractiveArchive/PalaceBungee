@@ -18,9 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Marc on 7/16/16
- */
 @RequiredArgsConstructor
 public class Player {
     private final UUID uuid;

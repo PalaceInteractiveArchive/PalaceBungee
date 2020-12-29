@@ -4,17 +4,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rabbitmq.client.*;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.Player;
-import network.palace.bungee.handlers.Rank;
-import network.palace.bungee.handlers.RankTag;
-import network.palace.bungee.handlers.Subsystem;
+import network.palace.bungee.handlers.*;
 import network.palace.bungee.messages.packets.*;
 import network.palace.bungee.utils.ConfigUtil;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -130,6 +130,25 @@ public class MessageHandler {
                                 }
                             }
                         }
+                        break;
+                    }
+                    // Create Server
+                    case 8: {
+                        CreateServerPacket packet = new CreateServerPacket(object);
+                        String[] addressList = packet.getAddress().split(":");
+                        ServerInfo info = ProxyServer.getInstance().constructServerInfo(packet.getName(), new InetSocketAddress(addressList[0], Integer.parseInt(addressList[1])), "", false);
+                        ProxyServer.getInstance().getServers().put(packet.getName(), info);
+                        PalaceBungee.getServerUtil().createServer(new Server(packet.getName(), packet.getAddress(), packet.isPark(), packet.getType()));
+                        PalaceBungee.getProxyServer().getLogger().info("New server created: " + object.toString());
+                        break;
+                    }
+                    // Delete Server
+                    case 9: {
+                        DeleteServerPacket packet = new DeleteServerPacket(object);
+                        ProxyServer.getInstance().getServers().remove(packet.getName());
+                        PalaceBungee.getServerUtil().deleteServer(packet.getName());
+                        PalaceBungee.getProxyServer().getLogger().info("Server deleted: " + packet.getName());
+                        break;
                     }
                 }
             } catch (Exception e) {

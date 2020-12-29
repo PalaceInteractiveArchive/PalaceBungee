@@ -1,32 +1,19 @@
 package network.palace.bungee.utils;
 
-import com.google.common.collect.ImmutableMap;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
 import network.palace.bungee.handlers.ChatModifier;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by Marc on 2/10/17.
- */
 public class LinkUtil {
 
     private static class StringMessage {
-        private static final Map<Character, ChatColor> formatMap;
         private static final Pattern INCREMENTAL_PATTERN = Pattern.compile("(" + ChatColor.COLOR_CHAR + "[0-9a-fk-or])|(\\n)|((?:(?:https?)://)?(?:[-\\w_.]{2,}\\.[a-z]{2,4}.*?(?=[.?!,;:]?(?:[" + ChatColor.COLOR_CHAR + " \\n]|$))))", Pattern.CASE_INSENSITIVE);
 
-        static {
-            ImmutableMap.Builder<Character, ChatColor> builder = ImmutableMap.builder();
-            for (ChatColor format : ChatColor.values()) {
-                builder.put(Character.toLowerCase(format.toString().charAt(1)), format);
-            }
-            formatMap = builder.build();
-        }
 
         private final List<BaseComponent> list = new ArrayList<>();
         private BaseComponent currentChatComponent = new TextComponent("");
@@ -53,7 +40,7 @@ public class LinkUtil {
                 appendNewComponent(matcher.start(groupId));
                 switch (groupId) {
                     case 1:
-                        ChatColor format = formatMap.get(match.toLowerCase(java.util.Locale.ENGLISH).charAt(1));
+                        ChatColor format = ChatColor.getByChar(match.toLowerCase(java.util.Locale.ENGLISH).charAt(1));
                         if (format == ChatColor.RESET) {
                             modifier = new ChatModifier();
                         } else if (isFormat(format)) {
@@ -99,7 +86,7 @@ public class LinkUtil {
                 appendNewComponent(message.length());
             }
 
-            output = list.toArray(new BaseComponent[list.size()]);
+            output = list.toArray(new BaseComponent[0]);
         }
 
         private boolean isFormat(ChatColor format) {

@@ -9,9 +9,6 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-/**
- * Created by Marc on 2/10/17.
- */
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatModifier {

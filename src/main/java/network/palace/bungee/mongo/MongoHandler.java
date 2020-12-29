@@ -33,6 +33,7 @@ public class MongoHandler {
     private final MongoCollection<Document> bansCollection;
     private final MongoCollection<Document> partyCollection;
     private final MongoCollection<Document> playerCollection;
+    private final MongoCollection<Document> serversCollection;
     private final MongoCollection<Document> serviceConfigCollection;
     private final MongoCollection<Document> spamIpWhitelist;
 
@@ -46,6 +47,7 @@ public class MongoHandler {
         MongoDatabase database = client.getDatabase("palace");
         bansCollection = database.getCollection("bans");
         partyCollection = database.getCollection("parties");
+        serversCollection = database.getCollection("servers");
         playerCollection = database.getCollection("players");
         serviceConfigCollection = database.getCollection("service_configs");
         spamIpWhitelist = database.getCollection("spamipwhitelist");
@@ -436,5 +438,53 @@ public class MongoHandler {
             }
         }
         return players;
+    }
+
+    /* Server Methods */
+
+    public List<Server> getServers(boolean playground) {
+        List<Server> list = new ArrayList<>();
+        for (Document doc : serversCollection.find()) {
+            if (playground) {
+                if (!doc.containsKey("playground") || !doc.getBoolean("playground")) continue;
+            } else {
+                if (doc.containsKey("playground") && doc.getBoolean("playground")) continue;
+            }
+            list.add(new Server(doc.getString("name"), doc.getString("address"),
+                    doc.getBoolean("park"), doc.getString("type")));
+        }
+        return list;
+    }
+
+    public int getServerCount(String name) {
+        return (int) playerCollection.count(Filters.eq("onlineData.server", name));
+    }
+
+    public HashMap<String, Integer> getServerCounts() {
+        FindIterable<Document> list = playerCollection.find(Filters.eq("online", true)).projection(new Document("onlineData", true));
+        HashMap<String, Integer> map = new HashMap<>();
+        for (Document doc : list) {
+            try {
+                String server = doc.get("onlineData", Document.class).getString("server");
+                map.put(server, map.getOrDefault(server, 0) + 1);
+            } catch (Exception ignored) {
+            }
+        }
+        return map;
+    }
+
+    public void createServer(Server server) {
+        Document serverDocument = new Document("name", server.getName()).append("type", server.getServerType())
+                .append("address", server.getAddress()).append("park", server.isPark());
+        if (PalaceBungee.isTestNetwork()) serverDocument.append("playground", true);
+        serversCollection.insertOne(serverDocument);
+    }
+
+    public void deleteServer(String name) {
+        if (PalaceBungee.isTestNetwork()) {
+            serversCollection.deleteMany(Filters.and(Filters.eq("name", name), Filters.eq("playground", true)));
+        } else {
+            serversCollection.deleteMany(Filters.and(Filters.eq("name", name), Filters.exists("playground", false)));
+        }
     }
 }

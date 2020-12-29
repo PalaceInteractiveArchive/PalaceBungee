@@ -12,9 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Marc on 9/12/16
- */
 public class Party {
     public static final String MESSAGE_BARS = ChatColor.GOLD + "-----------------------------------------------------";
 
