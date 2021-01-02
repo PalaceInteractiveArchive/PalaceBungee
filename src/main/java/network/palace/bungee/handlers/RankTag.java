@@ -9,16 +9,17 @@ import java.util.List;
 @AllArgsConstructor
 public enum RankTag {
     /* Media Team */
-    DESIGNER("Resource Pack Designer", "D", ChatColor.BLUE, 7),
+    DESIGNER("Resource Pack Designer", "D", ChatColor.BLUE, 8),
     /* Guide Program */
-    GUIDE("Guide Team", "G", ChatColor.DARK_GREEN, 6),
+    GUIDE("Guide Team", "G", ChatColor.DARK_GREEN, 7),
     /* Sponsor Tiers */
-    SPONSOR_OBSIDIAN("Obsidian Tier Sponsor", "S", ChatColor.DARK_PURPLE, 5),
-    SPONSOR_EMERALD("Emerald Tier Sponsor", "S", ChatColor.GREEN, 4),
-    SPONSOR_DIAMOND("Diamond Tier Sponsor", "S", ChatColor.AQUA, 3),
-    SPONSOR_LAPIS("Lapis Tier Sponsor", "S", ChatColor.BLUE, 2),
-    SPONSOR_GOLD("Gold Tier Sponsor", "S", ChatColor.YELLOW, 1),
-    SPONSOR_IRON("Iron Tier Sponsor", "S", ChatColor.GRAY, 0);
+    SPONSOR_OBSIDIAN("Obsidian Tier Sponsor", "S", ChatColor.DARK_PURPLE, 6),
+    SPONSOR_EMERALD("Emerald Tier Sponsor", "S", ChatColor.GREEN, 5),
+    SPONSOR_DIAMOND("Diamond Tier Sponsor", "S", ChatColor.AQUA, 4),
+    SPONSOR_LAPIS("Lapis Tier Sponsor", "S", ChatColor.BLUE, 3),
+    SPONSOR_GOLD("Gold Tier Sponsor", "S", ChatColor.YELLOW, 2),
+    SPONSOR_IRON("Iron Tier Sponsor", "S", ChatColor.GRAY, 1),
+    CREATOR("Creator", "C", ChatColor.BLUE, 0);
 
     @Getter private String name;
     private String tag;
