@@ -189,7 +189,19 @@ public class MongoHandler {
      * @return the proxyID for the proxy the player is connected to, or null if they are offline
      */
     public UUID findPlayer(String username) {
-        Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.eq("online", true))).projection(new Document("online", true).append("uuid", true)).first();
+        Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.eq("online", true))).projection(new Document("onlineData", true).append("uuid", true)).first();
+        if (doc == null) return null;
+        return UUID.fromString(doc.get("onlineData", Document.class).getString("proxy"));
+    }
+
+    /**
+     * Get the proxyID for the proxy the player is connected to
+     *
+     * @param uuid the uuid
+     * @return the proxyID for the proxy the player is connected to, or null if they are offline
+     */
+    public UUID findPlayer(UUID uuid) {
+        Document doc = playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("online", true))).projection(new Document("onlineData", true).append("uuid", true)).first();
         if (doc == null) return null;
         return UUID.fromString(doc.get("onlineData", Document.class).getString("proxy"));
     }

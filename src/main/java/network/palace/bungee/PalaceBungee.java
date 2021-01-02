@@ -133,6 +133,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new MsgCommand());
         pm.registerCommand(this, new OnlineCountCommand());
         pm.registerCommand(this, new PartyCommand());
+        pm.registerCommand(this, new ReplyCommand());
         pm.registerCommand(this, new RulesCommand());
         pm.registerCommand(this, new SocialCommand());
         pm.registerCommand(this, new StoreCommand());

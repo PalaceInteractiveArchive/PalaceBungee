@@ -31,6 +31,11 @@ public class Player {
     @Getter private final int protocolVersion;
     @Getter @Setter private ProxiedPlayer proxiedPlayer;
 
+    // The UUID of the player that messaged them last
+    @Getter @Setter private UUID replyTo = null;
+    // The last time the player had their replyTo value updated
+    @Getter @Setter private long replyTime = 0;
+
     public List<RankTag> getTags() {
         return new ArrayList<>(tags);
     }

@@ -170,10 +170,12 @@ public class MessageHandler {
                             // message to target
                             DMPacket response;
                             if (player == null) {
-                                response = new DMPacket("", packet.getFrom(), "", PalaceBungee.getProxyID(), false);
+                                response = new DMPacket("", packet.getFrom(), "", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false);
                             } else {
                                 player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
-                                response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), PalaceBungee.getProxyID(), false);
+                                response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false);
+                                player.setReplyTo(packet.getFromUUID());
+                                player.setReplyTime(System.currentTimeMillis());
                             }
                             sendToProxy(response, packet.getSendingProxy());
                         } else {
@@ -183,6 +185,8 @@ public class MessageHandler {
                                 player.sendMessage(ChatColor.RED + "Player not found!");
                             } else {
                                 player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
+                                player.setReplyTo(packet.getToUUID());
+                                player.setReplyTime(System.currentTimeMillis());
                             }
                         }
                     }
