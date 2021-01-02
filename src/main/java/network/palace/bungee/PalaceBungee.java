@@ -17,6 +17,7 @@ import network.palace.bungee.commands.staff.BroadcastCommand;
 import network.palace.bungee.commands.staff.SGListCommand;
 import network.palace.bungee.commands.staff.ServerCommand;
 import network.palace.bungee.commands.staff.StaffListCommand;
+import network.palace.bungee.dashboard.DashboardConnection;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
 import network.palace.bungee.listeners.PlayerJoinAndLeave;
@@ -28,6 +29,9 @@ import network.palace.bungee.utils.ConfigUtil;
 import network.palace.bungee.utils.ServerUtil;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
@@ -50,6 +54,7 @@ public class PalaceBungee extends Plugin {
     @Getter private final static HashMap<UUID, String> usernameCache = new HashMap<>();
 
     @Getter private final static boolean testNetwork = true;
+    @Getter private static DashboardConnection dashboardConnection;
 
     @Override
     public void onEnable() {
@@ -79,6 +84,13 @@ public class PalaceBungee extends Plugin {
 
         registerListeners();
         registerCommands();
+
+        try {
+            dashboardConnection = new DashboardConnection();
+        } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException | InterruptedException e) {
+            e.printStackTrace();
+            getLogger().severe("Error connecting to Dashboard!");
+        }
     }
 
     @Override

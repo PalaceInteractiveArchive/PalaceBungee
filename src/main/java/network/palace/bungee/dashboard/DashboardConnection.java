@@ -68,6 +68,7 @@ public class DashboardConnection {
                 if (!object.has("id")) {
                     return;
                 }
+                PalaceBungee.getProxyServer().getLogger().info("[DEBUG] Incoming from Dashboard: " + object.toString());
                 int id = object.get("id").getAsInt();
 //                System.out.println(object.toString());
                 switch (id) {

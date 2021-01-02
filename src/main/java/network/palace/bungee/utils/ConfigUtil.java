@@ -30,7 +30,13 @@ public class ConfigUtil {
     private double strictThreshold;
 
     public String getDashboardURL() {
-        return "null";
+        try {
+            Configuration config = getConfig();
+            return config.getString("dashboardURL");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "null";
+        }
     }
 
     public void reload() throws IOException {
