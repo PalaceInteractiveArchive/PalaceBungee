@@ -27,7 +27,7 @@ public class PlayerJoinAndLeave implements Listener {
         PendingConnection connection = event.getConnection();
         String address = ((InetSocketAddress) connection.getSocketAddress()).getAddress().toString().replaceAll("/", "");
 
-        Document doc = PalaceBungee.getMongoHandler().getPlayer(connection.getUniqueId(), new Document("rank", true).append("tags", true).append("online", true));
+        Document doc = PalaceBungee.getMongoHandler().getPlayer(connection.getUniqueId(), new Document("rank", true).append("tags", true).append("online", true).append("settings", true));
 
         if (doc != null && doc.containsKey("online") && doc.getBoolean("online")) {
             event.setCancelled(true);
@@ -48,7 +48,10 @@ public class PlayerJoinAndLeave implements Listener {
                     if (tag != null) tagList.add(tag);
                 }
             }
-            player = new Player(connection.getUniqueId(), connection.getName(), Rank.fromString(doc.getString("rank")), tagList, address, connection.getVersion());
+
+            Document settings = (Document) doc.get("settings");
+
+            player = new Player(connection.getUniqueId(), connection.getName(), Rank.fromString(doc.getString("rank")), tagList, address, connection.getVersion(), settings.getBoolean("mentions"));
         }
         PalaceBungee.login(player);
     }
@@ -60,7 +63,6 @@ public class PlayerJoinAndLeave implements Listener {
         if (player == null) {
             pl.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "We are currently experiencing some server-side issues. Please check back soon!"));
         } else {
-            player.setProxiedPlayer(pl);
             if (player.getRank().getRankId() >= Rank.SPECIALGUEST.getRankId()) {
                 try {
                     PalaceBungee.getMessageHandler().sendStaffMessage(player.getRank().getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked in");

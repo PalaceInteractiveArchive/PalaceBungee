@@ -6,6 +6,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
@@ -89,6 +90,35 @@ public class MongoHandler {
 
     public boolean isPlayerOnline(UUID uuid) {
         return playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("online", true))).first() != null;
+    }
+
+    public Document getSettings(UUID uuid) {
+        return getPlayer(uuid, new Document("settings", 1));
+    }
+
+    public void setSetting(UUID uuid, String key, Object value) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("settings." + key, value),
+                new UpdateOptions().upsert(true));
+    }
+
+    public ArrayList getBans(UUID uuid) {
+        return getPlayer(uuid, new Document("bans", 1)).get("bans", ArrayList.class);
+    }
+
+    public ArrayList getMutes(UUID uuid) {
+        return getPlayer(uuid, new Document("mutes", 1)).get("mutes", ArrayList.class);
+    }
+
+    public ArrayList getKicks(UUID uuid) {
+        return getPlayer(uuid, new Document("kicks", 1)).get("kicks", ArrayList.class);
+    }
+
+    public ArrayList getWarnings(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("warnings", 1));
+        if (doc == null || !doc.containsKey("warnings")) {
+            return new ArrayList();
+        }
+        return doc.get("warnings", ArrayList.class);
     }
 
     public boolean isBanned(UUID uuid) {

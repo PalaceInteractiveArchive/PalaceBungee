@@ -35,6 +35,7 @@ public class ReplyCommand extends PalaceCommand {
         if (targetPlayer != null) {
             player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + targetPlayer.getUsername() + ": " + ChatColor.WHITE + message);
             targetPlayer.sendMessage(ChatColor.GREEN + player.getUsername() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + message);
+            targetPlayer.mention();
             player.setReplyTo(targetPlayer.getUniqueId());
             player.setReplyTime(System.currentTimeMillis());
             targetPlayer.setReplyTo(player.getUniqueId());

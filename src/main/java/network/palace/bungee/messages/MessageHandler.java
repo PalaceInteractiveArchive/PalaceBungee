@@ -173,6 +173,7 @@ public class MessageHandler {
                                 response = new DMPacket("", packet.getFrom(), "", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false);
                             } else {
                                 player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
+                                player.mention();
                                 response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false);
                                 player.setReplyTo(packet.getFromUUID());
                                 player.setReplyTime(System.currentTimeMillis());

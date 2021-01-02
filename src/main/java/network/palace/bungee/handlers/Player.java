@@ -12,6 +12,7 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.messages.packets.MentionPacket;
 import network.palace.bungee.utils.LinkUtil;
 
 import java.util.ArrayList;
@@ -29,12 +30,14 @@ public class Player {
     @Getter private Mute mute;
     @Getter private boolean kicking = false;
     @Getter private final int protocolVersion;
-    @Getter @Setter private ProxiedPlayer proxiedPlayer;
+    @Setter private ProxiedPlayer proxiedPlayer;
 
     // The UUID of the player that messaged them last
     @Getter @Setter private UUID replyTo = null;
     // The last time the player had their replyTo value updated
     @Getter @Setter private long replyTime = 0;
+    // Whether the player has mention pings enabled
+    @NonNull @Setter private boolean mentions;
 
     public List<RankTag> getTags() {
         return new ArrayList<>(tags);
@@ -52,28 +55,24 @@ public class Player {
         return uuid;
     }
 
+    public ProxiedPlayer getProxiedPlayer() {
+        if (proxiedPlayer == null) this.proxiedPlayer = PalaceBungee.getProxyServer().getPlayer(uuid);
+        return proxiedPlayer;
+    }
+
     public void sendMessage(String message) {
-        ProxiedPlayer p = PalaceBungee.getProxyServer().getPlayer(uuid);
-        if (p != null) {
-            p.sendMessage(LinkUtil.fromString(message));
-        }
+        getProxiedPlayer().sendMessage(LinkUtil.fromString(message));
     }
 
     public void sendMessage(TextComponent message) {
-        ProxiedPlayer p = PalaceBungee.getProxyServer().getPlayer(uuid);
-        if (p != null) {
-            p.sendMessage(LinkUtil.fromComponent(message));
-        }
+        getProxiedPlayer().sendMessage(LinkUtil.fromComponent(message));
     }
 
     public void sendMessage(final BaseComponent[] components) {
-        ProxiedPlayer p = PalaceBungee.getProxyServer().getPlayer(uuid);
         for (int i = 0; i < components.length; i++) {
             components[i] = LinkUtil.fromComponent(components[i]);
         }
-        if (p != null) {
-            p.sendMessage(components);
-        }
+        getProxiedPlayer().sendMessage(components);
     }
 
     public void sendSubsystemMessage(Subsystem subsystem, String message) {
@@ -95,7 +94,7 @@ public class Player {
         }
         BaseComponent[] r = new ComponentBuilder(pre).color(ChatColor.RED)
                 .append(reason).color(ChatColor.AQUA).create();
-        PalaceBungee.getProxyServer().getPlayer(uuid).disconnect(r);
+        getProxiedPlayer().disconnect(r);
     }
 
     public void kickPlayer(TextComponent reason) {
@@ -103,7 +102,7 @@ public class Player {
             return;
         }
         kicking = true;
-        PalaceBungee.getProxyServer().getPlayer(uuid).disconnect(reason);
+        getProxiedPlayer().disconnect(reason);
     }
 
     public void kickPlayer(BaseComponent[] reason) {
@@ -111,16 +110,11 @@ public class Player {
             return;
         }
         kicking = true;
-        PalaceBungee.getProxyServer().getPlayer(uuid).disconnect(reason);
+        getProxiedPlayer().disconnect(reason);
     }
 
     public Server getServer() {
-        ProxiedPlayer p = PalaceBungee.getProxyServer().getPlayer(uuid);
-        if (p != null) {
-            return p.getServer();
-        } else {
-            return null;
-        }
+        return getProxiedPlayer().getServer();
     }
 
     public String getServerName() {
@@ -136,6 +130,19 @@ public class Player {
         ProxiedPlayer p = PalaceBungee.getProxyServer().getPlayer(uuid);
         if (p != null) {
             p.chat(msg);
+        }
+    }
+
+    public boolean hasMentions() {
+        return mentions;
+    }
+
+    public void mention() {
+        if (!hasMentions()) return;
+        try {
+            PalaceBungee.getMessageHandler().sendMessage(new MentionPacket(uuid), "mc_direct", "direct", getServerName());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
