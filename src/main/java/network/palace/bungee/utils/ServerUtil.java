@@ -1,20 +1,62 @@
 package network.palace.bungee.utils;
 
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.ReconnectHandler;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Server;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 
 public class ServerUtil {
     private final HashMap<String, Server> servers = new HashMap<>();
+    private ServerInfo currentHub;
 
     public ServerUtil() {
         loadServers();
+
+        currentHub = getServerInfo("Hub1", true);
+
+        PalaceBungee.getProxyServer().setReconnectHandler(new ReconnectHandler() {
+            @Override
+            public ServerInfo getServer(ProxiedPlayer proxiedPlayer) {
+                return currentHub;
+            }
+
+            @Override
+            public void setServer(ProxiedPlayer proxiedPlayer) {
+            }
+
+            @Override
+            public void save() {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+        });
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                int currentCount = servers.get(currentHub.getName()).getCount();
+                for (Server server : servers.values()) {
+                    if (!server.getName().startsWith("Hub")) continue;
+                    if (server.getCount() < currentCount) {
+                        currentCount = server.getCount();
+                        currentHub = getServerInfo(server.getName(), true);
+                    }
+                }
+            }
+        }, 2000L, 5000L);
     }
 
     private void loadServers() {

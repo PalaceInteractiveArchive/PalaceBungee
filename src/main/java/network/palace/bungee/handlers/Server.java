@@ -14,6 +14,8 @@ public class Server {
     @Getter @Setter private int gameMaxPlayers;
     @Getter private final String serverType;
     @Getter @Setter private boolean online = false;
+    private int count = 0;
+    private long lastCountRetrieval = 0;
 
     public Server(String name, String address, boolean park, String serverType) {
         this.name = name;
@@ -27,7 +29,10 @@ public class Server {
     }
 
     public int getCount() {
-        return PalaceBungee.getMongoHandler().getServerCount(name);
+        if (System.currentTimeMillis() - lastCountRetrieval < 5000) return count;
+        count = PalaceBungee.getMongoHandler().getServerCount(name);
+        lastCountRetrieval = System.currentTimeMillis();
+        return count;
     }
 
 //    @Getter private ServerQueue serverQueue = new ServerQueue();
