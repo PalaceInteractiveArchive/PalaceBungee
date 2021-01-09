@@ -138,7 +138,7 @@ public class MessageHandler {
                         String[] addressList = packet.getAddress().split(":");
                         ServerInfo info = ProxyServer.getInstance().constructServerInfo(packet.getName(), new InetSocketAddress(addressList[0], Integer.parseInt(addressList[1])), "", false);
                         ProxyServer.getInstance().getServers().put(packet.getName(), info);
-                        PalaceBungee.getServerUtil().createServer(new Server(packet.getName(), packet.getAddress(), packet.isPark(), packet.getType()));
+                        PalaceBungee.getServerUtil().createServer(new Server(packet.getName(), packet.getAddress(), packet.isPark(), packet.getType(), false));
                         PalaceBungee.getProxyServer().getLogger().info("New server created: " + object.toString());
                         break;
                     }

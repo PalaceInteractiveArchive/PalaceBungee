@@ -79,7 +79,7 @@ public class ServerCommand extends PalaceCommand {
                     break;
                 }
                 try {
-                    Server s = new Server(args[1], args[2], Boolean.parseBoolean(args[3]), args[4]);
+                    Server s = new Server(args[1], args[2], Boolean.parseBoolean(args[3]), args[4], false);
                     if (!args[2].contains(":")) throw new IllegalArgumentException("Invalid address format!");
                     PalaceBungee.getMongoHandler().createServer(s);
                     PalaceBungee.getMessageHandler().sendMessage(new CreateServerPacket(s), "all_proxies", "fanout");

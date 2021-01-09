@@ -13,15 +13,16 @@ public class Server {
     @Getter private final boolean park;
     @Getter @Setter private int gameMaxPlayers;
     @Getter private final String serverType;
-    @Getter @Setter private boolean online = false;
+    @Getter @Setter private boolean online;
     private int count = 0;
     private long lastCountRetrieval = 0;
 
-    public Server(String name, String address, boolean park, String serverType) {
+    public Server(String name, String address, boolean park, String serverType, boolean online) {
         this.name = name;
         this.address = address;
         this.park = park;
         this.serverType = serverType;
+        this.online = online;
     }
 
     public UUID getUniqueId() {

@@ -493,7 +493,7 @@ public class MongoHandler {
                 if (doc.containsKey("playground") && doc.getBoolean("playground")) continue;
             }
             list.add(new Server(doc.getString("name"), doc.getString("address"),
-                    doc.getBoolean("park"), doc.getString("type")));
+                    doc.getBoolean("park"), doc.getString("type"), doc.getBoolean("online")));
         }
         return list;
     }
