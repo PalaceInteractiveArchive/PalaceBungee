@@ -150,6 +150,13 @@ public class MessageHandler {
                         PalaceBungee.getProxyServer().getLogger().info("Server deleted: " + packet.getName());
                         break;
                     }
+
+                    case 10: {
+                        KickPacket packet = new KickPacket(object);
+                        Player player = PalaceBungee.getPlayer(packet.getUuid());
+                        if (player == null) return;
+                        player.kickPlayer(packet.getReason());
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
