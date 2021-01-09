@@ -34,23 +34,21 @@ public class KickCommand extends PalaceCommand {
             message.append(args[i]).append(" ");
         }
         message.substring(0, message.length() - 1);
-        Player targetPlayer = PalaceBungee.getPlayer(args[0]);
-        if (targetPlayer != null) {
-            targetPlayer.kickPlayer(message.toString());
-        } else {
-            try {
-                String target = args[0];
-                UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(target);
-                if (targetProxy == null) {
-                    player.sendMessage(ChatColor.RED + "Player not found!");
-                    return;
-                }
-                KickPacket packet = new KickPacket(player.getUniqueId(), message.toString());
-                PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
-            } catch (Exception e) {
-                e.printStackTrace();
-                player.sendMessage(ChatColor.RED + "There was an error kicking that user. Try again soon!");
+        try {
+            String target = args[0];
+            UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(target);
+            if (targetProxy == null) {
+                player.sendMessage(ChatColor.RED + "Player not found!");
+                return;
             }
+            UUID targetPlayer = PalaceBungee.getMongoHandler().usernameToUUID(target);
+            KickPacket packet = new KickPacket(targetPlayer, message.toString().trim());
+            PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
+            PalaceBungee.getMessageHandler().sendStaffMessage(ChatColor.GREEN + target + ChatColor.RED + " was kicked by " + ChatColor.GREEN + player.getUsername() +
+                    ChatColor.RED + " Reason: " + ChatColor.GREEN + message.toString().trim());
+        } catch (Exception e) {
+            e.printStackTrace();
+            player.sendMessage(ChatColor.RED + "There was an error kicking that user. Try again soon!");
         }
     }
 }

@@ -31,7 +31,6 @@ public class KickPacket extends MQPacket {
         JsonObject object = getBaseJSON();
         object.addProperty("reason", reason);
         object.addProperty("uuid", uuid.toString());
-
         return object;
     }
 }
