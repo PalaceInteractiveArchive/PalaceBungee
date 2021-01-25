@@ -25,11 +25,11 @@ public class ClearChatCommand extends PalaceCommand {
                     return;
                 }
                 ClearChatPacket packet = new ClearChatPacket(player.getServerName(), player.getUsername(), uuid);
-                PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
+                PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
                 return;
             }
             String chat = player.getServerName();
-            PalaceBungee.getMessageHandler().sendMessage(new ClearChatPacket(chat, player.getUsername()), "all_proxies", "fanout");
+            PalaceBungee.getMessageHandler().sendMessage(new ClearChatPacket(chat, player.getUsername()), PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "There was an error running the chat clear command! If this continues to happen, report it immediately on Discord.");

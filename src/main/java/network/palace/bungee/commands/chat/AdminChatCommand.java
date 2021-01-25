@@ -22,7 +22,7 @@ public class AdminChatCommand extends PalaceCommand {
         try {
             MessageByRankPacket packet = new MessageByRankPacket(ChatColor.RED + "[ADMIN CHAT] " + ChatColor.GRAY + player.getUsername() + ": " + ChatColor.WHITE +
                     ChatColor.translateAlternateColorCodes('&', String.join(" ", args)), Rank.DEVELOPER, null, false);
-            PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
+            PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "There was an error executing this command!");

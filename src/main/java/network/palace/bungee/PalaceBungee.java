@@ -20,11 +20,13 @@ import network.palace.bungee.commands.staff.StaffListCommand;
 import network.palace.bungee.dashboard.DashboardConnection;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
+import network.palace.bungee.listeners.PlayerChat;
 import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.party.PartyUtil;
+import network.palace.bungee.utils.ChatUtil;
 import network.palace.bungee.utils.ConfigUtil;
 import network.palace.bungee.utils.ServerUtil;
 
@@ -43,6 +45,7 @@ public class PalaceBungee extends Plugin {
     @Getter private static ConfigUtil configUtil;
     @Getter private static ServerUtil serverUtil;
 
+    @Getter private static ChatUtil chatUtil;
     @Getter private static PartyUtil partyUtil;
 
     @Getter private static MongoHandler mongoHandler;
@@ -76,10 +79,12 @@ public class PalaceBungee extends Plugin {
 
         try {
             messageHandler = new MessageHandler();
+            messageHandler.initialize();
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
 
+        chatUtil = new ChatUtil();
         partyUtil = new PartyUtil();
 
         registerListeners();
@@ -100,6 +105,7 @@ public class PalaceBungee extends Plugin {
 
     private void registerListeners() {
         PluginManager pm = getProxy().getPluginManager();
+        pm.registerListener(this, new PlayerChat());
         pm.registerListener(this, new ProxyPing());
         pm.registerListener(this, new PlayerJoinAndLeave());
     }

@@ -68,9 +68,15 @@ public class Player {
         getProxiedPlayer().sendMessage(LinkUtil.fromComponent(message));
     }
 
-    public void sendMessage(final BaseComponent[] components) {
-        for (int i = 0; i < components.length; i++) {
-            components[i] = LinkUtil.fromComponent(components[i]);
+    public void sendMessage(BaseComponent[] components) {
+        sendMessage(components, true);
+    }
+
+    public void sendMessage(final BaseComponent[] components, boolean parseLinks) {
+        if (parseLinks) {
+            for (int i = 0; i < components.length; i++) {
+                components[i] = LinkUtil.fromComponent(components[i]);
+            }
         }
         getProxiedPlayer().sendMessage(components);
     }

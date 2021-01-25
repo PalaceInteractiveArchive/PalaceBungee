@@ -82,7 +82,7 @@ public class ServerCommand extends PalaceCommand {
                     Server s = new Server(args[1], args[2], Boolean.parseBoolean(args[3]), args[4], false);
                     if (!args[2].contains(":")) throw new IllegalArgumentException("Invalid address format!");
                     PalaceBungee.getMongoHandler().createServer(s);
-                    PalaceBungee.getMessageHandler().sendMessage(new CreateServerPacket(s), "all_proxies", "fanout");
+                    PalaceBungee.getMessageHandler().sendMessage(new CreateServerPacket(s), PalaceBungee.getMessageHandler().ALL_PROXIES);
                     player.sendMessage(ChatColor.GREEN + "Server created successfully! Connect to it with " + ChatColor.YELLOW + "/server " + s.getName());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -102,7 +102,7 @@ public class ServerCommand extends PalaceCommand {
                         return;
                     }
                     PalaceBungee.getMongoHandler().deleteServer(s.getName());
-                    PalaceBungee.getMessageHandler().sendMessage(new DeleteServerPacket(s.getName()), "all_proxies", "fanout");
+                    PalaceBungee.getMessageHandler().sendMessage(new DeleteServerPacket(s.getName()), PalaceBungee.getMessageHandler().ALL_PROXIES);
                     player.sendMessage(ChatColor.RED + "Server removed successfully!");
                     //TODO Send all players on deleted server to another server
                 } catch (Exception e) {

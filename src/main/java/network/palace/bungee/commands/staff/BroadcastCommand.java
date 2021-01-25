@@ -26,7 +26,7 @@ public class BroadcastCommand extends PalaceCommand {
             }
             String msg = ChatColor.translateAlternateColorCodes('&', message.substring(0, message.length() - 1));
             BroadcastPacket packet = new BroadcastPacket(player.getUsername(), msg);
-            PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
+            PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "There was an error executing this command!");

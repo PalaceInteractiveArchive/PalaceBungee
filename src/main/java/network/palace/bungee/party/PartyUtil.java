@@ -72,7 +72,7 @@ public class PartyUtil {
                 .color(ChatColor.GREEN).create();
 
         ComponentMessagePacket packet = new ComponentMessagePacket(components, uuid);
-        PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
+        PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
 
         party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has asked " + PalaceBungee.getUsername(uuid) +
                 " to join the party! They have 30 seconds to accept.", true);

@@ -29,11 +29,16 @@ public class MessageByRankPacket extends MQPacket {
 
     @Override
     public JsonObject getJSON() {
-        JsonObject object = getBaseJSON();
-        object.addProperty("message", message);
-        object.addProperty("rank", rank.getDBName());
-        if (tag != null) object.addProperty("tag", tag.getDBName());
-        object.addProperty("exact", exact);
-        return object;
+        try {
+            JsonObject object = getBaseJSON();
+            object.addProperty("message", message);
+            object.addProperty("rank", rank.getDBName());
+            if (tag != null) object.addProperty("tag", tag.getDBName());
+            object.addProperty("exact", exact);
+            return object;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

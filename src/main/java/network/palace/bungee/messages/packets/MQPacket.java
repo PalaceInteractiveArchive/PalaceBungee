@@ -3,6 +3,7 @@ package network.palace.bungee.messages.packets;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import network.palace.bungee.PalaceBungee;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -33,6 +34,9 @@ public abstract class MQPacket {
     public byte[] toBytes() {
         JsonObject obj = getJSON();
         if (obj != null) return obj.toString().getBytes(StandardCharsets.UTF_8);
-        else return new byte[0];
+        else {
+            PalaceBungee.getProxyServer().getLogger().severe("JSON Object for packet is null! " + this.getClass().getName());
+            return new byte[0];
+        }
     }
 }

@@ -23,7 +23,7 @@ public class GuideChatCommand extends PalaceCommand {
         try {
             MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.DARK_GREEN + "GUIDE" +
                     ChatColor.WHITE + "] " + String.join(" ", args), Rank.TRAINEE, RankTag.GUIDE, false);
-            PalaceBungee.getMessageHandler().sendMessage(packet, "all_proxies", "fanout");
+            PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "There was an error executing this command!");

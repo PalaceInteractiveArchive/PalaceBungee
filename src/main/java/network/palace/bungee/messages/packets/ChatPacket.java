@@ -1,0 +1,42 @@
+package network.palace.bungee.messages.packets;
+
+import com.google.gson.JsonObject;
+import lombok.Getter;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
+
+import java.util.UUID;
+
+public class ChatPacket extends MQPacket {
+    @Getter private final UUID sender;
+    @Getter private final String serializedMessage;
+    // ParkChat, or server name
+    @Getter private final String channel;
+
+    public ChatPacket(JsonObject object) {
+        super(PacketID.Global.CHAT.getId(), object);
+        this.sender = UUID.fromString(object.get("sender").getAsString());
+        this.serializedMessage = object.get("serializedMessage").getAsString();
+        this.channel = object.get("channel").getAsString();
+    }
+
+    public ChatPacket(UUID sender, BaseComponent[] message, String channel) {
+        super(PacketID.Global.CHAT.getId(), null);
+        this.sender = sender;
+        this.serializedMessage = ComponentSerializer.toString(message);
+        this.channel = channel;
+    }
+
+    public BaseComponent[] getMessage() {
+        return ComponentSerializer.parse(serializedMessage);
+    }
+
+    @Override
+    public JsonObject getJSON() {
+        JsonObject object = getBaseJSON();
+        object.addProperty("sender", sender.toString());
+        object.addProperty("serializedMessage", serializedMessage);
+        object.addProperty("channel", channel);
+        return object;
+    }
+}

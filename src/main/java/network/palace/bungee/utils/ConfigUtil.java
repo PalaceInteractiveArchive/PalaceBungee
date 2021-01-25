@@ -114,7 +114,7 @@ public class ConfigUtil {
                 maintenance, chatDelay, parkChatMuted, dmEnabled, strictChat, strictThreshold,
                 0, 0, null, null);
         PalaceBungee.getMongoHandler().setBungeeConfig(config);
-        PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), "all_proxies", "fanout");
+        PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
     @Getter

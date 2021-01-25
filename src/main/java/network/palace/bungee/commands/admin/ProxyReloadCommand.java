@@ -16,7 +16,7 @@ public class ProxyReloadCommand extends PalaceCommand {
     @Override
     public void execute(Player player, String[] args) {
         try {
-            PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), "all_proxies", "fanout");
+            PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), PalaceBungee.getMessageHandler().ALL_PROXIES);
             player.sendMessage(ChatColor.GREEN + "Proxy settings reloaded!");
         } catch (Exception e) {
             e.printStackTrace();

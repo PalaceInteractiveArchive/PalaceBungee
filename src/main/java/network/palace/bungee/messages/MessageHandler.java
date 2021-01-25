@@ -1,5 +1,6 @@
 package network.palace.bungee.messages;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rabbitmq.client.*;
@@ -22,6 +23,11 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 public class MessageHandler {
+    public static final AMQP.BasicProperties JSON_PROPS = new AMQP.BasicProperties.Builder().contentEncoding("application/json").build();
+
+    public Connection PUBLISHING_CONNECTION, CONSUMING_CONNECTION;
+    public MessageClient ALL_PROXIES, CHAT_ANALYSIS;
+
     private final ConnectionFactory factory;
     private final HashMap<String, Channel> channels = new HashMap<>();
 
@@ -36,6 +42,38 @@ public class MessageHandler {
         factory.setHost(connection.getHost());
         factory.setUsername(connection.getUsername());
         factory.setPassword(connection.getPassword());
+
+        PUBLISHING_CONNECTION = factory.newConnection();
+        CONSUMING_CONNECTION = factory.newConnection();
+
+        PUBLISHING_CONNECTION.addShutdownListener(e -> {
+            PalaceBungee.getProxyServer().getLogger().warning("Publishing connection has been closed - reinitializing!");
+            try {
+                PUBLISHING_CONNECTION = factory.newConnection();
+            } catch (IOException | TimeoutException ioException) {
+                PalaceBungee.getProxyServer().getLogger().severe("Failed to reinitialize publishing connection!");
+                ioException.printStackTrace();
+            }
+        });
+        CONSUMING_CONNECTION.addShutdownListener(e -> {
+            PalaceBungee.getProxyServer().getLogger().warning("Consuming connection has been closed - reinitializing!");
+            try {
+                CONSUMING_CONNECTION = factory.newConnection();
+            } catch (IOException | TimeoutException ioException) {
+                PalaceBungee.getProxyServer().getLogger().severe("Failed to reinitialize consuming connection!");
+                ioException.printStackTrace();
+            }
+        });
+    }
+
+    public void initialize() throws IOException, TimeoutException {
+        try {
+            ALL_PROXIES = new MessageClient(ConnectionType.PUBLISHING, "all_proxies", "fanout");
+            CHAT_ANALYSIS = new MessageClient(ConnectionType.PUBLISHING, "chat_analysis", true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            PalaceBungee.getProxyServer().getLogger().severe("There was an error initializing essential message publishing queues!");
+        }
 
         CancelCallback doNothing = consumerTag -> {
         };
@@ -150,6 +188,12 @@ public class MessageHandler {
                         PalaceBungee.getProxyServer().getLogger().info("Server deleted: " + packet.getName());
                         break;
                     }
+                    // Chat
+                    case 12: {
+                        ChatPacket packet = new ChatPacket(object);
+                        PalaceBungee.getChatUtil().processIncomingChatMessage(packet);
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -160,7 +204,6 @@ public class MessageHandler {
             try {
                 JsonObject object = parseDelivery(delivery);
                 PalaceBungee.getProxyServer().getLogger().severe(object.toString());
-                //noinspection SwitchStatementWithTooFewBranches
                 switch (object.get("id").getAsInt()) {
                     // DM
                     case 4: {
@@ -191,6 +234,12 @@ public class MessageHandler {
                             }
                         }
                     }
+                    // Chat Analysis (Response)
+                    case 14: {
+                        ChatAnalysisResponsePacket packet = new ChatAnalysisResponsePacket(object);
+                        PalaceBungee.getChatUtil().handleAnalysisResponse(packet);
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -210,7 +259,10 @@ public class MessageHandler {
     private JsonObject parseDelivery(Delivery delivery) {
         byte[] bytes = delivery.getBody();
         String s = new String(bytes, StandardCharsets.UTF_8);
-        JsonObject object = (JsonObject) new JsonParser().parse(s);
+        JsonParser parser = new JsonParser();
+        JsonElement element = parser.parse(s);
+        if (!element.isJsonObject()) throw new IllegalArgumentException("Json is not an object: " + element.toString());
+        JsonObject object = element.getAsJsonObject();
         if (!object.has("id")) throw new IllegalArgumentException("Missing 'id' field from message packet");
         return object;
     }
@@ -227,9 +279,7 @@ public class MessageHandler {
      * @throws TimeoutException on TimeoutException
      */
     public String registerConsumer(String exchange, String exchangeType, String routingKey, DeliverCallback deliverCallback, CancelCallback cancelCallback) throws IOException, TimeoutException {
-        Connection connection = factory.newConnection();
-
-        Channel channel = connection.createChannel();
+        Channel channel = CONSUMING_CONNECTION.createChannel();
         channel.exchangeDeclare(exchange, exchangeType);
 
         String queueName = channel.queueDeclare().getQueue();
@@ -261,23 +311,23 @@ public class MessageHandler {
         channels.clear();
     }
 
-    public void sendMessage(MQPacket packet, String exchange, String exchangeType) throws Exception {
-        sendMessage(packet, exchange, exchangeType, "");
+    public void sendMessage(MQPacket packet, MessageClient client) throws IOException {
+        sendMessage(packet, client, "");
+    }
+
+    public void sendMessage(MQPacket packet, MessageClient client, String routingKey) throws IOException {
+        client.basicPublish(packet.toBytes(), routingKey);
     }
 
     public void sendMessage(MQPacket packet, String exchange, String exchangeType, String routingKey) throws Exception {
-        try (Connection connection = factory.newConnection()) {
-            Channel channel = connection.createChannel();
-            channel.exchangeDeclare(exchange, exchangeType);
-            AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().contentEncoding("application/json").build();
-            channel.basicPublish(exchange, routingKey, props, packet.toBytes());
-        }
+        MessageClient client = new MessageClient(ConnectionType.PUBLISHING, exchange, exchangeType);
+        client.basicPublish(packet.toBytes(), routingKey);
     }
 
     public void sendStaffMessage(String message) throws Exception {
         MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.RED + "STAFF" +
                 ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false);
-        sendMessage(packet, "all_proxies", "fanout");
+        sendMessage(packet, ALL_PROXIES);
     }
 
     public void sendMessageToPlayer(UUID uuid, String message) throws Exception {
@@ -287,10 +337,21 @@ public class MessageHandler {
             return;
         }
         MessagePacket packet = new MessagePacket(message, uuid);
-        sendMessage(packet, "all_proxies", "fanout");
+        sendMessage(packet, ALL_PROXIES);
     }
 
     public void sendToProxy(DMPacket packet, UUID targetProxy) throws Exception {
-        sendMessage(packet, "proxy_direct", "direct", targetProxy.toString());
+        sendMessage(packet, new MessageClient(ConnectionType.PUBLISHING, "proxy_direct", "direct"), targetProxy.toString());
+    }
+
+    public Connection getConnection(ConnectionType type) throws IOException, TimeoutException {
+        switch (type) {
+            case PUBLISHING:
+                return PUBLISHING_CONNECTION;
+            case CONSUMING:
+                return CONSUMING_CONNECTION;
+            default:
+                return factory.newConnection();
+        }
     }
 }
