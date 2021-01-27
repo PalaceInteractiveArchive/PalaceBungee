@@ -515,6 +515,19 @@ public class MongoHandler {
         return map;
     }
 
+    public HashMap<UUID, Integer> getProxyCounts() {
+        FindIterable<Document> list = playerCollection.find(Filters.eq("online", true)).projection(new Document("onlineData", true));
+        HashMap<UUID, Integer> map = new HashMap<>();
+        for (Document doc : list) {
+            try {
+                UUID proxy = UUID.fromString(doc.get("onlineData", Document.class).getString("proxy"));
+                map.put(proxy, map.getOrDefault(proxy, 0) + 1);
+            } catch (Exception ignored) {
+            }
+        }
+        return map;
+    }
+
     public void createServer(Server server) {
         Document serverDocument = new Document("name", server.getName()).append("type", server.getServerType())
                 .append("address", server.getAddress()).append("park", server.isPark());

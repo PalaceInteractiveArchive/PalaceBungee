@@ -7,6 +7,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import network.palace.bungee.commands.*;
 import network.palace.bungee.commands.admin.GuideLogCommand;
+import network.palace.bungee.commands.admin.ProxyCountsCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
 import network.palace.bungee.commands.chat.*;
 import network.palace.bungee.commands.guide.GuideListCommand;
@@ -114,6 +115,7 @@ public class PalaceBungee extends Plugin {
         PluginManager pm = getProxy().getPluginManager();
         /* Admin Commands */
         pm.registerCommand(this, new GuideLogCommand());
+        pm.registerCommand(this, new ProxyCountsCommand());
         pm.registerCommand(this, new ProxyReloadCommand());
         /* Chat Commands */
         pm.registerCommand(this, new AdminChatCommand());
