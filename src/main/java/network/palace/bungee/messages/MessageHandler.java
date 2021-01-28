@@ -200,6 +200,8 @@ public class MessageHandler {
             }
         }, doNothing);
 
+        //TODO Handle sending
+
         registerConsumer("proxy_direct", "direct", PalaceBungee.getProxyID().toString(), (consumerTag, delivery) -> {
             try {
                 JsonObject object = parseDelivery(delivery);
@@ -340,7 +342,7 @@ public class MessageHandler {
         sendMessage(packet, ALL_PROXIES);
     }
 
-    public void sendToProxy(DMPacket packet, UUID targetProxy) throws Exception {
+    public void sendToProxy(MQPacket packet, UUID targetProxy) throws Exception {
         sendMessage(packet, new MessageClient(ConnectionType.PUBLISHING, "proxy_direct", "direct"), targetProxy.toString());
     }
 

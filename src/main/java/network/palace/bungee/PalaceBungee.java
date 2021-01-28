@@ -9,6 +9,7 @@ import network.palace.bungee.commands.*;
 import network.palace.bungee.commands.admin.GuideLogCommand;
 import network.palace.bungee.commands.admin.ProxyCountsCommand;
 import network.palace.bungee.commands.admin.ProxyReloadCommand;
+import network.palace.bungee.commands.admin.ProxyVersionCommand;
 import network.palace.bungee.commands.chat.*;
 import network.palace.bungee.commands.guide.GuideListCommand;
 import network.palace.bungee.commands.moderation.AltAccountsCommand;
@@ -117,6 +118,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new GuideLogCommand());
         pm.registerCommand(this, new ProxyCountsCommand());
         pm.registerCommand(this, new ProxyReloadCommand());
+        pm.registerCommand(this, new ProxyVersionCommand());
         /* Chat Commands */
         pm.registerCommand(this, new AdminChatCommand());
         pm.registerCommand(this, new ChatDelayCommand());

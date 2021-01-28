@@ -2,6 +2,7 @@ package network.palace.bungee.handlers;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.md_5.bungee.api.config.ServerInfo;
 import network.palace.bungee.PalaceBungee;
 
 import java.util.UUID;
@@ -34,6 +35,11 @@ public class Server {
         count = PalaceBungee.getMongoHandler().getServerCount(name);
         lastCountRetrieval = System.currentTimeMillis();
         return count;
+    }
+
+    public void join(Player player) {
+        ServerInfo info = PalaceBungee.getServerUtil().getServerInfo(name, true);
+        if (info != null) player.getProxiedPlayer().connect(info);
     }
 
 //    @Getter private ServerQueue serverQueue = new ServerQueue();
