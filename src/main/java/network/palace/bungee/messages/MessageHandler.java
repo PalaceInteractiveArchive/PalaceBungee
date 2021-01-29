@@ -194,13 +194,45 @@ public class MessageHandler {
                         PalaceBungee.getChatUtil().processIncomingChatMessage(packet);
                         break;
                     }
+                    case 15: {
+                        SendPlayerPacket packet = new SendPlayerPacket(object);
+                        String target = packet.getTargetPlayer();
+                        Server server = PalaceBungee.getServerUtil().getServer(packet.getTargetServer(), true);
+                        if (server == null) return;
+                        if (target.contains(":")) {
+                            String fromServer = target.split(":")[1];
+                            // send all on fromServer to targetServer
+                            for (Player player : PalaceBungee.getOnlinePlayers()) {
+                                if (player.getServerName().equals(fromServer)) {
+                                    server.join(player);
+                                }
+                            }
+                        } else if (target.contains("-")) {
+                            try {
+                                UUID playerUUID = UUID.fromString(target);
+                                Player player = PalaceBungee.getPlayer(playerUUID);
+                                server.join(player);
+                            } catch (Exception ignored) {
+                            }
+                        } else if (target.equals("all")) {
+                            // send all players to targetServer
+                            for (Player player : PalaceBungee.getOnlinePlayers()) {
+                                server.join(player);
+                            }
+                        } else {
+                            try {
+                                Player player = PalaceBungee.getPlayer(target);
+                                server.join(player);
+                            } catch (Exception ignored) {
+                            }
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
             }
         }, doNothing);
-
-        //TODO Handle sending
 
         registerConsumer("proxy_direct", "direct", PalaceBungee.getProxyID().toString(), (consumerTag, delivery) -> {
             try {
