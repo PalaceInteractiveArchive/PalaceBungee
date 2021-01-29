@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
+import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
@@ -34,6 +35,7 @@ public class MongoHandler {
     private final MongoCollection<Document> bansCollection;
     private final MongoCollection<Document> partyCollection;
     private final MongoCollection<Document> playerCollection;
+    @Getter private final MongoCollection<Document> resourcePackCollection;
     private final MongoCollection<Document> serversCollection;
     private final MongoCollection<Document> serviceConfigCollection;
     private final MongoCollection<Document> spamIpWhitelist;
@@ -48,8 +50,9 @@ public class MongoHandler {
         MongoDatabase database = client.getDatabase("palace");
         bansCollection = database.getCollection("bans");
         partyCollection = database.getCollection("parties");
-        serversCollection = database.getCollection("servers");
         playerCollection = database.getCollection("players");
+        resourcePackCollection = database.getCollection("resourcepacks");
+        serversCollection = database.getCollection("servers");
         serviceConfigCollection = database.getCollection("service_configs");
         spamIpWhitelist = database.getCollection("spamipwhitelist");
     }
