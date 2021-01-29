@@ -22,7 +22,9 @@ public class GuideChatCommand extends PalaceCommand {
         }
         try {
             MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.DARK_GREEN + "GUIDE" +
-                    ChatColor.WHITE + "] " + String.join(" ", args), Rank.TRAINEE, RankTag.GUIDE, false);
+                    ChatColor.WHITE + "] " + RankTag.format(player.getTags()) + player.getRank().getFormattedName() +
+                    " " + ChatColor.GRAY + player.getUsername() + ": " + ChatColor.DARK_AQUA + String.join(" ", args),
+                    Rank.TRAINEE, RankTag.GUIDE, false);
             PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();
