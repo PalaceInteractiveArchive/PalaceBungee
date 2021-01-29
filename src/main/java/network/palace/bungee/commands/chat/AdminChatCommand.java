@@ -21,7 +21,7 @@ public class AdminChatCommand extends PalaceCommand {
         }
         try {
             MessageByRankPacket packet = new MessageByRankPacket(ChatColor.RED + "[ADMIN CHAT] " + ChatColor.GRAY + player.getUsername() + ": " + ChatColor.WHITE +
-                    ChatColor.translateAlternateColorCodes('&', String.join(" ", args)), Rank.DEVELOPER, null, false);
+                    ChatColor.translateAlternateColorCodes('&', String.join(" ", args)), Rank.DEVELOPER, null, false, false);
             PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();

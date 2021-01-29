@@ -28,11 +28,11 @@ public class MsgCommand extends PalaceCommand {
             message.append(args[i]).append(" ");
         }
         message.substring(0, message.length() - 1);
-        Player targetPlayer = PalaceBungee.getPlayer(args[0]);
         if (player.getRank().getRankId() < Rank.CHARACTER.getRankId() && !PalaceBungee.getConfigUtil().isDmEnabled()) {
             player.sendMessage(ChatColor.RED + "Direct messages are currently disabled.");
             return;
         }
+        Player targetPlayer = PalaceBungee.getPlayer(args[0]);
         if (targetPlayer != null) {
             if (player.getRank().getRankId() < Rank.CHARACTER.getRankId() && (!targetPlayer.isDmEnabled() || (targetPlayer.isIgnored(player.getUniqueId()) && targetPlayer.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
                 player.sendMessage(ChatColor.RED + "This person has messages disabled!");

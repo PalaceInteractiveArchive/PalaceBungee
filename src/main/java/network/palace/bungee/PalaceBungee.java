@@ -8,7 +8,10 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import network.palace.bungee.commands.*;
 import network.palace.bungee.commands.admin.*;
 import network.palace.bungee.commands.chat.*;
+import network.palace.bungee.commands.guide.GuideAnnounceCommand;
+import network.palace.bungee.commands.guide.GuideHelpCommand;
 import network.palace.bungee.commands.guide.GuideListCommand;
+import network.palace.bungee.commands.guide.HelpMeCommand;
 import network.palace.bungee.commands.moderation.*;
 import network.palace.bungee.commands.staff.BroadcastCommand;
 import network.palace.bungee.commands.staff.SGListCommand;
@@ -25,6 +28,7 @@ import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.party.PartyUtil;
 import network.palace.bungee.utils.ChatUtil;
 import network.palace.bungee.utils.ConfigUtil;
+import network.palace.bungee.utils.GuideUtil;
 import network.palace.bungee.utils.ServerUtil;
 
 import java.io.IOException;
@@ -43,6 +47,7 @@ public class PalaceBungee extends Plugin {
     @Getter private static ServerUtil serverUtil;
 
     @Getter private static ChatUtil chatUtil;
+    @Getter private static GuideUtil guideUtil;
     @Getter private static PartyUtil partyUtil;
 
     @Getter private static MongoHandler mongoHandler;
@@ -82,6 +87,7 @@ public class PalaceBungee extends Plugin {
         }
 
         chatUtil = new ChatUtil();
+        guideUtil = new GuideUtil();
         partyUtil = new PartyUtil();
 
         registerListeners();
@@ -128,7 +134,10 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new PartyChatCommand());
         pm.registerCommand(this, new StaffChatCommand());
         /* Guide Commands */
+        pm.registerCommand(this, new GuideAnnounceCommand());
+        pm.registerCommand(this, new GuideHelpCommand());
         pm.registerCommand(this, new GuideListCommand());
+        pm.registerCommand(this, new HelpMeCommand());
         /* Moderation Commands */
         pm.registerCommand(this, new AltAccountsCommand());
         pm.registerCommand(this, new DMToggleCommand());

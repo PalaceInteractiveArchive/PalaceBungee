@@ -24,6 +24,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -39,6 +41,8 @@ public class MongoHandler {
     private final MongoCollection<Document> serversCollection;
     private final MongoCollection<Document> serviceConfigCollection;
     private final MongoCollection<Document> spamIpWhitelist;
+    private final MongoCollection<Document> helpRequestsCollection;
+    private final MongoCollection<Document> announcementRequestsCollection;
 
     public MongoHandler() throws IOException {
         ConfigUtil.DatabaseConnection mongo = PalaceBungee.getConfigUtil().getMongoDBInfo();
@@ -55,6 +59,8 @@ public class MongoHandler {
         serversCollection = database.getCollection("servers");
         serviceConfigCollection = database.getCollection("service_configs");
         spamIpWhitelist = database.getCollection("spamipwhitelist");
+        helpRequestsCollection = database.getCollection("help_requests");
+        announcementRequestsCollection = database.getCollection("announcement_requests");
     }
 
     public void stop() {
@@ -237,6 +243,18 @@ public class MongoHandler {
         Document doc = playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("online", true))).projection(new Document("onlineData", true).append("uuid", true)).first();
         if (doc == null) return null;
         return UUID.fromString(doc.get("onlineData", Document.class).getString("proxy"));
+    }
+
+    /**
+     * Get the server the player is connected to
+     *
+     * @param username the username
+     * @return the server the player is connected to, or null if they are offline
+     */
+    public String getPlayerServer(String username) {
+        Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.eq("online", true))).projection(new Document("onlineData", true).append("username", true)).first();
+        if (doc == null) return null;
+        return doc.get("onlineData", Document.class).getString("server");
     }
 
     /**
@@ -544,5 +562,103 @@ public class MongoHandler {
         } else {
             serversCollection.deleteMany(Filters.and(Filters.eq("name", name), Filters.exists("playground", false)));
         }
+    }
+
+    /**
+     * Log an accepted help request in the database
+     *
+     * @param requesting the requesting player
+     * @param helping    the helping staff member
+     */
+    public void logHelpRequest(UUID requesting, UUID helping) {
+        helpRequestsCollection.insertOne(new Document("requesting", requesting.toString())
+                .append("helping", helping.toString()).append("time", System.currentTimeMillis()));
+    }
+
+    /**
+     * Get the staff member's activity accepting help request
+     *
+     * @param staffMember the staff member to look up
+     * @return a String with comma-separated values for accepted help requests: last day, last week, last month, all time
+     */
+    public String getHelpActivity(UUID staffMember) {
+        List<Long> requests = new ArrayList<>();
+        for (Document doc : helpRequestsCollection.find(Filters.eq("helping", staffMember.toString())).projection(new Document("time", true))) {
+            if (doc.containsKey("time")) requests.add(doc.getLong("time"));
+        }
+        requests.sort((o1, o2) -> (int) (o1 - o2));
+        long dayAgo = Instant.now().minus(Duration.ofDays(1)).toEpochMilli();
+        long weekAgo = Instant.now().minus(Duration.ofDays(7)).toEpochMilli();
+        long monthAgo = Instant.now().minus(Duration.ofDays(30)).toEpochMilli();
+        int dayTotal = 0, weekTotal = 0, monthTotal = 0, total = 0;
+        for (long r : requests) {
+            if (r >= dayAgo) dayTotal++;
+            if (r >= weekAgo) weekTotal++;
+            if (r >= monthAgo) monthTotal++;
+            total++;
+        }
+        return dayTotal + "," + weekTotal + "," + monthTotal + "," + total;
+    }
+
+    public long lastHelpRequest(UUID uuid) {
+        Document doc = playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.exists("lastHelpRequest", true))).projection(new Document("lastHelpRequest", true)).first();
+        if (doc == null) return 0;
+        return (long) doc.getOrDefault("lastHelpRequest", 0L);
+    }
+
+    public void setLastHelpRequest(UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("lastHelpRequest", System.currentTimeMillis()));
+    }
+
+    public boolean areHelpRequestsOverloaded() {
+        return playerCollection.count(Filters.and(Filters.eq("online", true), Filters.gte("lastHelpRequest", System.currentTimeMillis() - (30 * 1000)))) >= 5;
+    }
+
+    public void setPendingHelpRequest(UUID uuid, boolean b) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("pendingHelpRequest", b));
+    }
+
+    public boolean hasPendingHelpRequest(UUID uuid) {
+        Document doc = playerCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("pendingHelpRequest", true))).first();
+        if (doc == null) return false;
+        return doc.getBoolean("pendingHelpRequest", false);
+    }
+
+    public boolean canMakeAnnouncementRequest(UUID uuid) {
+        return announcementRequestsCollection.count(Filters.eq("uuid", uuid.toString())) > 0;
+    }
+
+    public void makeAnnouncementRequest(UUID uuid, String announcement) {
+        announcementRequestsCollection.insertOne(new Document("uuid", uuid.toString()).append("announcement", announcement));
+    }
+
+    public Document findAnnouncementRequest(UUID uuid) {
+        return announcementRequestsCollection.find(Filters.eq("uuid", uuid.toString())).first();
+    }
+
+    public void removeAnnouncementRequest(UUID uuid) {
+        announcementRequestsCollection.deleteMany(Filters.eq("uuid", uuid.toString()));
+    }
+
+    /**
+     * Check whether any staff members are online
+     *
+     * @param guide true if guides should be included in this count
+     * @return true if a staff member is online, false if not
+     */
+    public boolean areStaffOnline(boolean guide) {
+        FindIterable<Document> find = playerCollection.find(Filters.eq("online", true)).projection(new Document("rank", true).append("tags", true));
+        for (Document doc : find) {
+            Rank rank = Rank.fromString(doc.getString("rank"));
+            if (rank.getRankId() >= Rank.TRAINEE.getRankId()) return true;
+            if (guide && doc.containsKey("tags")) {
+                ArrayList list = doc.get("tags", ArrayList.class);
+                for (Object o : list) {
+                    RankTag tag = RankTag.fromString((String) o);
+                    if (tag.equals(RankTag.GUIDE)) return true;
+                }
+            }
+        }
+        return false;
     }
 }

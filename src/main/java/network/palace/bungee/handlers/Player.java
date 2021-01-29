@@ -165,4 +165,8 @@ public class Player {
             e.printStackTrace();
         }
     }
+
+    public boolean hasTag(RankTag tag) {
+        return tags.contains(tag);
+    }
 }

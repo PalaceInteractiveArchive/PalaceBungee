@@ -5,6 +5,7 @@ import net.md_5.bungee.api.ReconnectHandler;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Server;
 
 import java.net.InetSocketAddress;
@@ -114,5 +115,11 @@ public class ServerUtil {
 
     public List<Server> getServers() {
         return new ArrayList<>(servers.values());
+    }
+
+    public void sendPlayer(Player player, String serverName) {
+        Server server = getServer(serverName, true);
+        if (server == null) return;
+        server.join(player);
     }
 }

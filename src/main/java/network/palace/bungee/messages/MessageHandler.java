@@ -102,12 +102,16 @@ public class MessageHandler {
                     case 2: {
                         MessageByRankPacket packet = new MessageByRankPacket(object);
                         RankTag tag = packet.getTag();
+                        BaseComponent[] components = packet.isComponentMessage() ? ComponentSerializer.parse(packet.getMessage()) : null;
                         PalaceBungee.getOnlinePlayers().stream().filter(p -> {
                             if (packet.isExact())
                                 return p.getRank().equals(packet.getRank()) || (tag != null && p.getTags().contains(packet.getTag()));
                             else
                                 return p.getRank().getRankId() >= packet.getRank().getRankId() || (tag != null && p.getTags().contains(packet.getTag()));
-                        }).forEach(player -> player.sendMessage(packet.getMessage()));
+                        }).forEach(player -> {
+                            if (packet.isComponentMessage()) player.sendMessage(components);
+                            else player.sendMessage(packet.getMessage());
+                        });
                         break;
                     }
                     // Proxy reload
@@ -252,6 +256,18 @@ public class MessageHandler {
                         PalaceBungee.getConfigUtil().setMutedChats(mutedChats, false);
                         break;
                     }
+                    case 18: {
+                        MentionByRankPacket packet = new MentionByRankPacket(object);
+                        Rank rank = packet.getRank();
+                        RankTag tag = packet.getTag();
+                        PalaceBungee.getOnlinePlayers().stream().filter(p -> {
+                            if (packet.isExact())
+                                return (rank != null && p.getRank().equals(packet.getRank())) || (tag != null && p.getTags().contains(packet.getTag()));
+                            else
+                                return (rank != null && p.getRank().getRankId() >= packet.getRank().getRankId()) || (tag != null && p.getTags().contains(packet.getTag()));
+                        }).forEach(Player::mention);
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -394,7 +410,7 @@ public class MessageHandler {
 
     public void sendStaffMessage(String message) throws Exception {
         MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.RED + "STAFF" +
-                ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false);
+                ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false, false);
         sendMessage(packet, ALL_PROXIES);
     }
 

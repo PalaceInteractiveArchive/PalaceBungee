@@ -24,7 +24,7 @@ public class GuideChatCommand extends PalaceCommand {
             MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.DARK_GREEN + "GUIDE" +
                     ChatColor.WHITE + "] " + RankTag.format(player.getTags()) + player.getRank().getFormattedName() +
                     " " + ChatColor.GRAY + player.getUsername() + ": " + ChatColor.DARK_AQUA + String.join(" ", args),
-                    Rank.TRAINEE, RankTag.GUIDE, false);
+                    Rank.TRAINEE, RankTag.GUIDE, false, false);
             PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
             e.printStackTrace();

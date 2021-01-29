@@ -287,7 +287,7 @@ public class ChatUtil {
                 MessageByRankPacket chatPacket = new MessageByRankPacket("[" + ChatColor.RED + "CHAT" +
                         ChatColor.WHITE + "] " + ChatColor.GREEN + "Message from " + ChatColor.AQUA + player.getUsername() +
                         ChatColor.GREEN + " blocked: " + ChatColor.RED + packet.getFilterCaught() + ", " + ChatColor.AQUA + "'" +
-                        originalRequest.getMessage() + "', " + ChatColor.RED + "'" + packet.getOffendingText() + "'", Rank.TRAINEE, null, false);
+                        originalRequest.getMessage() + "', " + ChatColor.RED + "'" + packet.getOffendingText() + "'", Rank.TRAINEE, null, false, false);
                 PalaceBungee.getMessageHandler().sendMessage(chatPacket, PalaceBungee.getMessageHandler().ALL_PROXIES);
             } catch (Exception e) {
                 e.printStackTrace();

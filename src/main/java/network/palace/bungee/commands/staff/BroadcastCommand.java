@@ -10,13 +10,13 @@ import network.palace.bungee.messages.packets.BroadcastPacket;
 public class BroadcastCommand extends PalaceCommand {
 
     public BroadcastCommand() {
-        super("broadcast", Rank.MOD, "bc");
+        super("broadcast", Rank.MOD, "b");
     }
 
     @Override
     public void execute(Player player, String[] args) {
         if (args.length < 3) {
-            player.sendMessage(ChatColor.RED + "/bc [Message]");
+            player.sendMessage(ChatColor.RED + "/b [Message] " + ChatColor.AQUA + " - (Global Broadcast)");
             return;
         }
         try {
