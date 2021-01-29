@@ -32,12 +32,24 @@ public class Player {
     @Getter private final int protocolVersion;
     @Setter private ProxiedPlayer proxiedPlayer;
 
+    @Getter @Setter private boolean dmEnabled = true;
+    @Getter private final List<UUID> ignored = new ArrayList<>();
+
     // The UUID of the player that messaged them last
     @Getter @Setter private UUID replyTo = null;
     // The last time the player had their replyTo value updated
     @Getter @Setter private long replyTime = 0;
     // Whether the player has mention pings enabled
     @NonNull @Setter private boolean mentions;
+
+    public boolean isIgnored(UUID uuid) {
+        return ignored.contains(uuid);
+    }
+
+    public void setIgnored(UUID uuid, boolean b) {
+        if (b) ignored.add(uuid);
+        else ignored.remove(uuid);
+    }
 
     public List<RankTag> getTags() {
         return new ArrayList<>(tags);

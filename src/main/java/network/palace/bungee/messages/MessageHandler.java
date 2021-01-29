@@ -215,26 +215,36 @@ public class MessageHandler {
                             // message to target
                             DMPacket response;
                             if (player == null) {
-                                response = new DMPacket("", packet.getFrom(), "", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false);
+                                response = new DMPacket("", packet.getFrom(), "", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
                             } else {
-                                player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
-                                player.mention();
-                                response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false);
-                                player.setReplyTo(packet.getFromUUID());
-                                player.setReplyTime(System.currentTimeMillis());
+                                if (!packet.isSenderIsStaff() && (!player.isDmEnabled() || (player.isIgnored(packet.getFromUUID()) && player.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
+                                    // if sender is not staff, and the target player either has dm's disabled or has ignored the sender
+                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                } else {
+                                    player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
+                                    player.mention();
+                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    player.setReplyTo(packet.getFromUUID());
+                                    player.setReplyTime(System.currentTimeMillis());
+                                }
                             }
                             sendToProxy(response, packet.getSendingProxy());
                         } else {
                             // confirmation to sender
                             if (player == null) return;
                             if (packet.getFrom().isEmpty()) {
-                                player.sendMessage(ChatColor.RED + "Player not found!");
+                                if (packet.getMessage().isEmpty()) {
+                                    player.sendMessage(ChatColor.RED + "Player not found!");
+                                } else {
+                                    player.sendMessage(packet.getMessage());
+                                }
                             } else {
                                 player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
                                 player.setReplyTo(packet.getToUUID());
                                 player.setReplyTime(System.currentTimeMillis());
                             }
                         }
+                        break;
                     }
                     // Chat Analysis (Response)
                     case 14: {

@@ -10,6 +10,7 @@ import network.palace.bungee.commands.admin.*;
 import network.palace.bungee.commands.chat.*;
 import network.palace.bungee.commands.guide.GuideListCommand;
 import network.palace.bungee.commands.moderation.AltAccountsCommand;
+import network.palace.bungee.commands.moderation.DMToggleCommand;
 import network.palace.bungee.commands.moderation.LookupCommand;
 import network.palace.bungee.commands.moderation.NamecheckCommand;
 import network.palace.bungee.commands.staff.BroadcastCommand;
@@ -114,6 +115,7 @@ public class PalaceBungee extends Plugin {
         /* Admin Commands */
         pm.registerCommand(this, new GuideLogCommand());
         pm.registerCommand(this, new MaintenanceCommand());
+        pm.registerCommand(this, new MsgToggleCommand());
         pm.registerCommand(this, new ProxyCountsCommand());
         pm.registerCommand(this, new ProxyReloadCommand());
         pm.registerCommand(this, new ProxyVersionCommand());
@@ -128,6 +130,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new GuideListCommand());
         /* Moderation Commands */
         pm.registerCommand(this, new AltAccountsCommand());
+        pm.registerCommand(this, new DMToggleCommand());
         pm.registerCommand(this, new LookupCommand());
         pm.registerCommand(this, new NamecheckCommand());
         /* Staff Commands */

@@ -9,7 +9,7 @@ import java.util.UUID;
 public class DMPacket extends MQPacket {
     private final String from, to, message;
     private final UUID fromUUID, toUUID;
-    private final boolean initialSend;
+    private final boolean initialSend, senderIsStaff;
 
     public DMPacket(JsonObject object) {
         super(PacketID.Global.DM.getId(), object);
@@ -28,9 +28,10 @@ public class DMPacket extends MQPacket {
         this.message = object.get("message").getAsString();
         this.sendingProxy = UUID.fromString(object.get("sendingProxy").getAsString());
         this.initialSend = object.get("initialSend").getAsBoolean();
+        this.senderIsStaff = object.get("senderIsStaff").getAsBoolean();
     }
 
-    public DMPacket(String from, String to, String message, UUID fromUUID, UUID toUUID, UUID sendingProxy, boolean initialSend) {
+    public DMPacket(String from, String to, String message, UUID fromUUID, UUID toUUID, UUID sendingProxy, boolean initialSend, boolean senderIsStaff) {
         super(PacketID.Global.DM.getId(), null);
         this.from = from;
         this.to = to;
@@ -39,6 +40,7 @@ public class DMPacket extends MQPacket {
         this.toUUID = toUUID;
         this.sendingProxy = sendingProxy;
         this.initialSend = initialSend;
+        this.senderIsStaff = senderIsStaff;
     }
 
     @Override
@@ -51,6 +53,7 @@ public class DMPacket extends MQPacket {
         object.addProperty("message", message);
         object.addProperty("sendingProxy", sendingProxy.toString());
         object.addProperty("initialSend", initialSend);
+        object.addProperty("senderIsStaff", senderIsStaff);
         return object;
     }
 }

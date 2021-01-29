@@ -16,6 +16,7 @@ import network.palace.bungee.messages.packets.ProxyReloadPacket;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 @SuppressWarnings("MismatchedReadAndWriteOfArray")
 @Getter
@@ -63,7 +64,7 @@ public class ConfigUtil {
         ProtocolConstants.setLowVersion(config.minVersion, config.minVersionString);
 
         if (this.maintenance) {
-            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+            for (Player tp : new ArrayList<>(PalaceBungee.getOnlinePlayers())) {
                 try {
                     if (tp.getRank().getRankId() < Rank.DEVELOPER.getRankId()) {
                         tp.kickPlayer(ChatColor.AQUA + "Palace Network has entered a period of maintenance!\nFollow " +
@@ -128,6 +129,11 @@ public class ConfigUtil {
 
     public void setMaintenanceMode(boolean maintenance) throws Exception {
         this.maintenance = maintenance;
+        saveConfigChanges();
+    }
+
+    public void setDmEnabled(boolean dmEnabled) throws Exception {
+        this.dmEnabled = dmEnabled;
         saveConfigChanges();
     }
 
