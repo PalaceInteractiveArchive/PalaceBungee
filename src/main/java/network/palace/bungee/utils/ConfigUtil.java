@@ -9,7 +9,9 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
+import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.messages.packets.ProxyReloadPacket;
 
 import java.io.File;
@@ -19,9 +21,9 @@ import java.io.IOException;
 @Getter
 public class ConfigUtil {
     private Favicon favicon;
-    private String motd;
+    private String motd, motdTemp;
     private ServerPing.PlayerInfo[] motdInfo;
-    private String maintenanceMotd;
+    private String maintenanceMotd, maintenanceMotdTemp;
     private boolean maintenance;
     private int chatDelay;
     private boolean parkChatMuted;
@@ -42,12 +44,14 @@ public class ConfigUtil {
     public void reload() throws IOException {
         BungeeConfig config = getBungeeConfig();
         this.favicon = config.favicon;
-        this.motd = config.motd;
+        this.motdTemp = config.motd;
+        this.motd = this.motdTemp.replaceAll("%n%", System.getProperty("line.separator"));
         this.motdInfo = new ServerPing.PlayerInfo[config.motdInfo.length];
         for (int i = 0; i < config.motdInfo.length; i++) {
             this.motdInfo[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', config.motdInfo[i]), "");
         }
-        this.maintenanceMotd = config.maintenanceMotd;
+        this.maintenanceMotdTemp = config.maintenanceMotd;
+        this.maintenanceMotd = this.maintenanceMotdTemp.replaceAll("%n%", System.getProperty("line.separator"));
         this.maintenance = config.maintenance;
         this.chatDelay = config.chatDelay;
         this.parkChatMuted = config.parkChatMuted;
@@ -57,6 +61,19 @@ public class ConfigUtil {
 
         ProtocolConstants.setHighVersion(config.maxVersion, config.maxVersionString);
         ProtocolConstants.setLowVersion(config.minVersion, config.minVersionString);
+
+        if (this.maintenance) {
+            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                try {
+                    if (tp.getRank().getRankId() < Rank.DEVELOPER.getRankId()) {
+                        tp.kickPlayer(ChatColor.AQUA + "Palace Network has entered a period of maintenance!\nFollow " +
+                                ChatColor.BLUE + "@PalaceDev " + ChatColor.AQUA + "on Twitter for updates.", false);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public DatabaseConnection getRabbitMQInfo() {
@@ -106,6 +123,11 @@ public class ConfigUtil {
 
     public void setChatDelay(int seconds) throws Exception {
         this.chatDelay = seconds;
+        saveConfigChanges();
+    }
+
+    public void setMaintenanceMode(boolean maintenance) throws Exception {
+        this.maintenance = maintenance;
         saveConfigChanges();
     }
 

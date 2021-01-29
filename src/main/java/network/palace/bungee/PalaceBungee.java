@@ -6,10 +6,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import network.palace.bungee.commands.*;
-import network.palace.bungee.commands.admin.GuideLogCommand;
-import network.palace.bungee.commands.admin.ProxyCountsCommand;
-import network.palace.bungee.commands.admin.ProxyReloadCommand;
-import network.palace.bungee.commands.admin.ProxyVersionCommand;
+import network.palace.bungee.commands.admin.*;
 import network.palace.bungee.commands.chat.*;
 import network.palace.bungee.commands.guide.GuideListCommand;
 import network.palace.bungee.commands.moderation.AltAccountsCommand;
@@ -116,6 +113,7 @@ public class PalaceBungee extends Plugin {
         PluginManager pm = getProxy().getPluginManager();
         /* Admin Commands */
         pm.registerCommand(this, new GuideLogCommand());
+        pm.registerCommand(this, new MaintenanceCommand());
         pm.registerCommand(this, new ProxyCountsCommand());
         pm.registerCommand(this, new ProxyReloadCommand());
         pm.registerCommand(this, new ProxyVersionCommand());

@@ -40,6 +40,15 @@ public class PlayerJoinAndLeave implements Listener {
             // new player
             player = null;
         } else {
+            Rank rank = Rank.fromString(doc.getString("rank"));
+            if (PalaceBungee.getConfigUtil().isMaintenance() && rank.getRankId() < Rank.DEVELOPER.getRankId()) {
+                event.setCancelled(true);
+                event.setCancelReason(new ComponentBuilder("We are currently performing maintenance on our servers.\nFollow ")
+                        .color(ChatColor.AQUA).append("@PalaceDev ").color(ChatColor.BLUE).append("on Twitter for updates!")
+                        .color(ChatColor.AQUA).create());
+                return;
+            }
+
             List<RankTag> tagList = new ArrayList<>();
             if (doc.containsKey("tags")) {
                 var tags = doc.get("tags", ArrayList.class);
@@ -51,7 +60,7 @@ public class PlayerJoinAndLeave implements Listener {
 
             Document settings = (Document) doc.get("settings");
 
-            player = new Player(connection.getUniqueId(), connection.getName(), Rank.fromString(doc.getString("rank")), tagList, address, connection.getVersion(), settings.getBoolean("mentions"));
+            player = new Player(connection.getUniqueId(), connection.getName(), rank, tagList, address, connection.getVersion(), settings.getBoolean("mentions"));
         }
         PalaceBungee.login(player);
     }
