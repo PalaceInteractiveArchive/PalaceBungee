@@ -11,6 +11,7 @@ import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.Subsystem;
+import network.palace.bungee.messages.packets.ChangeChannelPacket;
 import network.palace.bungee.messages.packets.ComponentMessagePacket;
 
 import java.util.ArrayList;
@@ -129,6 +130,15 @@ public class PartyUtil {
             return;
         }
         party.messageAllMembers(ChatColor.RED + player.getUsername() + " has closed the party!", true);
+        party.forAllMembers(uuid -> {
+            // Move all players to the main chat channel
+            try {
+                ChangeChannelPacket packet = new ChangeChannelPacket(uuid, "all");
+                PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         PalaceBungee.getMongoHandler().closeParty(party.getPartyID());
     }
 

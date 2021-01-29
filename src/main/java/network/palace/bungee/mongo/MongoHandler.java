@@ -13,6 +13,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
+import network.palace.bungee.messages.packets.ChangeChannelPacket;
 import network.palace.bungee.party.Party;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;

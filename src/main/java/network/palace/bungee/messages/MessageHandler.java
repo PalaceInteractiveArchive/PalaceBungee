@@ -228,6 +228,19 @@ public class MessageHandler {
                         }
                         break;
                     }
+                    case 16: {
+                        ChangeChannelPacket packet = new ChangeChannelPacket(object);
+                        UUID uuid = packet.getUuid();
+                        String channel = packet.getChannel();
+
+                        Player player = PalaceBungee.getPlayer(uuid);
+                        if (player == null) return;
+
+                        player.setChannel(channel);
+                        player.sendMessage(ChatColor.GREEN + "You have been moved to the " + ChatColor.AQUA + channel +
+                                ChatColor.GREEN + " channel");
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);

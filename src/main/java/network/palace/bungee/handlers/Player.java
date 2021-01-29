@@ -32,6 +32,7 @@ public class Player {
     @Getter private final int protocolVersion;
     @Setter private ProxiedPlayer proxiedPlayer;
 
+    @Getter @Setter private String channel = "all";
     @Getter @Setter private boolean dmEnabled = true;
     @Getter private final List<UUID> ignored = new ArrayList<>();
 
