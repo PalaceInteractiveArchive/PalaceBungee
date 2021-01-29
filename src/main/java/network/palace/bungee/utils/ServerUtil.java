@@ -8,10 +8,7 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Server;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.logging.Level;
 
 public class ServerUtil {
@@ -113,5 +110,9 @@ public class ServerUtil {
 
     public void deleteServer(String name) {
         servers.remove(name);
+    }
+
+    public List<Server> getServers() {
+        return new ArrayList<>(servers.values());
     }
 }

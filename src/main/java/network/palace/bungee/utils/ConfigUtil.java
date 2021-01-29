@@ -17,6 +17,7 @@ import network.palace.bungee.messages.packets.ProxyReloadPacket;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("MismatchedReadAndWriteOfArray")
 @Getter
@@ -27,10 +28,10 @@ public class ConfigUtil {
     private String maintenanceMotd, maintenanceMotdTemp;
     private boolean maintenance;
     private int chatDelay;
-    private boolean parkChatMuted;
     private boolean dmEnabled;
     private boolean strictChat;
     private double strictThreshold;
+    private List<String> mutedChats;
 
     public String getDashboardURL() {
         try {
@@ -55,10 +56,10 @@ public class ConfigUtil {
         this.maintenanceMotd = this.maintenanceMotdTemp.replaceAll("%n%", System.getProperty("line.separator"));
         this.maintenance = config.maintenance;
         this.chatDelay = config.chatDelay;
-        this.parkChatMuted = config.parkChatMuted;
         this.dmEnabled = config.dmEnabled;
         this.strictChat = config.strictChat;
         this.strictThreshold = config.strictThreshold;
+        this.mutedChats = config.mutedChats;
 
         ProtocolConstants.setHighVersion(config.maxVersion, config.maxVersionString);
         ProtocolConstants.setLowVersion(config.minVersion, config.minVersionString);
@@ -102,7 +103,7 @@ public class ConfigUtil {
             return PalaceBungee.getMongoHandler().getBungeeConfig();
         } catch (Exception e) {
             e.printStackTrace();
-            return new BungeeConfig(null, "", new String[0], "", false, 2, true, false, false, 0.8, 0, 0, "", "");
+            return new BungeeConfig(null, "", new String[0], "", false, 2, true, false, 0.8, 0, 0, "", "", new ArrayList<>());
         }
     }
 
@@ -137,10 +138,15 @@ public class ConfigUtil {
         saveConfigChanges();
     }
 
+    public void setMutedChats(List<String> mutedChats, boolean dbUpdate) throws Exception {
+        this.mutedChats = mutedChats;
+        if (dbUpdate) saveConfigChanges();
+    }
+
     private void saveConfigChanges() throws Exception {
         BungeeConfig config = new BungeeConfig(null, null, null, null,
-                maintenance, chatDelay, parkChatMuted, dmEnabled, strictChat, strictThreshold,
-                0, 0, null, null);
+                maintenance, chatDelay, dmEnabled, strictChat, strictThreshold,
+                0, 0, null, null, mutedChats);
         PalaceBungee.getMongoHandler().setBungeeConfig(config);
         PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
@@ -161,7 +167,6 @@ public class ConfigUtil {
         private final String maintenanceMotd;
         private final boolean maintenance;
         private final int chatDelay;
-        private final boolean parkChatMuted;
         private final boolean dmEnabled;
         private final boolean strictChat;
         private final double strictThreshold;
@@ -169,5 +174,6 @@ public class ConfigUtil {
         private final int minVersion;
         private final String maxVersionString;
         private final String minVersionString;
+        private final List<String> mutedChats;
     }
 }

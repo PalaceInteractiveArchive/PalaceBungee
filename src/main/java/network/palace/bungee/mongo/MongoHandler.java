@@ -13,7 +13,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
-import network.palace.bungee.messages.packets.ChangeChannelPacket;
 import network.palace.bungee.party.Party;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
@@ -29,7 +28,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class MongoHandler {
 
     private final MongoClient client;
@@ -199,20 +198,20 @@ public class MongoHandler {
 
         return new ConfigUtil.BungeeConfig(icon, ChatColor.translateAlternateColorCodes('&', config.getString("motd")),
                 motdInfo, ChatColor.translateAlternateColorCodes('&', config.getString("maintenanceMotd")),
-                config.getBoolean("maintenance"), config.getInteger("chatDelay"), config.getBoolean("parkChatMuted"),
-                config.getBoolean("dmEnabled"), config.getBoolean("strictChat"), config.getDouble("strictThreshold"),
-                config.getInteger("maxVersion"), config.getInteger("minVersion"), config.getString("maxVersionString"),
-                config.getString("minVersionString"));
+                config.getBoolean("maintenance"), config.getInteger("chatDelay"), config.getBoolean("dmEnabled"),
+                config.getBoolean("strictChat"), config.getDouble("strictThreshold"), config.getInteger("maxVersion"),
+                config.getInteger("minVersion"), config.getString("maxVersionString"),
+                config.getString("minVersionString"), config.get("mutedChats", ArrayList.class));
     }
 
     public void setBungeeConfig(ConfigUtil.BungeeConfig config) throws Exception {
         serviceConfigCollection.updateOne(Filters.eq("type", "bungeecord"), new Document("$set",
                 new Document("maintenance", config.isMaintenance())
                         .append("chatDelay", config.getChatDelay())
-                        .append("parkChatMuted", config.isParkChatMuted())
                         .append("dmEnabled", config.isDmEnabled())
                         .append("strictChat", config.isStrictChat())
                         .append("strictThreshold", config.getStrictThreshold())
+                        .append("mutedChats", config.getMutedChats())
         ));
     }
 

@@ -1,5 +1,6 @@
 package network.palace.bungee.utils;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import net.md_5.bungee.BungeeCord;
@@ -12,10 +13,7 @@ import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.Server;
-import network.palace.bungee.messages.packets.ChatAnalysisPacket;
-import network.palace.bungee.messages.packets.ChatAnalysisResponsePacket;
-import network.palace.bungee.messages.packets.ChatPacket;
-import network.palace.bungee.messages.packets.MessageByRankPacket;
+import network.palace.bungee.messages.packets.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class ChatUtil {
     @Getter @Setter private boolean parkChatMuted = false;
     private final HashMap<UUID, ChatAnalysisPacket> analysisPackets = new HashMap<>();
+    private final HashMap<UUID, ChatMessage> messageCache = new HashMap<>();
 
     public ChatUtil() {
         BungeeCord.getInstance().getScheduler().schedule(PalaceBungee.getInstance(), () -> {
@@ -42,17 +41,6 @@ public class ChatUtil {
         }, 5000, 500, TimeUnit.MILLISECONDS);
     }
 
-    public void processIncomingChatMessage(ChatPacket packet) throws Exception {
-        UUID sender = packet.getSender();
-        BaseComponent[] message = packet.getMessage();
-        String channel = packet.getChannel();
-        if (channel.equals("ParkChat")) {
-            for (Player player : PalaceBungee.getOnlinePlayers()) {
-                player.sendMessage(message);
-            }
-        }
-    }
-
     public void sendOutgoingParkChatMessage(Player player, String message) throws Exception {
         if (parkChatMuted && player.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
             player.sendMessage(ChatColor.RED + "Chat is currently muted!");
@@ -69,31 +57,21 @@ public class ChatUtil {
             serverName = player.getServerName();
         }
 
-        analyzeMessage(player.getUniqueId(), player.getRank(), msg, player.getServerName(), () -> {
-            BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE).event(getPlayerHover(player, player.getServerName()))
-                    .append(serverName).color(ChatColor.GREEN)
-                    .append("] ").color(ChatColor.WHITE)
-                    .append(RankTag.format(player.getTags()))
-                    .append(rank.getFormattedName() + " ")
-                    .append(player.getUsername() + ": ").color(ChatColor.GRAY)
-                    .append(msg, ComponentBuilder.FormatRetention.NONE).color(rank.getChatColor()).create();
+        BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE).event(getPlayerHover(player, player.getServerName()))
+                .append(serverName).color(ChatColor.GREEN)
+                .append("] ").color(ChatColor.WHITE)
+                .append(RankTag.format(player.getTags()))
+                .append(rank.getFormattedName() + " ")
+                .append(player.getUsername() + ": ").color(ChatColor.GRAY)
+                .append(msg, ComponentBuilder.FormatRetention.NONE).color(rank.getChatColor()).create();
 
-            ChatPacket packet = new ChatPacket(player.getUniqueId(), components, "ParkChat");
-            try {
-                PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
-            } catch (Exception e) {
-                e.printStackTrace();
-                player.sendMessage(ChatColor.RED + "There was an error sending your chat message! Please try again in a few minutes. If the issue continues, try logging out and back in.");
-            }
-        });
-    }
-
-    public void analyzeMessage(UUID uuid, Rank rank, String message, String server, Runnable callback) throws Exception {
-        ChatAnalysisPacket packet = new ChatAnalysisPacket(uuid, PalaceBungee.getProxyID(), rank, message, server, callback);
-
-        PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().CHAT_ANALYSIS);
-
-        analysisPackets.put(packet.getRequestId(), packet);
+        ChatPacket packet = new ChatPacket(player.getUniqueId(), components, "ParkChat");
+        try {
+            PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
+        } catch (Exception e) {
+            e.printStackTrace();
+            player.sendMessage(ChatColor.RED + "There was an error sending your chat message! Please try again in a few minutes. If the issue continues, try logging out and back in.");
+        }
     }
 
     private HoverEvent getPlayerHover(Player player, String server) {
@@ -104,6 +82,185 @@ public class ChatUtil {
         }
         builder.append("Server: ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.AQUA).append(server).color(ChatColor.GREEN);
         return new HoverEvent(HoverEvent.Action.SHOW_TEXT, builder.create());
+    }
+
+    public void muteChat(String server) throws Exception {
+        List<String> mutedChats = PalaceBungee.getConfigUtil().getMutedChats();
+        if (!mutedChats.contains(server)) {
+            mutedChats.add(server);
+            PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
+        }
+//        if (server.equals("Creative")) {
+//            PacketMuteChat packet = new PacketMuteChat(server, true, "");
+//            sendToServer(server, packet);
+//        }
+    }
+
+    public void unmuteChat(String server) throws Exception {
+        List<String> mutedChats = PalaceBungee.getConfigUtil().getMutedChats();
+        if (mutedChats.contains(server)) {
+            mutedChats.remove(server);
+            PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, false), PalaceBungee.getMessageHandler().ALL_PROXIES);
+        }
+//        if (server.equals("Creative")) {
+//            PacketMuteChat packet = new PacketMuteChat(server, false, "");
+//            sendToServer(server, packet);
+//        }
+    }
+
+    public boolean isChatMuted(String server) {
+        return PalaceBungee.getConfigUtil().getMutedChats().contains(server);
+    }
+
+    public boolean chatEvent(Player player, String msg, boolean command) throws Exception {
+        switch (player.getChannel()) {
+            case "party": {
+                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "pchat " + msg);
+                return true;
+            }
+            case "staff": {
+                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "sc " + msg);
+                return true;
+            }
+            case "admin": {
+                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "ho " + msg);
+                return true;
+            }
+        }
+
+//        if (player.isNewGuest()) TODO new players need chat disabled, allow commands
+
+        Rank rank = player.getRank();
+        String serverName = player.getServerName();
+        Server server = PalaceBungee.getServerUtil().getServer(serverName, true);
+        if (server == null) return true;
+        String channel = server.isPark() ? "ParkChat" : serverName;
+
+        if (rank.getRankId() >= Rank.TRAINEE.getRankId()) {
+            // TODO AFK timer
+        }
+
+//        if (player.isDisabled()) TODO staff members can be disabled until they enter their password
+
+        if (command) {
+            String s = msg.toLowerCase().replaceFirst("/", "");
+            if (player.getRank().getRankId() < Rank.TRAINEEBUILD.getRankId() && (s.startsWith("/calc") || s.startsWith("/calculate") ||
+                    s.startsWith("/eval") || s.startsWith("/evaluate") || s.startsWith("/solve") ||
+                    s.startsWith("worldedit:/calc") || s.startsWith("worldedit:/calculate") ||
+                    s.startsWith("worldedit:/eval") || s.startsWith("worldedit:/evaluate") ||
+                    s.startsWith("worldedit:/solve"))) {
+                player.sendMessage(ChatColor.RED + "That command is disabled.");
+                return true;
+            }
+            return false;
+        }
+
+        String processed = processChatMessage(player, msg, channel);
+        if (processed == null) return true;
+
+        analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+            messageCache.put(player.getUniqueId(), new ChatMessage(player.getUniqueId(), processed));
+
+            // TODO Log chat message
+            if (channel.equals("ParkChat")) {
+                try {
+                    sendOutgoingParkChatMessage(player, processed);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    player.sendMessage(ChatColor.RED + "There was an error sending your chat message! Please try again in a few minutes. If the issue continues, try logging out and back in.");
+                }
+            } else {
+                player.chat(processed);
+            }
+        });
+        return true;
+    }
+
+    /**
+     * Process chat message locally
+     *
+     * @param player  the player
+     * @param msg     the message
+     * @param channel the chat channel
+     * @return the message (modified if necessary), or null if the message should be blocked
+     * @implNote this method will return null if the message should be blocked
+     */
+    public String processChatMessage(Player player, String msg, String channel) {
+        // Remove multiple spaces between words
+        msg = msg.replaceAll(" {2}", " ");
+
+//        if (player.isMuted()) TODO muted players can't talk in chat
+
+        if (player.getRank().getRankId() < Rank.CHARACTER.getRankId()) {
+            if (isChatMuted(channel) && !channel.equals("Creative")) {
+                player.sendMessage(ChatColor.RED + "Chat is currently muted!");
+                return null;
+            }
+
+//            if (strictModeCheck(msg)) TODO strict mode prevents similar chat messages from being sent, should probably use API
+
+            if (System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
+                player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
+                return null;
+            }
+            player.setLastChatMessage(System.currentTimeMillis());
+
+            msg = removeCaps(player, msg);
+
+            if (messageCache.containsKey(player.getUniqueId())) {
+                ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
+                //Block saying the same message within a minute
+                if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
+                    player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
+                    return null;
+                }
+            }
+        } else {
+            if (msg.startsWith(":warn-")) {
+//                dashboard.getWarningUtil().handle(player, msg.toString());
+                return null;
+            }
+        }
+
+        //TODO emoji
+
+        return msg;
+    }
+
+    private String removeCaps(Player player, String msg) {
+        int size = msg.toCharArray().length;
+        if (size < 10) {
+            return msg;
+        }
+        int amount = 0;
+        for (char c : msg.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                amount++;
+            }
+        }
+        if (Math.floor(100 * (((float) amount) / size)) >= 50.0) {
+            player.sendMessage(ChatColor.RED + "Please do not use excessive capitals in your messages.");
+            StringBuilder s = new StringBuilder();
+            for (int i = 0; i < msg.length(); i++) {
+                if (i == 0) {
+                    s.append(msg.charAt(0));
+                    continue;
+                }
+                s.append(Character.toLowerCase(msg.charAt(i)));
+            }
+            return s.toString();
+        }
+        return msg;
+    }
+
+    public void analyzeMessage(UUID uuid, Rank rank, String message, String server, Runnable callback) throws Exception {
+        ChatAnalysisPacket packet = new ChatAnalysisPacket(uuid, PalaceBungee.getProxyID(), rank, message, server, callback);
+
+        PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().CHAT_ANALYSIS);
+
+        analysisPackets.put(packet.getRequestId(), packet);
     }
 
     public void handleAnalysisResponse(ChatAnalysisResponsePacket packet) {
@@ -136,5 +293,25 @@ public class ChatUtil {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void handleIncomingChatPacket(ChatPacket packet) throws Exception {
+        UUID sender = packet.getSender();
+        BaseComponent[] message = packet.getMessage();
+        String channel = packet.getChannel();
+        if (channel.equals("ParkChat")) {
+            for (Player player : PalaceBungee.getOnlinePlayers()) {
+                // TODO handle mentions
+                player.sendMessage(message);
+            }
+        }
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class ChatMessage {
+        private final UUID uuid;
+        private final String message;
+        private final long time = System.currentTimeMillis();
     }
 }

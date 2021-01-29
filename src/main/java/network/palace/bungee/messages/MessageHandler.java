@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -191,7 +192,7 @@ public class MessageHandler {
                     // Chat
                     case 12: {
                         ChatPacket packet = new ChatPacket(object);
-                        PalaceBungee.getChatUtil().processIncomingChatMessage(packet);
+                        PalaceBungee.getChatUtil().handleIncomingChatPacket(packet);
                         break;
                     }
                     case 15: {
@@ -239,6 +240,16 @@ public class MessageHandler {
                         player.setChannel(channel);
                         player.sendMessage(ChatColor.GREEN + "You have been moved to the " + ChatColor.AQUA + channel +
                                 ChatColor.GREEN + " channel");
+                        break;
+                    }
+                    case 17: {
+                        ChatMutePacket packet = new ChatMutePacket(object);
+                        List<String> mutedChats = PalaceBungee.getConfigUtil().getMutedChats();
+                        if (packet.isMuted() && !mutedChats.contains(packet.getChannel()))
+                            mutedChats.add(packet.getChannel());
+                        else if (!packet.isMuted())
+                            mutedChats.remove(packet.getChannel());
+                        PalaceBungee.getConfigUtil().setMutedChats(mutedChats, false);
                         break;
                     }
                 }

@@ -35,6 +35,7 @@ public class Player {
     @Getter @Setter private String channel = "all";
     @Getter @Setter private boolean dmEnabled = true;
     @Getter private final List<UUID> ignored = new ArrayList<>();
+    @Getter @Setter private long lastChatMessage = 0;
 
     // The UUID of the player that messaged them last
     @Getter @Setter private UUID replyTo = null;

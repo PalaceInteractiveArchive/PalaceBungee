@@ -9,10 +9,7 @@ import network.palace.bungee.commands.*;
 import network.palace.bungee.commands.admin.*;
 import network.palace.bungee.commands.chat.*;
 import network.palace.bungee.commands.guide.GuideListCommand;
-import network.palace.bungee.commands.moderation.AltAccountsCommand;
-import network.palace.bungee.commands.moderation.DMToggleCommand;
-import network.palace.bungee.commands.moderation.LookupCommand;
-import network.palace.bungee.commands.moderation.NamecheckCommand;
+import network.palace.bungee.commands.moderation.*;
 import network.palace.bungee.commands.staff.BroadcastCommand;
 import network.palace.bungee.commands.staff.SGListCommand;
 import network.palace.bungee.commands.staff.ServerCommand;
@@ -125,6 +122,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new AdminChatCommand());
         pm.registerCommand(this, new ChatCommand());
         pm.registerCommand(this, new ChatDelayCommand());
+        pm.registerCommand(this, new ChatStatusCommand());
         pm.registerCommand(this, new ClearChatCommand());
         pm.registerCommand(this, new GuideChatCommand());
         pm.registerCommand(this, new PartyChatCommand());
@@ -135,6 +133,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new AltAccountsCommand());
         pm.registerCommand(this, new DMToggleCommand());
         pm.registerCommand(this, new LookupCommand());
+        pm.registerCommand(this, new MuteChatCommand());
         pm.registerCommand(this, new NamecheckCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
