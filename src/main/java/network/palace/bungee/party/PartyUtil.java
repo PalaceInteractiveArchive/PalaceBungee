@@ -130,6 +130,10 @@ public class PartyUtil {
             return;
         }
         party.messageAllMembers(ChatColor.RED + player.getUsername() + " has closed the party!", true);
+        closeParty(party);
+    }
+
+    public void closeParty(Party party) throws Exception {
         party.forAllMembers(uuid -> {
             // Move all players to the main chat channel
             try {

@@ -14,6 +14,7 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
+import network.palace.bungee.party.Party;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
@@ -85,9 +86,18 @@ public class PlayerJoinAndLeave implements Listener {
     @EventHandler
     public void onDisconnect(PlayerDisconnectEvent event) {
         ProxiedPlayer pl = event.getPlayer();
+        try {
+            Party party = PalaceBungee.getMongoHandler().getPartyByLeader(pl.getUniqueId());
+            if (party != null) {
+                party.messageAllMembers("The party has been closed because " + pl.getName() + " has disconnected!", true);
+                PalaceBungee.getPartyUtil().closeParty(party);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Player player = PalaceBungee.getPlayer(pl.getUniqueId());
         if (player != null) {
-            PalaceBungee.logout(player.getUniqueId());
             if (player.getRank().getRankId() >= Rank.SPECIALGUEST.getRankId()) {
                 try {
                     PalaceBungee.getMessageHandler().sendStaffMessage(player.getRank().getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked out");
@@ -95,6 +105,7 @@ public class PlayerJoinAndLeave implements Listener {
                     e.printStackTrace();
                 }
             }
+            PalaceBungee.logout(player.getUniqueId());
         }
     }
 }
