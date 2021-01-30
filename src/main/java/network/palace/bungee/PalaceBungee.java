@@ -144,6 +144,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new LookupCommand());
         pm.registerCommand(this, new MuteChatCommand());
         pm.registerCommand(this, new NamecheckCommand());
+        pm.registerCommand(this, new TempBanCommand());
         pm.registerCommand(this, new UnbanCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());

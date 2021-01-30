@@ -1,6 +1,8 @@
 package network.palace.bungee.utils;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
@@ -138,5 +140,24 @@ public class ModerationUtil {
 
     public void announceSpamMessage(String username, String message) throws Exception {
         sendMessage(ChatColor.GREEN + username + "'s " + ChatColor.RED + "message " + ChatColor.AQUA + message + ChatColor.GREEN + " was marked as potential spam.");
+    }
+
+    public BaseComponent[] getBanMessage(Ban ban) {
+        if (ban.isPermanent()) {
+            return new ComponentBuilder("You are permanently banned from this server!\n\n").color(ChatColor.RED)
+                    .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
+                    .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create();
+        } else {
+            return new ComponentBuilder("You are temporarily banned from this server!\n\n").color(ChatColor.RED)
+                    .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
+                    .append("Expires: ").color(ChatColor.YELLOW).append(DateUtil.formatDateDiff(ban.getExpires()) + "\n\n").color(ChatColor.WHITE)
+                    .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create();
+        }
+    }
+
+    public BaseComponent[] getBanMessage(AddressBan ban) {
+        return new ComponentBuilder("Your network has been banned from this server!\n\n").color(ChatColor.RED)
+                .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
+                .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create();
     }
 }

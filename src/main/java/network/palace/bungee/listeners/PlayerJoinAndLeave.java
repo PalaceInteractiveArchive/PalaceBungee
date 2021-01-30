@@ -17,7 +17,6 @@ import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.moderation.AddressBan;
 import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.party.Party;
-import network.palace.bungee.utils.DateUtil;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
@@ -49,9 +48,7 @@ public class PlayerJoinAndLeave implements Listener {
             AddressBan addressBan = PalaceBungee.getMongoHandler().getAddressBan(address);
             if (addressBan != null) {
                 event.setCancelled(true);
-                event.setCancelReason(new ComponentBuilder("Your network has been banned from this server!\n\n").color(ChatColor.RED)
-                        .append("Reason: ").color(ChatColor.YELLOW).append(addressBan.getReason() + "\n\n").color(ChatColor.WHITE)
-                        .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                event.setCancelReason(PalaceBungee.getModerationUtil().getBanMessage(addressBan));
                 return;
             }
             String[] list = address.split("\\.");
@@ -59,26 +56,19 @@ public class PlayerJoinAndLeave implements Listener {
             AddressBan rangeBan = PalaceBungee.getMongoHandler().getAddressBan(range);
             if (rangeBan != null) {
                 event.setCancelled(true);
-                event.setCancelReason(new ComponentBuilder("Your network has been banned from this server!\n\n").color(ChatColor.RED)
-                        .append("Reason: ").color(ChatColor.YELLOW).append(rangeBan.getReason() + "\n\n").color(ChatColor.WHITE)
-                        .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                event.setCancelReason(PalaceBungee.getModerationUtil().getBanMessage(rangeBan));
                 return;
             }
             Ban ban = PalaceBungee.getMongoHandler().getCurrentBan(connection.getUniqueId(), connection.getName());
             if (ban != null) {
                 if (ban.isPermanent()) {
                     event.setCancelled(true);
-                    event.setCancelReason(new ComponentBuilder("You are permanently banned from this server!\n\n").color(ChatColor.RED)
-                            .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
-                            .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                    event.setCancelReason(PalaceBungee.getModerationUtil().getBanMessage(ban));
                     return;
                 } else {
                     if (ban.getExpires() > System.currentTimeMillis()) {
                         event.setCancelled(true);
-                        event.setCancelReason(new ComponentBuilder("You are temporarily banned from this server!\n\n").color(ChatColor.RED)
-                                .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
-                                .append("Expires: " + DateUtil.formatDateDiff(ban.getExpires()) + "\n\n").color(ChatColor.YELLOW)
-                                .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                        event.setCancelReason(PalaceBungee.getModerationUtil().getBanMessage(ban));
                         return;
                     }
                     PalaceBungee.getMongoHandler().unbanPlayer(connection.getUniqueId());

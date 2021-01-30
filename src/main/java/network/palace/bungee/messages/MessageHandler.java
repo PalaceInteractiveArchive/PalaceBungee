@@ -271,7 +271,13 @@ public class MessageHandler {
                     case 19: {
                         KickPlayerPacket packet = new KickPlayerPacket(object);
                         Player tp = PalaceBungee.getPlayer(packet.getUuid());
-                        if (tp != null) tp.kickPlayer(packet.getReason(), false);
+                        if (tp != null) {
+                            if (packet.isComponentMessage()) {
+                                tp.kickPlayer(ComponentSerializer.parse(packet.getReason()));
+                            } else {
+                                tp.kickPlayer(packet.getReason(), false);
+                            }
+                        }
                         break;
                     }
                 }

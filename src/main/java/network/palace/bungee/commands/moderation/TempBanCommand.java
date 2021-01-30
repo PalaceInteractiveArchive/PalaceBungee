@@ -8,24 +8,26 @@ import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.messages.packets.KickPlayerPacket;
+import network.palace.bungee.utils.DateUtil;
 
 import java.util.UUID;
 import java.util.logging.Level;
 
-public class BanCommand extends PalaceCommand {
+public class TempBanCommand extends PalaceCommand {
 
-    public BanCommand() {
-        super("ban", Rank.MOD);
+    public TempBanCommand() {
+        super("tempban", Rank.MOD);
     }
 
     @Override
     public void execute(Player banner, String[] args) {
-        if (banner.getRank().equals(Rank.MEDIA) || banner.getRank().equals(Rank.TECHNICIAN)) {
-            banner.sendMessage(ChatColor.RED + "You do not have permission to execute this command!");
-            return;
-        }
-        if (args.length < 2) {
-            banner.sendMessage(ChatColor.RED + "/ban [Player] [Reason]");
+        if (args.length < 3) {
+            banner.sendMessage(ChatColor.RED + "/tempban [Player] [Time] [Reason]");
+            banner.sendMessage(ChatColor.RED + "Time Examples:");
+            banner.sendMessage(ChatColor.RED + "6h = Six Hours");
+            banner.sendMessage(ChatColor.RED + "6d = Six Days");
+            banner.sendMessage(ChatColor.RED + "6w = Six Weeks");
+            banner.sendMessage(ChatColor.RED + "6mon = Six Months");
             return;
         }
         String playername = args[0];
@@ -35,17 +37,18 @@ public class BanCommand extends PalaceCommand {
             return;
         }
         StringBuilder r = new StringBuilder();
-        for (int i = 1; i < args.length; i++) {
+        for (int i = 2; i < args.length; i++) {
             r.append(args[i]).append(" ");
         }
         String reason = (r.substring(0, 1).toUpperCase() + r.substring(1)).trim();
         PalaceBungee.getProxyServer().getScheduler().runAsync(PalaceBungee.getInstance(), () -> {
             try {
+                long timestamp = DateUtil.parseDateDiff(args[1], true);
                 if (PalaceBungee.getMongoHandler().isPlayerBanned(uuid)) {
                     banner.sendMessage(ChatColor.RED + "This player is already banned! Unban them to change the reason.");
                     return;
                 }
-                Ban ban = new Ban(uuid, playername, true, System.currentTimeMillis(), System.currentTimeMillis(), reason, banner.getUniqueId().toString());
+                Ban ban = new Ban(uuid, playername, false, timestamp, reason, banner.getUniqueId().toString());
                 PalaceBungee.getMongoHandler().banPlayer(uuid, ban);
                 PalaceBungee.getMessageHandler().sendMessage(new KickPlayerPacket(uuid,
                         ComponentSerializer.toString(PalaceBungee.getModerationUtil().getBanMessage(ban)),
