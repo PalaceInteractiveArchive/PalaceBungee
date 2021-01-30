@@ -3,8 +3,6 @@ package network.palace.bungee.messages.packets;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 
-import java.util.UUID;
-
 @Getter
 public class KickIPPacket extends MQPacket {
     private final String address;

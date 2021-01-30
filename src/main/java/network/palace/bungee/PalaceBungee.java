@@ -25,7 +25,7 @@ import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
-import network.palace.bungee.party.PartyUtil;
+import network.palace.bungee.utils.PartyUtil;
 import network.palace.bungee.utils.*;
 
 import java.io.IOException;
@@ -142,12 +142,18 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new BanCommand());
         pm.registerCommand(this, new BanIPCommand());
         pm.registerCommand(this, new DMToggleCommand());
+        pm.registerCommand(this, new FindCommand());
+        pm.registerCommand(this, new IPCommand());
+        pm.registerCommand(this, new KickCommand());
         pm.registerCommand(this, new LookupCommand());
+        pm.registerCommand(this, new ModlogCommand());
         pm.registerCommand(this, new MuteChatCommand());
+        pm.registerCommand(this, new MuteCommand());
         pm.registerCommand(this, new NamecheckCommand());
         pm.registerCommand(this, new TempBanCommand());
         pm.registerCommand(this, new UnbanCommand());
         pm.registerCommand(this, new UnbanIPCommand());
+        pm.registerCommand(this, new UnmuteCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
         pm.registerCommand(this, new ServerCommand());

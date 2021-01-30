@@ -16,7 +16,7 @@ import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.moderation.AddressBan;
 import network.palace.bungee.handlers.moderation.Ban;
-import network.palace.bungee.party.Party;
+import network.palace.bungee.handlers.Party;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
@@ -89,6 +89,7 @@ public class PlayerJoinAndLeave implements Listener {
             Document settings = (Document) doc.get("settings");
 
             player = new Player(connection.getUniqueId(), connection.getName(), rank, tagList, address, connection.getVersion(), settings.getBoolean("mentions"));
+            player.setMute(PalaceBungee.getMongoHandler().getCurrentMute(connection.getUniqueId()));
         }
         if (PalaceBungee.getConfigUtil().isMaintenance() && rank.getRankId() < Rank.DEVELOPER.getRankId()) {
             event.setCancelled(true);

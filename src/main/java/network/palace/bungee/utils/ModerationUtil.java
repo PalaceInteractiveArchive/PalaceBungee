@@ -160,4 +160,20 @@ public class ModerationUtil {
                 .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
                 .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create();
     }
+
+    public BaseComponent[] getKickMessage(Kick kick) {
+        return new ComponentBuilder("You have been disconnected from this server!\n\n").color(ChatColor.RED)
+                .append("Reason: ").color(ChatColor.YELLOW).append(kick.getReason() + "\n\n").color(ChatColor.WHITE)
+                .append("Please review our rules at ").color(ChatColor.YELLOW).append("https://palnet.us/rules").color(ChatColor.AQUA).underlined(true).create();
+    }
+
+    public String getMuteMessage(Mute mute) {
+        return "\n" + ChatColor.RED + "" + ChatColor.STRIKETHROUGH +
+                "                                                                              \n" +
+                ChatColor.RESET + "" + ChatColor.RED + "You have been muted for " + mute.getReason() +
+                (mute.getReason().trim().endsWith(".") ? "" : ".") + ChatColor.GRAY + "\nExpires: " + ChatColor.WHITE +
+                DateUtil.formatDateDiff(mute.getExpires()) + ChatColor.GRAY + "\n\nPlease review our rules at " +
+                ChatColor.AQUA + "https://palnet.us/rules\n" + ChatColor.RED + "" + ChatColor.STRIKETHROUGH +
+                "                                                                              \n" + ChatColor.RESET;
+    }
 }

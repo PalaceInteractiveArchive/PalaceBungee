@@ -62,7 +62,7 @@ public class PunishmentsCommand extends PalaceCommand {
                     } else {
                         player.sendMessage(ChatColor.RED + "Reason: " + ChatColor.GREEN + reason.trim() +
                                 ChatColor.RED + " | Started: " + ChatColor.GREEN + df.format(created) +
-                                ChatColor.RED + (active ? " | Expired: " : " | Expires: ") +
+                                ChatColor.RED + (active ? " | Expires: " : " | Expired: ") +
                                 ChatColor.GREEN + df.format(expires) + ChatColor.RED + " | Length: " +
                                 ChatColor.GREEN + DateUtil.formatDateDiff(createdCal, expiresCal) +
                                 ChatColor.RED + " | Permanent: " + ChatColor.GREEN + "False");
@@ -89,7 +89,7 @@ public class PunishmentsCommand extends PalaceCommand {
                     expiresCal.setTimeInMillis(expires);
                     player.sendMessage(ChatColor.RED + "Reason: " + ChatColor.GREEN + reason.trim() +
                             ChatColor.RED + " | Started: " + ChatColor.GREEN + df.format(created) +
-                            ChatColor.RED + (active ? " | Expired: " : " | Expires: ") +
+                            ChatColor.RED + (active ? " | Expires: " : " | Expired: ") +
                             ChatColor.GREEN + df.format(expires) + ChatColor.RED + " | Length: " +
                             ChatColor.GREEN + DateUtil.formatDateDiff(createdCal, expiresCal));
                 }

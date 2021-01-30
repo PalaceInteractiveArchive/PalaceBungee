@@ -9,8 +9,6 @@ import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 

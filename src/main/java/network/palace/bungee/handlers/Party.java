@@ -1,10 +1,9 @@
-package network.palace.bungee.party;
+package network.palace.bungee.handlers;
 
 import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.PalaceCallback;
 import network.palace.bungee.messages.packets.MessagePacket;
 import org.bson.Document;
 
@@ -17,7 +16,7 @@ public class Party {
     public static final String MESSAGE_BARS = ChatColor.GOLD + "-----------------------------------------------------";
 
     @Getter private final String partyID;
-    @Getter private UUID leader;
+    @Getter private final UUID leader;
     private final HashMap<UUID, String> members;
     private final HashMap<UUID, Long> invited;
 

@@ -13,6 +13,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.moderation.Mute;
+import network.palace.bungee.messages.packets.MQPacket;
 import network.palace.bungee.messages.packets.MentionPacket;
 import network.palace.bungee.utils.LinkUtil;
 
@@ -28,7 +29,7 @@ public class Player {
     @NonNull private List<RankTag> tags;
     @Getter private final String address;
     @Getter private final long loginTime = System.currentTimeMillis();
-    @Getter private Mute mute;
+    @Getter @Setter private Mute mute = null;
     @Getter private boolean kicking = false;
     @Getter private final int protocolVersion;
     @Setter private ProxiedPlayer proxiedPlayer;
@@ -169,5 +170,27 @@ public class Player {
 
     public boolean hasTag(RankTag tag) {
         return tags.contains(tag);
+    }
+
+    public boolean isMuted() {
+        if (mute == null || !mute.isMuted()) return false;
+        long expires = mute.getExpires();
+        if (System.currentTimeMillis() < mute.getExpires()) {
+            return true;
+        } else {
+            PalaceBungee.getMongoHandler().unmutePlayer(uuid);
+            return false;
+        }
+    }
+
+    /**
+     * Send a packet to the proxy this player is connected to
+     *
+     * @param packet the packet to be sent
+     * @throws Exception if there's an issue communicating over the message queue
+     */
+    public void sendPacket(MQPacket packet) throws Exception {
+        UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(uuid);
+        if (targetProxy != null) PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);
     }
 }

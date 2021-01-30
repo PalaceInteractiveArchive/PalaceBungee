@@ -1,4 +1,4 @@
-package network.palace.bungee.party;
+package network.palace.bungee.utils;
 
 import com.google.common.collect.ImmutableMap;
 import net.md_5.bungee.api.ChatColor;
@@ -13,6 +13,8 @@ import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.Subsystem;
 import network.palace.bungee.messages.packets.ChangeChannelPacket;
 import network.palace.bungee.messages.packets.ComponentMessagePacket;
+import network.palace.bungee.messages.packets.SendPlayerPacket;
+import network.palace.bungee.handlers.Party;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -199,8 +201,15 @@ public class PartyUtil {
             player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.RED + "Only the party leader can warp players to their server!");
             return;
         }
-        party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has warped the party to their server! (WIP)", true);
-        //TODO Needs to be finished
+        party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has warped the party to their server!", true);
+        party.forAllMembers(uuid -> {
+            try {
+                if (uuid.equals(player.getUniqueId())) return;
+                player.sendPacket(new SendPlayerPacket(uuid.toString(), player.getServerName()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void promoteToLeader(Player player, String username) throws Exception {
@@ -226,17 +235,34 @@ public class PartyUtil {
         party.messageAllMembers(ChatColor.YELLOW + PalaceBungee.getUsername(uuid) + " has been promoted to party leader!", true);
     }
 
-    public void chat(Player player, String message) throws Exception {
-        //TODO Chat filter
+    public void chat(Player player, String msg) throws Exception {
+        String processed = PalaceBungee.getChatUtil().processChatMessage(player, msg, "PC", false);
+        if (processed == null) return;
+
         Party party = PalaceBungee.getMongoHandler().getPartyByMember(player.getUniqueId());
         if (party == null) {
             player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.AQUA + "You aren't in a party! Create one with " + ChatColor.YELLOW + "/party create");
             return;
         }
-        Rank rank = player.getRank();
-        message = Subsystem.PARTY.getPrefix() + (party.isLeader(player.getUniqueId()) ? ChatColor.YELLOW + "* " : "") +
-                RankTag.format(player.getTags()) + rank.getFormattedName() + ChatColor.GRAY + " " + player.getUsername() + ": " + ChatColor.WHITE +
-                (rank.getRankId() >= Rank.TRAINEE.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message);
-        party.messageAllMembers(message, false);
+
+        PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+            try {
+                Rank rank = player.getRank();
+                String message;
+                try {
+                    message = EmojiUtil.convertMessage(player, processed);
+                } catch (IllegalArgumentException e) {
+                    player.sendMessage(ChatColor.RED + e.getMessage());
+                    return;
+                }
+                message = Subsystem.PARTY.getPrefix() + (party.isLeader(player.getUniqueId()) ? ChatColor.YELLOW + "* " : "") +
+                        RankTag.format(player.getTags()) + rank.getFormattedName() + ChatColor.GRAY + " " + player.getUsername() + ": " + ChatColor.WHITE +
+                        (rank.getRankId() >= Rank.TRAINEE.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message);
+                party.messageAllMembers(message, false);
+            } catch (Exception e) {
+                e.printStackTrace();
+                player.sendMessage(ChatColor.RED + "An error occurred while sending your party chat message! Please try again in a few minutes.");
+            }
+        });
     }
 }

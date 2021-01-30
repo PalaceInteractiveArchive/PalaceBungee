@@ -16,7 +16,7 @@ import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.Server;
 import network.palace.bungee.handlers.moderation.*;
-import network.palace.bungee.party.Party;
+import network.palace.bungee.handlers.Party;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -731,5 +731,17 @@ public class MongoHandler {
             return new ArrayList();
         }
         return doc.get("warnings", ArrayList.class);
+    }
+
+    public Rank getRank(String username) {
+        Document doc = getPlayer(username, new Document("rank", true));
+        if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
+        return Rank.fromString(doc.getString("rank"));
+    }
+
+    public Rank getRank(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("rank", true));
+        if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
+        return Rank.fromString(doc.getString("rank"));
     }
 }

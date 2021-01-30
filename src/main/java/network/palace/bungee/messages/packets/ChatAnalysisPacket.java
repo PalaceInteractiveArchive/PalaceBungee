@@ -2,7 +2,6 @@ package network.palace.bungee.messages.packets;
 
 import com.google.gson.JsonObject;
 import lombok.Getter;
-import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Rank;
 
 import java.util.UUID;

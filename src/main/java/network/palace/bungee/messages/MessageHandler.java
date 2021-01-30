@@ -11,6 +11,7 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
+import network.palace.bungee.handlers.moderation.Mute;
 import network.palace.bungee.messages.packets.*;
 import network.palace.bungee.utils.ConfigUtil;
 
@@ -200,37 +201,7 @@ public class MessageHandler {
                         break;
                     }
                     case 15: {
-                        SendPlayerPacket packet = new SendPlayerPacket(object);
-                        String target = packet.getTargetPlayer();
-                        Server server = PalaceBungee.getServerUtil().getServer(packet.getTargetServer(), true);
-                        if (server == null) return;
-                        if (target.contains(":")) {
-                            String fromServer = target.split(":")[1];
-                            // send all on fromServer to targetServer
-                            for (Player player : PalaceBungee.getOnlinePlayers()) {
-                                if (player.getServerName().equals(fromServer)) {
-                                    server.join(player);
-                                }
-                            }
-                        } else if (target.contains("-")) {
-                            try {
-                                UUID playerUUID = UUID.fromString(target);
-                                Player player = PalaceBungee.getPlayer(playerUUID);
-                                server.join(player);
-                            } catch (Exception ignored) {
-                            }
-                        } else if (target.equals("all")) {
-                            // send all players to targetServer
-                            for (Player player : PalaceBungee.getOnlinePlayers()) {
-                                server.join(player);
-                            }
-                        } else {
-                            try {
-                                Player player = PalaceBungee.getPlayer(target);
-                                server.join(player);
-                            } catch (Exception ignored) {
-                            }
-                        }
+                        handleSendPacket(new SendPlayerPacket(object));
                         break;
                     }
                     case 16: {
@@ -308,6 +279,22 @@ public class MessageHandler {
                         }
                         break;
                     }
+                    case 21: {
+                        MutePlayerPacket packet = new MutePlayerPacket(object);
+                        Player tp = PalaceBungee.getPlayer(packet.getUuid());
+                        if (tp == null) return;
+                        Mute mute = PalaceBungee.getMongoHandler().getCurrentMute(tp.getUniqueId());
+                        if (mute != null) {
+                            tp.setMute(mute);
+                            tp.sendMessage(PalaceBungee.getModerationUtil().getMuteMessage(mute));
+                        } else {
+                            if (tp.getMute() != null && tp.getMute().isMuted()) {
+                                tp.sendMessage(ChatColor.RED + "You have been unmuted.");
+                            }
+                            tp.setMute(null);
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -364,11 +351,48 @@ public class MessageHandler {
                         PalaceBungee.getChatUtil().handleAnalysisResponse(packet);
                         break;
                     }
+                    case 15: {
+                        handleSendPacket(new SendPlayerPacket(object));
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
             }
         }, doNothing);
+    }
+
+    private void handleSendPacket(SendPlayerPacket packet) {
+        String target = packet.getTargetPlayer();
+        Server server = PalaceBungee.getServerUtil().getServer(packet.getTargetServer(), true);
+        if (server == null) return;
+        if (target.contains(":")) {
+            String fromServer = target.split(":")[1];
+            // send all on fromServer to targetServer
+            for (Player player : PalaceBungee.getOnlinePlayers()) {
+                if (player.getServerName().equals(fromServer)) {
+                    server.join(player);
+                }
+            }
+        } else if (target.contains("-")) {
+            try {
+                UUID playerUUID = UUID.fromString(target);
+                Player player = PalaceBungee.getPlayer(playerUUID);
+                server.join(player);
+            } catch (Exception ignored) {
+            }
+        } else if (target.equals("all")) {
+            // send all players to targetServer
+            for (Player player : PalaceBungee.getOnlinePlayers()) {
+                server.join(player);
+            }
+        } else {
+            try {
+                Player player = PalaceBungee.getPlayer(target);
+                server.join(player);
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void handleError(String consumerTag, Delivery delivery, Exception e) {

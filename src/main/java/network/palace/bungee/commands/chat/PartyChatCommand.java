@@ -13,13 +13,8 @@ public class PartyChatCommand extends PalaceCommand {
 
     @Override
     public void execute(Player player, String[] args) {
-        String message = "";
-        StringBuilder msg = new StringBuilder();
-        for (String s : args) {
-            msg.append(s).append(" ");
-        }
         try {
-            PalaceBungee.getPartyUtil().chat(player, msg.toString().trim());
+            PalaceBungee.getPartyUtil().chat(player, String.join(" ", args));
         } catch (Exception e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "An error occurred while sending your party chat message! Please try again in a few minutes.");

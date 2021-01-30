@@ -8,6 +8,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
@@ -163,16 +164,24 @@ public class ChatUtil {
         analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
             messageCache.put(player.getUniqueId(), new ChatMessage(player.getUniqueId(), processed));
 
+            String emoji;
+            try {
+                emoji = EmojiUtil.convertMessage(player, processed);
+            } catch (IllegalArgumentException e) {
+                player.sendMessage(ChatColor.RED + e.getMessage());
+                return;
+            }
+
             // TODO Log chat message
             if (channel.equals("ParkChat")) {
                 try {
-                    sendOutgoingParkChatMessage(player, processed);
+                    sendOutgoingParkChatMessage(player, emoji);
                 } catch (Exception e) {
                     e.printStackTrace();
                     player.sendMessage(ChatColor.RED + "There was an error sending your chat message! Please try again in a few minutes. If the issue continues, try logging out and back in.");
                 }
             } else {
-                player.chat(processed);
+                player.chat(emoji);
             }
         });
         return true;
@@ -188,10 +197,28 @@ public class ChatUtil {
      * @implNote this method will return null if the message should be blocked
      */
     public String processChatMessage(Player player, String msg, String channel) {
-        // Remove multiple spaces between words
-        msg = msg.replaceAll(" {2}", " ");
+        return processChatMessage(player, msg, channel, false);
+    }
 
-//        if (player.isMuted()) TODO muted players can't talk in chat
+
+    /**
+     * Process chat message locally
+     *
+     * @param player      the player
+     * @param msg         the message
+     * @param channel     the chat channel
+     * @param ignoreMuted whether to ignore the player's mute state
+     * @return the message (modified if necessary), or null if the message should be blocked
+     * @implNote this method will return null if the message should be blocked
+     */
+    public String processChatMessage(Player player, String msg, String channel, boolean ignoreMuted) {
+        // Remove multiple spaces between words
+        msg = msg.replaceAll(" +", " ");
+
+        if (player.isMuted() && !ignoreMuted) {
+            player.sendMessage(PalaceBungee.getModerationUtil().getMuteMessage(player.getMute()));
+            return null;
+        }
 
         if (player.getRank().getRankId() < Rank.CHARACTER.getRankId()) {
             if (isChatMuted(channel) && !channel.equals("Creative")) {
@@ -223,8 +250,6 @@ public class ChatUtil {
                 return null;
             }
         }
-
-        //TODO emoji
 
         return msg;
     }
@@ -298,11 +323,16 @@ public class ChatUtil {
     public void handleIncomingChatPacket(ChatPacket packet) throws Exception {
         UUID sender = packet.getSender();
         BaseComponent[] message = packet.getMessage();
+        String plainText = ChatColor.stripColor(TextComponent.toPlainText(message)).toLowerCase();
         String channel = packet.getChannel();
         if (channel.equals("ParkChat")) {
             for (Player player : PalaceBungee.getOnlinePlayers()) {
-                // TODO handle mentions
-                player.sendMessage(message);
+                if (plainText.matches("(.* )?" + player.getUsername().toLowerCase() + "([.,! ].*)?")) {
+                    player.sendMessage(new ComponentBuilder("* ").color(ChatColor.BLUE).append(message).create());
+                    player.mention();
+                } else {
+                    player.sendMessage(message);
+                }
             }
         }
     }
