@@ -12,11 +12,11 @@ import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.Party;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.Server;
 import network.palace.bungee.handlers.moderation.*;
-import network.palace.bungee.handlers.Party;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -743,5 +743,15 @@ public class MongoHandler {
         Document doc = getPlayer(uuid, new Document("rank", true));
         if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
         return Rank.fromString(doc.getString("rank"));
+    }
+
+    public void setWarningCooldown(UUID uuid) {
+        playerCollection.updateOne(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("online", true)), Updates.set("lastWarned", System.currentTimeMillis()));
+    }
+
+    public long getWarningCooldown(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("lastWarned", true));
+        if (doc == null || !doc.containsKey("lastWarned")) return 0;
+        return doc.getLong("lastWarned");
     }
 }

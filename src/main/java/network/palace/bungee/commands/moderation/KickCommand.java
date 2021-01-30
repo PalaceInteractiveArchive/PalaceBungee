@@ -10,6 +10,7 @@ import network.palace.bungee.handlers.moderation.Kick;
 import network.palace.bungee.messages.packets.KickPlayerPacket;
 
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class KickCommand extends PalaceCommand {
 
@@ -42,7 +43,9 @@ public class KickCommand extends PalaceCommand {
             PalaceBungee.getModerationUtil().announceKick(playername, reason, player.getUsername());
             PalaceBungee.getMongoHandler().kickPlayer(uuid, kick);
         } catch (Exception e) {
-            player.sendMessage(ChatColor.RED + "That player isn't online!");
+            e.printStackTrace();
+            player.sendMessage(ChatColor.RED + "An error occurred while kicking that player. Check console for errors.");
+            PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error processing kick", e);
         }
     }
 }

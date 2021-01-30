@@ -154,6 +154,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new UnbanCommand());
         pm.registerCommand(this, new UnbanIPCommand());
         pm.registerCommand(this, new UnmuteCommand());
+        pm.registerCommand(this, new WarnCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
         pm.registerCommand(this, new ServerCommand());

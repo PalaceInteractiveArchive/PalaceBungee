@@ -2,7 +2,9 @@ package network.palace.bungee.utils;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
@@ -167,13 +169,29 @@ public class ModerationUtil {
                 .append("Please review our rules at ").color(ChatColor.YELLOW).append("https://palnet.us/rules").color(ChatColor.AQUA).underlined(true).create();
     }
 
-    public String getMuteMessage(Mute mute) {
-        return "\n" + ChatColor.RED + "" + ChatColor.STRIKETHROUGH +
-                "                                                                              \n" +
-                ChatColor.RESET + "" + ChatColor.RED + "You have been muted for " + mute.getReason() +
-                (mute.getReason().trim().endsWith(".") ? "" : ".") + ChatColor.GRAY + "\nExpires: " + ChatColor.WHITE +
-                DateUtil.formatDateDiff(mute.getExpires()) + ChatColor.GRAY + "\n\nPlease review our rules at " +
-                ChatColor.AQUA + "https://palnet.us/rules\n" + ChatColor.RED + "" + ChatColor.STRIKETHROUGH +
-                "                                                                              \n" + ChatColor.RESET;
+    public BaseComponent[] getMuteMessage(Mute mute) {
+        return new ComponentBuilder("\n                                                                              \n").color(ChatColor.RED).strikethrough(true)
+                .append("You have been muted for " + mute.getReason() + (mute.getReason().trim().endsWith(".") ? "" : "."))
+                .reset().color(ChatColor.RED)
+                .append("\nExpires: ").color(ChatColor.GRAY)
+                .append(DateUtil.formatDateDiff(mute.getExpires())).color(ChatColor.WHITE)
+                .append("\n\nPlease review our rules at ").color(ChatColor.GRAY)
+                .append("https://palnet.us/rules\n").color(ChatColor.AQUA)
+                .event(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://palnet.us/rules"))
+                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open ").color(ChatColor.AQUA).append("https://palnet.us/rules").color(ChatColor.GREEN).create()))
+                .append("\n                                                                              \n").color(ChatColor.RED).strikethrough(true)
+                .create();
+    }
+
+    public BaseComponent[] getWarnMessage(Warning warn) {
+        return new ComponentBuilder("\n                                                                              \n").color(ChatColor.RED).strikethrough(true)
+                .append("You have been issued a warning for " + warn.getReason() + (warn.getReason().trim().endsWith(".") ? "" : "."))
+                .reset().color(ChatColor.RED)
+                .append("\n\nPlease review our rules at ").color(ChatColor.GRAY)
+                .append("https://palnet.us/rules\n").color(ChatColor.AQUA)
+                .event(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://palnet.us/rules"))
+                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open ").color(ChatColor.AQUA).append("https://palnet.us/rules").color(ChatColor.GREEN).create()))
+                .append("\n                                                                              \n").color(ChatColor.RED).strikethrough(true)
+                .create();
     }
 }

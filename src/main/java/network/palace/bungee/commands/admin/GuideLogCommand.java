@@ -21,17 +21,10 @@ public class GuideLogCommand extends PalaceCommand {
             return;
         }
         String username = args[0];
-        Player tp = PalaceBungee.getPlayer(username);
-        UUID uuid;
-        if (tp == null) {
-            uuid = PalaceBungee.getMongoHandler().usernameToUUID(username);
-            if (uuid == null) {
-                player.sendMessage(ChatColor.RED + "Player not found!");
-                return;
-            }
-        } else {
-            uuid = tp.getUniqueId();
-            username = tp.getUsername();
+        UUID uuid = PalaceBungee.getMongoHandler().usernameToUUID(username);
+        if (uuid == null) {
+            player.sendMessage(ChatColor.RED + "Player not found!");
+            return;
         }
         String[] stats = PalaceBungee.getMongoHandler().getHelpActivity(uuid).split(",");
         player.sendMessage(ChatColor.GREEN + "Guide Log for " + username + ": \n" + ChatColor.YELLOW +
