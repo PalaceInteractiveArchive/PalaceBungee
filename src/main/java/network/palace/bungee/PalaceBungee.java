@@ -140,12 +140,14 @@ public class PalaceBungee extends Plugin {
         /* Moderation Commands */
         pm.registerCommand(this, new AltAccountsCommand());
         pm.registerCommand(this, new BanCommand());
+        pm.registerCommand(this, new BanIPCommand());
         pm.registerCommand(this, new DMToggleCommand());
         pm.registerCommand(this, new LookupCommand());
         pm.registerCommand(this, new MuteChatCommand());
         pm.registerCommand(this, new NamecheckCommand());
         pm.registerCommand(this, new TempBanCommand());
         pm.registerCommand(this, new UnbanCommand());
+        pm.registerCommand(this, new UnbanIPCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
         pm.registerCommand(this, new ServerCommand());

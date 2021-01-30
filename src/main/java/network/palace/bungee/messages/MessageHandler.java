@@ -280,6 +280,34 @@ public class MessageHandler {
                         }
                         break;
                     }
+                    case 20: {
+                        KickIPPacket packet = new KickIPPacket(object);
+                        String address = packet.getAddress();
+                        if (!address.contains("*")) {
+                            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                                if (tp.getAddress().equals(address)) {
+                                    if (packet.isComponentMessage()) {
+                                        tp.kickPlayer(ComponentSerializer.parse(packet.getReason()));
+                                    } else {
+                                        tp.kickPlayer(packet.getReason());
+                                    }
+                                }
+                            }
+                        } else {
+                            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                                String[] list = tp.getAddress().split("\\.");
+                                String range = list[0] + "." + list[1] + "." + list[2] + ".*";
+                                if (range.equalsIgnoreCase(address)) {
+                                    if (packet.isComponentMessage()) {
+                                        tp.kickPlayer(ComponentSerializer.parse(packet.getReason()));
+                                    } else {
+                                        tp.kickPlayer(packet.getReason());
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
