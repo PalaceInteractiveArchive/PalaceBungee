@@ -14,7 +14,10 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
+import network.palace.bungee.handlers.moderation.AddressBan;
+import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.party.Party;
+import network.palace.bungee.utils.DateUtil;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
@@ -37,18 +40,52 @@ public class PlayerJoinAndLeave implements Listener {
         }
 
         Player player;
+        Rank rank;
         if (doc == null) {
             // new player
             player = null;
+            rank = Rank.SETTLER;
         } else {
-            Rank rank = Rank.fromString(doc.getString("rank"));
-            if (PalaceBungee.getConfigUtil().isMaintenance() && rank.getRankId() < Rank.DEVELOPER.getRankId()) {
+            AddressBan addressBan = PalaceBungee.getMongoHandler().getAddressBan(address);
+            if (addressBan != null) {
                 event.setCancelled(true);
-                event.setCancelReason(new ComponentBuilder("We are currently performing maintenance on our servers.\nFollow ")
-                        .color(ChatColor.AQUA).append("@PalaceDev ").color(ChatColor.BLUE).append("on Twitter for updates!")
-                        .color(ChatColor.AQUA).create());
+                event.setCancelReason(new ComponentBuilder("Your network has been banned from this server!\n\n").color(ChatColor.RED)
+                        .append("Reason: ").color(ChatColor.YELLOW).append(addressBan.getReason() + "\n\n").color(ChatColor.WHITE)
+                        .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
                 return;
             }
+            String[] list = address.split("\\.");
+            String range = list[0] + "." + list[1] + "." + list[2] + ".*";
+            AddressBan rangeBan = PalaceBungee.getMongoHandler().getAddressBan(range);
+            if (rangeBan != null) {
+                event.setCancelled(true);
+                event.setCancelReason(new ComponentBuilder("Your network has been banned from this server!\n\n").color(ChatColor.RED)
+                        .append("Reason: ").color(ChatColor.YELLOW).append(rangeBan.getReason() + "\n\n").color(ChatColor.WHITE)
+                        .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                return;
+            }
+            Ban ban = PalaceBungee.getMongoHandler().getCurrentBan(connection.getUniqueId(), connection.getName());
+            if (ban != null) {
+                if (ban.isPermanent()) {
+                    event.setCancelled(true);
+                    event.setCancelReason(new ComponentBuilder("You are permanently banned from this server!\n\n").color(ChatColor.RED)
+                            .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
+                            .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                    return;
+                } else {
+                    if (ban.getExpires() > System.currentTimeMillis()) {
+                        event.setCancelled(true);
+                        event.setCancelReason(new ComponentBuilder("You are temporarily banned from this server!\n\n").color(ChatColor.RED)
+                                .append("Reason: ").color(ChatColor.YELLOW).append(ban.getReason() + "\n\n").color(ChatColor.WHITE)
+                                .append("Expires: " + DateUtil.formatDateDiff(ban.getExpires()) + "\n\n").color(ChatColor.YELLOW)
+                                .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create());
+                        return;
+                    }
+                    PalaceBungee.getMongoHandler().unbanPlayer(connection.getUniqueId());
+                }
+            }
+
+            rank = Rank.fromString(doc.getString("rank"));
 
             List<RankTag> tagList = new ArrayList<>();
             if (doc.containsKey("tags")) {
@@ -62,6 +99,13 @@ public class PlayerJoinAndLeave implements Listener {
             Document settings = (Document) doc.get("settings");
 
             player = new Player(connection.getUniqueId(), connection.getName(), rank, tagList, address, connection.getVersion(), settings.getBoolean("mentions"));
+        }
+        if (PalaceBungee.getConfigUtil().isMaintenance() && rank.getRankId() < Rank.DEVELOPER.getRankId()) {
+            event.setCancelled(true);
+            event.setCancelReason(new ComponentBuilder("We are currently performing maintenance on our servers.\nFollow ")
+                    .color(ChatColor.AQUA).append("@PalaceDev ").color(ChatColor.BLUE).append("on Twitter for updates!")
+                    .color(ChatColor.AQUA).create());
+            return;
         }
         PalaceBungee.login(player);
     }
