@@ -12,6 +12,7 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.moderation.Mute;
 import network.palace.bungee.messages.packets.MentionPacket;
 import network.palace.bungee.utils.LinkUtil;
 

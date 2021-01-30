@@ -1,17 +1,17 @@
-package network.palace.bungee.handlers;
+package network.palace.bungee.handlers.moderation;
 
 import lombok.Getter;
 
 import java.util.UUID;
 
 public class Ban {
-    private UUID uuid;
-    @Getter private String name;
-    @Getter private boolean permanent;
-    @Getter private long created;
-    @Getter private long expires;
-    @Getter private String reason;
-    @Getter private String source;
+    private final UUID uuid;
+    @Getter private final String name;
+    @Getter private final boolean permanent;
+    @Getter private final long created;
+    @Getter private final long expires;
+    @Getter private final String reason;
+    @Getter private final String source;
 
     public Ban(UUID uuid, String name, boolean permanent, long expires, String reason, String source) {
         this(uuid, name, permanent, System.currentTimeMillis(), expires, reason, source);

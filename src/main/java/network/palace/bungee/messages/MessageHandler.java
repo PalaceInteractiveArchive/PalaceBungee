@@ -268,6 +268,12 @@ public class MessageHandler {
                         }).forEach(Player::mention);
                         break;
                     }
+                    case 19: {
+                        KickPlayerPacket packet = new KickPlayerPacket(object);
+                        Player tp = PalaceBungee.getPlayer(packet.getUuid());
+                        if (tp != null) tp.kickPlayer(packet.getReason(), false);
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);

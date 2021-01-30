@@ -6,6 +6,8 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
+import network.palace.bungee.handlers.moderation.Ban;
+import network.palace.bungee.handlers.moderation.Mute;
 import network.palace.bungee.utils.DateUtil;
 import org.bson.Document;
 

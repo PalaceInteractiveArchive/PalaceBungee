@@ -26,10 +26,7 @@ import network.palace.bungee.listeners.ProxyPing;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.party.PartyUtil;
-import network.palace.bungee.utils.ChatUtil;
-import network.palace.bungee.utils.ConfigUtil;
-import network.palace.bungee.utils.GuideUtil;
-import network.palace.bungee.utils.ServerUtil;
+import network.palace.bungee.utils.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -48,6 +45,7 @@ public class PalaceBungee extends Plugin {
 
     @Getter private static ChatUtil chatUtil;
     @Getter private static GuideUtil guideUtil;
+    @Getter private static ModerationUtil moderationUtil;
     @Getter private static PartyUtil partyUtil;
 
     @Getter private static MongoHandler mongoHandler;
@@ -88,6 +86,7 @@ public class PalaceBungee extends Plugin {
 
         chatUtil = new ChatUtil();
         guideUtil = new GuideUtil();
+        moderationUtil = new ModerationUtil();
         partyUtil = new PartyUtil();
 
         registerListeners();
@@ -140,10 +139,12 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new HelpMeCommand());
         /* Moderation Commands */
         pm.registerCommand(this, new AltAccountsCommand());
+        pm.registerCommand(this, new BanCommand());
         pm.registerCommand(this, new DMToggleCommand());
         pm.registerCommand(this, new LookupCommand());
         pm.registerCommand(this, new MuteChatCommand());
         pm.registerCommand(this, new NamecheckCommand());
+        pm.registerCommand(this, new UnbanCommand());
         /* Staff Commands */
         pm.registerCommand(this, new BroadcastCommand());
         pm.registerCommand(this, new ServerCommand());

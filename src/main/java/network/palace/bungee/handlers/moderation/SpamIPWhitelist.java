@@ -1,4 +1,4 @@
-package network.palace.bungee.handlers;
+package network.palace.bungee.handlers.moderation;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class SpamIPWhitelist {
-    private String address;
-    private int limit;
+    private final String address;
+    private final int limit;
 }

@@ -1,4 +1,4 @@
-package network.palace.bungee.handlers;
+package network.palace.bungee.handlers.moderation;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 public class Mute {
-    private UUID uuid;
+    private final UUID uuid;
     @Setter private boolean muted;
     @Setter private long created;
     @Setter private long expires;

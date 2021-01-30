@@ -12,7 +12,10 @@ import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.*;
+import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
+import network.palace.bungee.handlers.Server;
+import network.palace.bungee.handlers.moderation.*;
 import network.palace.bungee.party.Party;
 import network.palace.bungee.utils.ConfigUtil;
 import org.bson.Document;
@@ -36,7 +39,7 @@ public class MongoHandler {
     private final MongoClient client;
     private final MongoCollection<Document> bansCollection;
     private final MongoCollection<Document> partyCollection;
-    private final MongoCollection<Document> playerCollection;
+    @Getter private final MongoCollection<Document> playerCollection;
     @Getter private final MongoCollection<Document> resourcePackCollection;
     private final MongoCollection<Document> serversCollection;
     private final MongoCollection<Document> serviceConfigCollection;
@@ -108,65 +111,6 @@ public class MongoHandler {
     public void setSetting(UUID uuid, String key, Object value) {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("settings." + key, value),
                 new UpdateOptions().upsert(true));
-    }
-
-    public ArrayList getBans(UUID uuid) {
-        return getPlayer(uuid, new Document("bans", 1)).get("bans", ArrayList.class);
-    }
-
-    public ArrayList getMutes(UUID uuid) {
-        return getPlayer(uuid, new Document("mutes", 1)).get("mutes", ArrayList.class);
-    }
-
-    public ArrayList getKicks(UUID uuid) {
-        return getPlayer(uuid, new Document("kicks", 1)).get("kicks", ArrayList.class);
-    }
-
-    public ArrayList getWarnings(UUID uuid) {
-        Document doc = getPlayer(uuid, new Document("warnings", 1));
-        if (doc == null || !doc.containsKey("warnings")) {
-            return new ArrayList();
-        }
-        return doc.get("warnings", ArrayList.class);
-    }
-
-    public boolean isBanned(UUID uuid) {
-        return getCurrentBan(uuid) != null;
-    }
-
-    public AddressBan getAddressBan(String address) {
-        Document doc = bansCollection.find(new Document("type", "ip").append("data", address)).first();
-        if (doc == null) return null;
-        return new AddressBan(doc.getString("data"), doc.getString("reason"), doc.getString("source"));
-    }
-
-    public Ban getCurrentBan(UUID uuid) {
-        return getCurrentBan(uuid, "");
-    }
-
-    public Ban getCurrentBan(UUID uuid, String name) {
-        Document doc = getPlayer(uuid, new Document("bans", 1));
-        for (Object o : doc.get("bans", ArrayList.class)) {
-            Document banDoc = (Document) o;
-            if (banDoc == null || !banDoc.getBoolean("active")) continue;
-            return new Ban(uuid, name, banDoc.getBoolean("permanent"), banDoc.getLong("created"),
-                    banDoc.getLong("expires"), banDoc.getString("reason"), banDoc.getString("source"));
-        }
-        return null;
-    }
-
-    /**
-     * Unban the player
-     * <p>
-     * Sets any active bans to inactive
-     *
-     * @param uuid the uuid of the player
-     */
-    public void unbanPlayer(UUID uuid) {
-        playerCollection.updateMany(new Document("uuid", uuid.toString()).append("bans.active", true),
-                new Document("$set", new Document("bans.$.active", false).append("bans.$.expires", System.currentTimeMillis())));
-        playerCollection.updateOne(new Document("uuid", uuid.toString()).append("bans.reason", "MCLeaks Account"),
-                Updates.pull("bans", new Document("reason", "MCLeaks Account")));
     }
 
     public int getOnlineCount() {
@@ -279,26 +223,6 @@ public class MongoHandler {
         Document doc = playerCollection.find(Filters.eq("uuid", uuid.toString())).projection(new Document("username", 1)).first();
         if (doc == null || !doc.containsKey("username")) return null;
         return doc.getString("username");
-    }
-
-    public boolean isPlayerMuted(UUID uuid) {
-        Mute m = getCurrentMute(uuid);
-        return m != null && m.isMuted();
-    }
-
-    public boolean isPlayerBanned(UUID uuid) {
-        return getCurrentBan(uuid) != null;
-    }
-
-    public Mute getCurrentMute(UUID uuid) {
-        Document doc = getPlayer(uuid, new Document("mutes", 1));
-        for (Object o : doc.get("mutes", ArrayList.class)) {
-            Document muteDoc = (Document) o;
-            if (muteDoc == null || !muteDoc.getBoolean("active")) continue;
-            return new Mute(uuid, true, muteDoc.getLong("created"), muteDoc.getLong("expires"),
-                    muteDoc.getString("reason"), muteDoc.getString("source"));
-        }
-        return null;
     }
 
     public String verifyModerationSource(String source) {
@@ -660,5 +584,152 @@ public class MongoHandler {
             }
         }
         return false;
+    }
+
+    /*
+    Moderation Methods
+     */
+
+    public boolean isPlayerMuted(UUID uuid) {
+        Mute m = getCurrentMute(uuid);
+        return m != null && m.isMuted();
+    }
+
+    public boolean isPlayerBanned(UUID uuid) {
+        return getCurrentBan(uuid) != null;
+    }
+
+    public Mute getCurrentMute(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("mutes", 1));
+        for (Object o : doc.get("mutes", ArrayList.class)) {
+            Document muteDoc = (Document) o;
+            if (muteDoc == null || !muteDoc.getBoolean("active")) continue;
+            return new Mute(uuid, true, muteDoc.getLong("created"), muteDoc.getLong("expires"),
+                    muteDoc.getString("reason"), muteDoc.getString("source"));
+        }
+        return null;
+    }
+
+    public void unmutePlayer(UUID uuid) {
+        playerCollection.updateMany(new Document("uuid", uuid.toString()).append("mutes.active", true), Updates.set("mutes.$.active", false));
+    }
+
+    public void mutePlayer(UUID uuid, Mute mute) {
+        if (isPlayerMuted(uuid)) return;
+
+        Document muteDocument = new Document("created", mute.getCreated()).append("expires", mute.getExpires())
+                .append("reason", mute.getReason()).append("source", mute.getSource()).append("active", true);
+
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.push("mutes", muteDocument));
+    }
+
+    public Ban getCurrentBan(UUID uuid) {
+        return getCurrentBan(uuid, "");
+    }
+
+    public Ban getCurrentBan(UUID uuid, String name) {
+        Document doc = getPlayer(uuid, new Document("bans", 1));
+        for (Object o : doc.get("bans", ArrayList.class)) {
+            Document banDoc = (Document) o;
+            if (banDoc == null || !banDoc.getBoolean("active")) continue;
+            return new Ban(uuid, name, banDoc.getBoolean("permanent"), banDoc.getLong("created"),
+                    banDoc.getLong("expires"), banDoc.getString("reason"), banDoc.getString("source"));
+        }
+        return null;
+    }
+
+    public void kickPlayer(UUID uuid, Kick kick) {
+        Document kickDocument = new Document("reason", kick.getReason())
+                .append("time", System.currentTimeMillis())
+                .append("source", kick.getSource());
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.push("kicks", kickDocument));
+    }
+
+    public void warnPlayer(Warning warning) {
+        Document warningDocument = new Document("reason", warning.getReason())
+                .append("time", System.currentTimeMillis())
+                .append("source", warning.getSource());
+        playerCollection.updateOne(Filters.eq("uuid", warning.getUniqueId().toString()),
+                Updates.push("warnings", warningDocument), new UpdateOptions().upsert(true));
+    }
+
+    public void unbanPlayer(UUID uuid) {
+        playerCollection.updateMany(new Document("uuid", uuid.toString()).append("bans.active", true),
+                new Document("$set", new Document("bans.$.active", false).append("bans.$.expires", System.currentTimeMillis())));
+    }
+
+    public void banPlayer(UUID uuid, Ban ban) {
+        if (isPlayerBanned(uuid)) return;
+
+        Document banDocument = new Document("created", ban.getCreated()).append("expires", ban.getExpires())
+                .append("permanent", ban.isPermanent()).append("reason", ban.getReason())
+                .append("source", ban.getSource()).append("active", true);
+
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.push("bans", banDocument));
+    }
+
+    public void banProvider(ProviderBan ban) {
+        bansCollection.insertOne(new Document("type", "provider").append("data", ban.getProvider())
+                .append("source", ban.getSource()));
+    }
+
+    public ProviderBan getProviderBan(String isp) {
+        Document doc = bansCollection.find(new Document("type", "provider").append("data", isp)).first();
+        if (doc == null) return null;
+        return new ProviderBan(doc.getString("data"), doc.getString("source"));
+    }
+
+    public List<String> getBannedProviders() {
+        List<String> list = new ArrayList<>();
+        for (Document doc : bansCollection.find(new Document("type", "provider"))) {
+            list.add(doc.getString("data"));
+        }
+        return list;
+    }
+
+    public void unbanProvider(String isp) {
+        bansCollection.deleteMany(new Document("type", "provider").append("data", isp));
+    }
+
+    public void banAddress(AddressBan ban) {
+        bansCollection.insertOne(new Document("type", "ip").append("data", ban.getAddress())
+                .append("reason", ban.getReason()).append("source", ban.getSource()));
+    }
+
+    public AddressBan getAddressBan(String address) {
+        Document doc = bansCollection.find(new Document("type", "ip").append("data", address)).first();
+        if (doc == null) return null;
+        return new AddressBan(doc.getString("data"), doc.getString("reason"), doc.getString("source"));
+    }
+
+    public void unbanAddress(String address) {
+        bansCollection.deleteMany(new Document("type", "ip").append("data", address));
+    }
+
+    public void updateProviderData(UUID uuid, ProviderData data) {
+        Document doc = new Document("isp", data.getIsp()).append("country", data.getCountry())
+                .append("region", data.getRegion()).append("regionName", data.getRegionName())
+                .append("timezone", data.getTimezone());
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), new Document("$set", doc));
+    }
+
+    public ArrayList getBans(UUID uuid) {
+        return getPlayer(uuid, new Document("bans", 1)).get("bans", ArrayList.class);
+    }
+
+    public ArrayList getMutes(UUID uuid) {
+        return getPlayer(uuid, new Document("mutes", 1)).get("mutes", ArrayList.class);
+    }
+
+    public ArrayList getKicks(UUID uuid) {
+        return getPlayer(uuid, new Document("kicks", 1)).get("kicks", ArrayList.class);
+    }
+
+    public ArrayList getWarnings(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("warnings", 1));
+        if (doc == null || !doc.containsKey("warnings")) {
+            return new ArrayList();
+        }
+        return doc.get("warnings", ArrayList.class);
     }
 }

@@ -7,6 +7,8 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
+import network.palace.bungee.handlers.moderation.AddressBan;
+import network.palace.bungee.handlers.moderation.SpamIPWhitelist;
 import org.bson.Document;
 
 import java.util.List;
