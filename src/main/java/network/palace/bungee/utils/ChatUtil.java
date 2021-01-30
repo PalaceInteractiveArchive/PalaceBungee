@@ -220,36 +220,44 @@ public class ChatUtil {
             return null;
         }
 
-        if (player.getRank().getRankId() < Rank.CHARACTER.getRankId()) {
-            if (isChatMuted(channel) && !channel.equals("Creative")) {
-                player.sendMessage(ChatColor.RED + "Chat is currently muted!");
-                return null;
+//        if (player.getRank().getRankId() < Rank.CHARACTER.getRankId()) {
+        if (isChatMuted(channel) && !channel.equals("Creative")) {
+            player.sendMessage(ChatColor.RED + "Chat is currently muted!");
+            return null;
+        }
+
+        if (strictModeCheck(msg)) {
+            player.sendMessage(ChatColor.RED + "Your message was similar to another recently said in chat and was marked as spam. We apologize if this was done in error, we're constantly improving our chat filter.");
+            try {
+                PalaceBungee.getModerationUtil().announceSpamMessage(player.getUsername(), msg);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            return null;
+        }
 
-//            if (strictModeCheck(msg)) TODO strict mode prevents similar chat messages from being sent, should probably use API
+        if (System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
+            player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
+            return null;
+        }
+        player.setLastChatMessage(System.currentTimeMillis());
 
-            if (System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
-                player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
-                return null;
-            }
-            player.setLastChatMessage(System.currentTimeMillis());
+        msg = removeCaps(player, msg);
 
-            msg = removeCaps(player, msg);
-
-            if (messageCache.containsKey(player.getUniqueId())) {
-                ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
-                //Block saying the same message within a minute
-                if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
-                    player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
-                    return null;
-                }
-            }
-        } else {
-            if (msg.startsWith(":warn-")) {
-//                dashboard.getWarningUtil().handle(player, msg.toString());
+        if (messageCache.containsKey(player.getUniqueId())) {
+            ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
+            //Block saying the same message within a minute
+            if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
+                player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
                 return null;
             }
         }
+//        } else {
+//            if (msg.startsWith(":warn-")) {
+////                dashboard.getWarningUtil().handle(player, msg.toString());
+//                return null;
+//            }
+//        }
 
         return msg;
     }
@@ -334,6 +342,34 @@ public class ChatUtil {
                     player.sendMessage(message);
                 }
             }
+        }
+    }
+
+    public boolean strictModeCheck(String message) {
+        //TODO need to find way to distribute this system in the future
+        try {
+            if (PalaceBungee.getConfigUtil().isStrictChat() && !messageCache.isEmpty() && message.length() >= 10) {
+                ChatMessage chatMessage = null;
+                for (ChatMessage cached : messageCache.values()) {
+                    if (chatMessage == null) {
+                        chatMessage = cached;
+                        continue;
+                    }
+                    if (cached.getTime() > chatMessage.getTime()) {
+                        chatMessage = cached;
+                    }
+                }
+
+                //Only strict-check messages said within the last 10 seconds
+                if (chatMessage != null && System.currentTimeMillis() - chatMessage.getTime() < 10 * 1000) {
+                    String lastMessage = chatMessage.getMessage();
+                    double distance = PalaceBungee.getChatAlgorithm().similarity(PalaceBungee.getConfigUtil().getStrictThreshold(), message, lastMessage);
+                    return distance >= PalaceBungee.getConfigUtil().getStrictThreshold();
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
         }
     }
 

@@ -143,6 +143,16 @@ public class ConfigUtil {
         if (dbUpdate) saveConfigChanges();
     }
 
+    public void setStrictChat(boolean strictChat) throws Exception {
+        this.strictChat = strictChat;
+        saveConfigChanges();
+    }
+
+    public void setStrictThreshold(double strictThreshold) throws Exception {
+        this.strictThreshold = strictThreshold;
+        saveConfigChanges();
+    }
+
     private void saveConfigChanges() throws Exception {
         BungeeConfig config = new BungeeConfig(null, null, null, null,
                 maintenance, chatDelay, dmEnabled, strictChat, strictThreshold,

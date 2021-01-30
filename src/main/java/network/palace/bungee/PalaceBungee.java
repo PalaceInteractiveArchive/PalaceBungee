@@ -26,6 +26,7 @@ import network.palace.bungee.listeners.ProxyPing;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.utils.*;
+import network.palace.bungee.utils.chat.JaroWinkler;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -43,6 +44,7 @@ public class PalaceBungee extends Plugin {
     @Getter private static ConfigUtil configUtil;
     @Getter private static ServerUtil serverUtil;
 
+    @Getter private static final JaroWinkler chatAlgorithm = new JaroWinkler();
     @Getter private static ChatUtil chatUtil;
     @Getter private static GuideUtil guideUtil;
     @Getter private static ModerationUtil moderationUtil;
@@ -153,6 +155,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new MuteCommand());
         pm.registerCommand(this, new NamecheckCommand());
         pm.registerCommand(this, new PartiesCommand());
+        pm.registerCommand(this, new StrictCommand());
         pm.registerCommand(this, new TempBanCommand());
         pm.registerCommand(this, new UnbanCommand());
         pm.registerCommand(this, new UnbanIPCommand());
