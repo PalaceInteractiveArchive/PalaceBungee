@@ -313,6 +313,18 @@ public class MongoHandler {
         return new Party(doc);
     }
 
+    public List<Party> getParties() throws Exception {
+        List<Party> parties = new ArrayList<>();
+        FindIterable<Document> find = partyCollection.find();
+        for (Document doc : find) {
+            try {
+                parties.add(new Party(doc));
+            } catch (Exception ignored) {
+            }
+        }
+        return parties;
+    }
+
     public Party createParty(UUID leader) throws Exception {
         Document doc = new Document("leader", leader.toString()).append("members", Collections.singletonList(leader.toString()))
                 .append("createdOn", System.currentTimeMillis()).append("invited", new ArrayList<>());
