@@ -12,6 +12,7 @@ import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
 import network.palace.bungee.handlers.moderation.Mute;
+import network.palace.bungee.handlers.moderation.ProviderBan;
 import network.palace.bungee.messages.packets.*;
 import network.palace.bungee.utils.ConfigUtil;
 
@@ -292,6 +293,19 @@ public class MessageHandler {
                                 tp.sendMessage(ChatColor.RED + "You have been unmuted.");
                             }
                             tp.setMute(null);
+                        }
+                        break;
+                    }
+                    case 22: {
+                        BanProviderPacket packet = new BanProviderPacket(object);
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if (tp.getIsp().trim().equalsIgnoreCase(packet.getProvider().trim())) {
+                                try {
+                                    tp.kickPlayer(PalaceBungee.getModerationUtil().getBanMessage(new ProviderBan(packet.getProvider(), "")));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
                         break;
                     }

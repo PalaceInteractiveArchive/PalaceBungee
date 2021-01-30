@@ -163,6 +163,11 @@ public class ModerationUtil {
                 .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create();
     }
 
+    public BaseComponent[] getBanMessage(ProviderBan ban) {
+        return new ComponentBuilder("Your network has been banned from this server!\n\n").color(ChatColor.RED)
+                .append("Appeal at ").color(ChatColor.YELLOW).append("https://palnet.us/appeal").color(ChatColor.AQUA).underlined(true).create();
+    }
+
     public BaseComponent[] getKickMessage(Kick kick) {
         return new ComponentBuilder("You have been disconnected from this server!\n\n").color(ChatColor.RED)
                 .append("Reason: ").color(ChatColor.YELLOW).append(kick.getReason() + "\n\n").color(ChatColor.WHITE)

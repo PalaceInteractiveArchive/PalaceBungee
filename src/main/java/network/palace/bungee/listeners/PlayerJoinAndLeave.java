@@ -11,12 +11,15 @@ import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.handlers.Party;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.moderation.AddressBan;
 import network.palace.bungee.handlers.moderation.Ban;
-import network.palace.bungee.handlers.Party;
+import network.palace.bungee.handlers.moderation.ProviderBan;
+import network.palace.bungee.handlers.moderation.ProviderData;
+import network.palace.bungee.utils.IPUtil;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
@@ -99,6 +102,20 @@ public class PlayerJoinAndLeave implements Listener {
             return;
         }
         PalaceBungee.login(player);
+        PalaceBungee.getProxyServer().getScheduler().runAsync(PalaceBungee.getInstance(), () -> {
+            assert player != null;
+            ProviderData data = IPUtil.getProviderData(player.getAddress());
+            if (data != null) {
+                player.setIsp(data.getIsp());
+                if (!player.getIsp().isEmpty()) {
+                    ProviderBan ban = PalaceBungee.getMongoHandler().getProviderBan(player.getIsp());
+                    if (ban != null) {
+                        player.kickPlayer(PalaceBungee.getModerationUtil().getBanMessage(ban));
+                    }
+                }
+                PalaceBungee.getMongoHandler().updateProviderData(player.getUniqueId(), data);
+            }
+        });
     }
 
     @EventHandler

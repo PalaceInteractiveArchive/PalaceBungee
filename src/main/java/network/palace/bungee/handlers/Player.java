@@ -28,6 +28,7 @@ public class Player {
     @Getter @Setter @NonNull private Rank rank;
     @NonNull private List<RankTag> tags;
     @Getter private final String address;
+    @Getter @Setter private String isp;
     @Getter private final long loginTime = System.currentTimeMillis();
     @Getter @Setter private Mute mute = null;
     @Getter private boolean kicking = false;

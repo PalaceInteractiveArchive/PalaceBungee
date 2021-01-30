@@ -25,13 +25,13 @@ import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
-import network.palace.bungee.utils.PartyUtil;
 import network.palace.bungee.utils.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
@@ -141,6 +141,8 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new AltAccountsCommand());
         pm.registerCommand(this, new BanCommand());
         pm.registerCommand(this, new BanIPCommand());
+        pm.registerCommand(this, new BannedProvidersCommand());
+        pm.registerCommand(this, new BanProviderCommand());
         pm.registerCommand(this, new DMToggleCommand());
         pm.registerCommand(this, new FindCommand());
         pm.registerCommand(this, new IPCommand());
@@ -153,6 +155,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new TempBanCommand());
         pm.registerCommand(this, new UnbanCommand());
         pm.registerCommand(this, new UnbanIPCommand());
+        pm.registerCommand(this, new UnbanProviderCommand());
         pm.registerCommand(this, new UnmuteCommand());
         pm.registerCommand(this, new WarnCommand());
         /* Staff Commands */
@@ -205,7 +208,7 @@ public class PalaceBungee extends Plugin {
     }
 
     public static Collection<Player> getOnlinePlayers() {
-        return players.values();
+        return new ArrayList<>(players.values());
     }
 
     public static String getUsername(UUID uuid) {
