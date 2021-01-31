@@ -18,6 +18,7 @@ public class MultiShowCommand extends PalaceCommand {
 
     @Override
     public void execute(Player player, String[] args) {
+        //TODO Doesn't work yet
         try {
             if (args.length == 4) {
                 List<String> servers = new ArrayList<>();
