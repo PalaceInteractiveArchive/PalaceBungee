@@ -34,6 +34,14 @@ public abstract class PalaceCommand extends Command {
     }
 
     @Override
+    public boolean hasPermission(CommandSender sender) {
+        if (!(sender instanceof ProxiedPlayer)) return false;
+        Player player = PalaceBungee.getPlayer(((ProxiedPlayer) sender).getUniqueId());
+        if (player == null) return false;
+        return player.getRank().getRankId() >= rank.getRankId() || (tag != null && player.getTags().contains(tag));
+    }
+
+    @Override
     public void execute(CommandSender commandSender, String[] strings) {
         if (!(commandSender instanceof ProxiedPlayer)) return;
         Player player = PalaceBungee.getPlayer(((ProxiedPlayer) commandSender).getUniqueId());

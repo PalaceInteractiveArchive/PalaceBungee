@@ -10,7 +10,6 @@ import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.moderation.AddressBan;
-import network.palace.bungee.handlers.moderation.SpamIPWhitelist;
 import org.bson.Document;
 
 import java.util.List;
@@ -51,11 +50,6 @@ public class AltAccountsCommand extends PalaceCommand {
         AddressBan ban = PalaceBungee.getMongoHandler().getAddressBan(ip);
         if (ban != null) {
             player.sendMessage(ChatColor.RED + "This IP Address is banned for " + ChatColor.AQUA + ban.getReason());
-        }
-        SpamIPWhitelist spamIPWhitelist = PalaceBungee.getMongoHandler().getSpamIPWhitelist(ip);
-        if (spamIPWhitelist != null) {
-            player.sendMessage(ChatColor.GREEN + "This IP Address is whitelisted from Spam IP protection with a player limit of " +
-                    spamIPWhitelist.getLimit() + " players.");
         }
         List<String> users = PalaceBungee.getMongoHandler().getPlayersFromIP(ip);
         if (users == null || users.isEmpty()) {

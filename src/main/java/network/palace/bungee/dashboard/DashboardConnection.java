@@ -217,7 +217,7 @@ public class DashboardConnection {
                             return;
                         }
 
-                        if (tp.getProtocolVersion() >= ProtocolConstants.MINECRAFT_1_13.getProtocolId()) {
+                        if (tp.getMcVersion() >= ProtocolConstants.MINECRAFT_1_13.getProtocolId()) {
                             int start = 0;
                             int length = 0;
 

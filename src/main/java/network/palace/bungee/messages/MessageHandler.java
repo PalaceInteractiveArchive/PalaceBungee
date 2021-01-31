@@ -135,9 +135,15 @@ public class MessageHandler {
                     case 6: {
                         ComponentMessagePacket packet = new ComponentMessagePacket(object);
                         BaseComponent[] components = ComponentSerializer.parse(packet.getSerializedMessage());
-                        for (UUID uuid : packet.getPlayers()) {
-                            Player tp = PalaceBungee.getPlayer(uuid);
-                            if (tp != null) tp.sendMessage(components);
+                        if (packet.getPlayers() == null) {
+                            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                                tp.sendMessage(components);
+                            }
+                        } else {
+                            for (UUID uuid : packet.getPlayers()) {
+                                Player tp = PalaceBungee.getPlayer(uuid);
+                                if (tp != null) tp.sendMessage(components);
+                            }
                         }
                         break;
                     }
@@ -306,6 +312,17 @@ public class MessageHandler {
                                     e.printStackTrace();
                                 }
                             }
+                        }
+                        break;
+                    }
+                    case 23: {
+                        FriendJoinPacket packet = new FriendJoinPacket(object);
+                        String phrase = packet.isJoin() ? "joined" : "left";
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if ((packet.isStaff() && tp.getRank().getRankId() >= Rank.CHARACTER.getRankId()) ||
+                                    !packet.getPlayers().contains(tp.getUniqueId()))
+                                continue;
+                            tp.sendMessage(packet.getUsername() + ChatColor.LIGHT_PURPLE + " has " + phrase + ".");
                         }
                         break;
                     }
@@ -489,6 +506,16 @@ public class MessageHandler {
     public void sendStaffMessage(String message) throws Exception {
         MessageByRankPacket packet = new MessageByRankPacket("[" + ChatColor.RED + "STAFF" +
                 ChatColor.WHITE + "] " + message, Rank.TRAINEE, null, false, false);
+        sendMessage(packet, ALL_PROXIES);
+    }
+
+    public void sendMessageToPlayer(UUID uuid, BaseComponent[] message) throws Exception {
+        Player player = PalaceBungee.getPlayer(uuid);
+        if (player != null) {
+            player.sendMessage(message);
+            return;
+        }
+        ComponentMessagePacket packet = new ComponentMessagePacket(message, uuid);
         sendMessage(packet, ALL_PROXIES);
     }
 

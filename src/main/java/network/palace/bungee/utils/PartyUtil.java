@@ -205,7 +205,7 @@ public class PartyUtil {
         party.forAllMembers(uuid -> {
             try {
                 if (uuid.equals(player.getUniqueId())) return;
-                player.sendPacket(new SendPlayerPacket(uuid.toString(), player.getServerName()));
+                player.sendPacket(new SendPlayerPacket(uuid.toString(), player.getServerName()), false);
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -18,27 +18,33 @@ import network.palace.bungee.messages.packets.MentionPacket;
 import network.palace.bungee.utils.LinkUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 public class Player {
     private final UUID uuid;
+    @Getter @Setter private boolean disabled = false;
+    @Getter @Setter private boolean newGuest = false;
     @Getter private final String username;
     @Getter @Setter @NonNull private Rank rank;
-    @NonNull private List<RankTag> tags;
+    @NonNull private final List<RankTag> tags;
     @Getter private final String address;
     @Getter @Setter private String isp;
     @Getter private final long loginTime = System.currentTimeMillis();
+    @Getter @Setter private long onlineTime = 0;
     @Getter @Setter private Mute mute = null;
     @Getter private boolean kicking = false;
-    @Getter private final int protocolVersion;
+    @Getter private final int mcVersion;
     @Setter private ProxiedPlayer proxiedPlayer;
 
     @Getter @Setter private String channel = "all";
     @Getter @Setter private boolean dmEnabled = true;
     @Getter private final List<UUID> ignored = new ArrayList<>();
     @Getter @Setter private long lastChatMessage = 0;
+
+    @Getter @Setter private boolean friendRequestToggle = true;
 
     // The UUID of the player that messaged them last
     @Getter @Setter private UUID replyTo = null;
@@ -163,7 +169,7 @@ public class Player {
     public void mention() {
         if (!hasMentions()) return;
         try {
-            PalaceBungee.getMessageHandler().sendMessage(new MentionPacket(uuid), "mc_direct", "direct", getServerName());
+            sendPacket(new MentionPacket(uuid), true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -187,11 +193,28 @@ public class Player {
     /**
      * Send a packet to the proxy this player is connected to
      *
-     * @param packet the packet to be sent
+     * @param packet   the packet to be sent
+     * @param mcServer true if packet should be sent directly to the player's MC server, false if should be sent to proxy
      * @throws Exception if there's an issue communicating over the message queue
      */
-    public void sendPacket(MQPacket packet) throws Exception {
-        UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(uuid);
-        if (targetProxy != null) PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);
+    public void sendPacket(MQPacket packet, boolean mcServer) throws Exception {
+        if (mcServer) {
+            PalaceBungee.getMessageHandler().sendMessage(packet, "mc_direct", "direct", getServerName());
+        } else {
+            UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(uuid);
+            if (targetProxy != null) PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);
+        }
+    }
+
+    public HashMap<UUID, String> getFriends() {
+        return PalaceBungee.getMongoHandler().getFriendList(uuid);
+    }
+
+    public HashMap<UUID, String> getRequests() {
+        return PalaceBungee.getMongoHandler().getFriendRequestList(uuid);
+    }
+
+    public boolean hasFriendToggledOff() {
+        return friendRequestToggle;
     }
 }

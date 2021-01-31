@@ -13,16 +13,14 @@ import network.palace.bungee.commands.guide.GuideHelpCommand;
 import network.palace.bungee.commands.guide.GuideListCommand;
 import network.palace.bungee.commands.guide.HelpMeCommand;
 import network.palace.bungee.commands.moderation.*;
-import network.palace.bungee.commands.staff.BroadcastCommand;
-import network.palace.bungee.commands.staff.SGListCommand;
-import network.palace.bungee.commands.staff.ServerCommand;
-import network.palace.bungee.commands.staff.StaffListCommand;
+import network.palace.bungee.commands.staff.*;
 import network.palace.bungee.dashboard.DashboardConnection;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.ProtocolConstants;
 import network.palace.bungee.listeners.PlayerChat;
 import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
+import network.palace.bungee.listeners.ServerSwitch;
 import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.utils.*;
@@ -32,6 +30,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,11 +43,14 @@ public class PalaceBungee extends Plugin {
     @Getter private static ConfigUtil configUtil;
     @Getter private static ServerUtil serverUtil;
 
+    @Getter private static BroadcastUtil broadcastUtil;
     @Getter private static final JaroWinkler chatAlgorithm = new JaroWinkler();
     @Getter private static ChatUtil chatUtil;
+    @Getter private static ForumUtil forumUtil;
     @Getter private static GuideUtil guideUtil;
     @Getter private static ModerationUtil moderationUtil;
     @Getter private static PartyUtil partyUtil;
+    @Getter private static PasswordUtil passwordUtil;
 
     @Getter private static MongoHandler mongoHandler;
     @Getter private static MessageHandler messageHandler;
@@ -65,15 +67,18 @@ public class PalaceBungee extends Plugin {
     public void onEnable() {
         instance = this;
 
-        ProtocolConstants.setHighVersion(753, "1.16.3");
-        ProtocolConstants.setLowVersion(573, "1.15");
-
         configUtil = new ConfigUtil();
 
         try {
             mongoHandler = new MongoHandler();
             PalaceBungee.getConfigUtil().reload();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            forumUtil = new ForumUtil();
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -86,10 +91,12 @@ public class PalaceBungee extends Plugin {
             e.printStackTrace();
         }
 
+        broadcastUtil = new BroadcastUtil();
         chatUtil = new ChatUtil();
         guideUtil = new GuideUtil();
         moderationUtil = new ModerationUtil();
         partyUtil = new PartyUtil();
+        passwordUtil = new PasswordUtil();
 
         registerListeners();
         registerCommands();
@@ -110,8 +117,9 @@ public class PalaceBungee extends Plugin {
     private void registerListeners() {
         PluginManager pm = getProxy().getPluginManager();
         pm.registerListener(this, new PlayerChat());
-        pm.registerListener(this, new ProxyPing());
         pm.registerListener(this, new PlayerJoinAndLeave());
+        pm.registerListener(this, new ProxyPing());
+        pm.registerListener(this, new ServerSwitch());
     }
 
     private void registerCommands() {
@@ -163,13 +171,19 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new UnmuteCommand());
         pm.registerCommand(this, new WarnCommand());
         /* Staff Commands */
+        pm.registerCommand(this, new BroadcastClockCommand());
         pm.registerCommand(this, new BroadcastCommand());
+        pm.registerCommand(this, new CharListCommand());
+        pm.registerCommand(this, new MotionCaptureCommand());
+        pm.registerCommand(this, new MultiShowCommand());
         pm.registerCommand(this, new ServerCommand());
         pm.registerCommand(this, new SGListCommand());
+        pm.registerCommand(this, new StaffCommand());
         pm.registerCommand(this, new StaffListCommand());
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new BugCommand());
+        pm.registerCommand(this, new FriendCommand());
         pm.registerCommand(this, new MentionsCommand());
         pm.registerCommand(this, new MsgCommand());
         pm.registerCommand(this, new OnlineCountCommand());
@@ -203,12 +217,12 @@ public class PalaceBungee extends Plugin {
 
     public static void login(Player player) {
         players.put(player.getUniqueId(), player);
-        mongoHandler.login(player.getUniqueId());
+        mongoHandler.login(player);
     }
 
-    public static void logout(UUID uuid) {
+    public static void logout(UUID uuid, Player player) {
         players.remove(uuid);
-        mongoHandler.logout(uuid);
+        mongoHandler.logout(uuid, player);
     }
 
     public static Collection<Player> getOnlinePlayers() {

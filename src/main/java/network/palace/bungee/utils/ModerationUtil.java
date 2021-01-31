@@ -112,16 +112,6 @@ public class ModerationUtil {
         return source;
     }
 
-    public void announceSpamWhitelistAdd(SpamIPWhitelist whitelist) {
-        sendRestrictedMessage(
-                ChatColor.GREEN + whitelist.getAddress() + " is now whitelisted from Spam IP protection with a limit of " +
-                        ChatColor.YELLOW + whitelist.getLimit() + ChatColor.GREEN + " accounts",
-                ChatColor.GREEN + "X.X.X.X is now whitelisted from Spam IP protection with a limit of " +
-                        ChatColor.YELLOW + whitelist.getLimit() + ChatColor.GREEN + " accounts",
-                Rank.LEAD
-        );
-    }
-
     public void announceSpamWhitelistRemove(String ip) {
         sendRestrictedMessage(
                 ChatColor.GREEN + ip + " is no longer whitelisted from Spam IP protection",

@@ -12,12 +12,12 @@ import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.Party;
-import network.palace.bungee.handlers.Rank;
-import network.palace.bungee.handlers.RankTag;
-import network.palace.bungee.handlers.Server;
+import network.palace.bungee.handlers.*;
 import network.palace.bungee.handlers.moderation.*;
+import network.palace.bungee.messages.packets.FriendJoinPacket;
 import network.palace.bungee.utils.ConfigUtil;
+import network.palace.bungee.utils.NameUtil;
+import org.bson.BsonInt32;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
@@ -32,10 +32,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class MongoHandler {
-
     private final MongoClient client;
     private final MongoCollection<Document> bansCollection;
     private final MongoCollection<Document> partyCollection;
@@ -43,9 +43,10 @@ public class MongoHandler {
     @Getter private final MongoCollection<Document> resourcePackCollection;
     private final MongoCollection<Document> serversCollection;
     private final MongoCollection<Document> serviceConfigCollection;
-    private final MongoCollection<Document> spamIpWhitelist;
     private final MongoCollection<Document> helpRequestsCollection;
     private final MongoCollection<Document> announcementRequestsCollection;
+    private final MongoCollection<Document> friendsCollection;
+    private final MongoCollection<Document> staffLoginCollection;
 
     public MongoHandler() throws IOException {
         ConfigUtil.DatabaseConnection mongo = PalaceBungee.getConfigUtil().getMongoDBInfo();
@@ -54,16 +55,17 @@ public class MongoHandler {
         String password = mongo.getPassword();
         MongoClientURI connectionString = new MongoClientURI("mongodb://" + username + ":" + password + "@" + hostname);
         client = new MongoClient(connectionString);
-        MongoDatabase database = client.getDatabase("palace");
+        MongoDatabase database = client.getDatabase(mongo.getDatabase());
         bansCollection = database.getCollection("bans");
         partyCollection = database.getCollection("parties");
         playerCollection = database.getCollection("players");
         resourcePackCollection = database.getCollection("resourcepacks");
         serversCollection = database.getCollection("servers");
         serviceConfigCollection = database.getCollection("service_configs");
-        spamIpWhitelist = database.getCollection("spamipwhitelist");
         helpRequestsCollection = database.getCollection("help_requests");
         announcementRequestsCollection = database.getCollection("announcement_requests");
+        friendsCollection = database.getCollection("friends");
+        staffLoginCollection = database.getCollection("stafflogin");
     }
 
     public void stop() {
@@ -96,6 +98,49 @@ public class MongoHandler {
         return doc.first();
     }
 
+    /**
+     * Set previous usernames for a player
+     *
+     * @param uuid the uuid
+     * @param list the list of previous usernames
+     */
+    public void setPreviousNames(UUID uuid, List<String> list) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("previousNames", list));
+    }
+
+    public void updatePreviousUsernames(UUID uuid, String username) {
+        PalaceBungee.getProxyServer().getScheduler().runAsync(PalaceBungee.getInstance(), () -> {
+            String current = "";
+            try {
+                List<String> list = NameUtil.getNames(username, uuid.toString().replaceAll("-", ""));
+                Collections.reverse(list);
+                current = list.get(0);
+                setPreviousNames(uuid, list.subList(1, list.size()));
+            } catch (Exception e) {
+                PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error retrieving previous usernames", e);
+            }
+            if (!username.isEmpty() && !current.equals(username)) {
+                playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("username", current));
+            }
+        });
+    }
+
+    private void checkForOldDuplicateUsernames(String username) throws Exception {
+        FindIterable<Document> sameName = playerCollection.find(Filters.eq("username", username)).projection(new Document("_id", true).append("uuid", true).append("username", true));
+        for (Document userWithSameName : sameName) {
+            try {
+                PalaceBungee.getProxyServer().getLogger().warning("Found a duplicate! " + userWithSameName.getString("uuid") + "|" + userWithSameName.getString("username"));
+                List<String> previousUsernames = NameUtil.getNames("", userWithSameName.getString("uuid"));
+                Collections.reverse(previousUsernames);
+                playerCollection.updateOne(Filters.eq("_id", userWithSameName.getObjectId("_id")), Updates.set("username", previousUsernames.get(0)));
+                playerCollection.updateOne(Filters.eq("_id", userWithSameName.getObjectId("_id")), Updates.set("previousNames", previousUsernames.subList(1, previousUsernames.size())));
+                PalaceBungee.getProxyServer().getLogger().warning("Updated duplicate to " + userWithSameName.getString("uuid") + "|" + previousUsernames.get(0));
+            } catch (Exception e) {
+                PalaceBungee.getProxyServer().getLogger().severe("Failed to check username history for " + userWithSameName.getString("uuid"));
+            }
+        }
+    }
+
     public boolean isPlayerInDB(UUID uuid) {
         return getPlayer(uuid, new Document("uuid", 1)) != null;
     }
@@ -113,20 +158,226 @@ public class MongoHandler {
                 new UpdateOptions().upsert(true));
     }
 
+    public void updateAddress(UUID uuid, String address) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("ip", address));
+    }
+
     public int getOnlineCount() {
         return (int) playerCollection.count(Filters.eq("online", true));
     }
 
-    public void login(UUID uuid) {
-        playerCollection.updateOne(new Document("uuid", uuid.toString()), new Document("$set",
-                new Document("online", true)
-                        .append("onlineData", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1"))
-        ));
+    public void createPlayer(Player player) {
+        player.setNewGuest(true);
+        player.setOnlineTime(1);
+
+        try {
+            PalaceBungee.getProxyServer().getLogger().warning("New user! Checking for existing duplicate usernames...");
+            checkForOldDuplicateUsernames(player.getUsername());
+        } catch (Exception e) {
+            e.printStackTrace();
+            PalaceBungee.getProxyServer().getLogger().severe("Error checking for duplicate username for " + player.getUsername() + "|" + player.getUniqueId());
+        }
+
+        Document playerDocument = new Document();
+        playerDocument.put("uuid", player.getUniqueId().toString());
+        playerDocument.put("username", player.getUsername());
+        playerDocument.put("previousNames", new ArrayList<>());
+        playerDocument.put("balance", 250);
+        playerDocument.put("tokens", 0);
+        playerDocument.put("server", player.getServerName().isEmpty() ? "Unknown" : player.getServerName());
+        playerDocument.put("isp", "");
+        playerDocument.put("country", "");
+        playerDocument.put("region", "");
+        playerDocument.put("regionName", "");
+        playerDocument.put("timezone", "");
+        playerDocument.put("lang", "en_US");
+        playerDocument.put("minecraftVersion", player.getMcVersion());
+        playerDocument.put("honor", 1);
+        playerDocument.put("ip", player.getAddress());
+        playerDocument.put("rank", player.getRank().getDBName());
+        playerDocument.put("lastOnline", System.currentTimeMillis());
+        playerDocument.put("onlineTime", 1L);
+
+        Map<String, String> skinData = new HashMap<>();
+        skinData.put("hash", "");
+        skinData.put("signature", "");
+        playerDocument.put("skin", skinData);
+
+        List<Integer> cosmeticData = new ArrayList<>();
+        playerDocument.put("cosmetics", cosmeticData);
+
+        List<Object> kicks = new ArrayList<>();
+        List<Object> mutes = new ArrayList<>();
+        List<Object> bans = new ArrayList<>();
+        playerDocument.put("kicks", kicks);
+        playerDocument.put("mutes", mutes);
+        playerDocument.put("bans", bans);
+
+        Map<String, Object> parkData = new HashMap<>();
+        List<Object> storageData = new ArrayList<>();
+        parkData.put("storage", storageData);
+
+        Map<String, String> magicBandData = new HashMap<>();
+        magicBandData.put("bandtype", "blue");
+        magicBandData.put("namecolor", "orange");
+        parkData.put("magicband", magicBandData);
+
+        Map<String, Integer> fpData = new HashMap<>();
+        fpData.put("slow", 0);
+        fpData.put("moderate", 0);
+        fpData.put("thrill", 0);
+        fpData.put("sday", 0);
+        fpData.put("mday", 0);
+        fpData.put("tday", 0);
+        parkData.put("fastpass", fpData);
+
+        List<Object> rideData = new ArrayList<>();
+        parkData.put("rides", rideData);
+
+        parkData.put("outfit", "0,0,0,0");
+        List<Object> outfitData = new ArrayList<>();
+        parkData.put("outfitPurchases", outfitData);
+
+        Map<String, Object> parkSettings = new HashMap<>();
+        parkSettings.put("visibility", true);
+        parkSettings.put("flash", true);
+        parkSettings.put("hotel", true);
+        parkSettings.put("pack", "");
+        parkData.put("settings", parkSettings);
+
+        playerDocument.put("parks", parkData);
+
+        Map<String, Object> creativeData = new HashMap<>();
+        creativeData.put("particle", "none");
+        creativeData.put("rptag", false);
+        creativeData.put("rplimit", 5);
+        creativeData.put("showcreator", false);
+        creativeData.put("creator", false);
+        creativeData.put("creatortag", false);
+        creativeData.put("resourcepack", "none");
+
+        playerDocument.put("creative", creativeData);
+
+        Map<String, Object> voteData = new HashMap<>();
+        voteData.put("lastTime", 0L);
+        voteData.put("lastSite", 0);
+        playerDocument.put("vote", voteData);
+
+        Map<String, Long> monthlyRewards = new HashMap<>();
+        monthlyRewards.put("settler", 0L);
+        playerDocument.put("monthlyRewards", monthlyRewards);
+
+        playerDocument.put("tutorial", false);
+
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("mentions", true);
+        settings.put("friendRequestToggle", true);
+        playerDocument.put("settings", settings);
+
+        List<Object> achievements = new ArrayList<>();
+        playerDocument.put("achievements", achievements);
+
+        List<Object> autographs = new ArrayList<>();
+        playerDocument.put("autographs", autographs);
+
+        List<Object> transactions = new ArrayList<>();
+        playerDocument.put("transactions", transactions);
+
+        List<Object> ignoring = new ArrayList<>();
+        playerDocument.put("ignoring", ignoring);
+
+        playerCollection.insertOne(playerDocument);
+
+        updatePreviousUsernames(player.getUniqueId(), player.getUsername());
     }
 
-    public void logout(UUID uuid) {
+    public void login(Player player) {
+        try {
+            Document doc = getPlayer(player.getUniqueId(), new Document("ip", 1).append("username", 1)
+                    .append("friendRequestToggle", 1).append("onlineTime", 1).append("tutorial", 1)
+                    .append("minecraftVersion", 1).append("settings", 1));
+            if (doc == null) {
+                createPlayer(player);
+                return;
+            } else {
+                playerCollection.updateOne(new Document("uuid", player.getUniqueId().toString()), new Document("$set",
+                        new Document("online", true)
+                                .append("onlineData", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1"))
+                ));
+            }
+            Rank rank = player.getRank();
+
+            long ot = doc.getLong("onlineTime");
+            player.setOnlineTime(ot == 0 ? 1 : ot);
+
+            String ip = doc.getString("ip");
+            int protocolVersion = doc.getInteger("minecraftVersion");
+            String username = doc.getString("username");
+
+            boolean disable = rank.getRankId() >= Rank.TRAINEE.getRankId() && !player.getAddress().equals(doc.getString("ip"));
+
+            if (!username.equals(player.getUsername())) {
+                PalaceBungee.getProxyServer().getLogger().log(Level.WARNING, "Username needs to be updated! Checking for existing duplicates...");
+                checkForOldDuplicateUsernames(player.getUsername());
+            }
+
+            if (!disable && (!ip.equals(player.getAddress()) || protocolVersion != player.getMcVersion() ||
+                    !username.equals(player.getUsername()))) {
+                playerCollection.updateOne(Filters.eq("uuid", player.getUniqueId().toString()),
+                        new Document("$set", new Document("ip", player.getAddress())
+                                .append("username", player.getUsername())
+                                .append("minecraftVersion", new BsonInt32(player.getMcVersion()))));
+                if (!username.equals(player.getUsername())) {
+                    int member_id = getForumMemberId(player.getUniqueId());
+                    if (member_id != -1) {
+                        PalaceBungee.getForumUtil().updatePlayerName(player.getUniqueId(), member_id, player.getUsername());
+                    }
+                    updatePreviousUsernames(player.getUniqueId(), player.getUsername());
+                }
+            }
+            Document settings = (Document) doc.get("settings");
+
+            player.setDisabled(disable);
+            player.setRank(rank);
+            player.setFriendRequestToggle(!settings.getBoolean("friendRequestToggle"));
+            player.setMentions(settings.getBoolean("mentions"));
+            player.setNewGuest(!doc.getBoolean("tutorial"));
+            PalaceBungee.getProxyServer().getLogger().info("Player Join: " + player.getUsername() + "|" + player.getUniqueId());
+
+            List<UUID> ignored = getIgnoredUsers(player);
+            ignored.forEach(uuid -> player.setIgnored(uuid, true));
+
+            HashMap<UUID, String> friends = getFriendList(player.getUniqueId());
+            HashMap<UUID, String> requests = getFriendRequestList(player.getUniqueId());
+            if (requests.size() > 0) {
+                player.sendMessage(ChatColor.AQUA + "You have " + ChatColor.YELLOW + "" + ChatColor.BOLD +
+                        requests.size() + " " + ChatColor.AQUA +
+                        "pending friend request" + (requests.size() > 1 ? "s" : "") + "! View them with " +
+                        ChatColor.YELLOW + ChatColor.BOLD + "/friend requests");
+            }
+            PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
+                    new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            Mute mute = getCurrentMute(player.getUniqueId());
+            player.setMute(mute);
+        } catch (Exception e) {
+            PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error handling player login", e);
+        }
+    }
+
+    public void logout(UUID uuid, Player player) {
         playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.set("online", false));
         playerCollection.updateOne(new Document("uuid", uuid.toString()), Updates.unset("onlineData"));
+
+        if (player != null) {
+            String server = "Unknown";
+            if (player.getServerName() != null) {
+                server = player.getServerName();
+            }
+            playerCollection.updateOne(Filters.eq("uuid", player.getUniqueId().toString()),
+                    new Document("$set", new Document("server", server).append("lastOnline", System.currentTimeMillis()))
+                            .append("$inc", new Document("onlineTime", (int) ((System.currentTimeMillis() / 1000) -
+                                    (player.getLoginTime() / 1000)))));
+        }
     }
 
     public ConfigUtil.BungeeConfig getBungeeConfig() throws Exception {
@@ -151,7 +402,7 @@ public class MongoHandler {
                 config.getBoolean("maintenance"), config.getInteger("chatDelay"), config.getBoolean("dmEnabled"),
                 config.getBoolean("strictChat"), config.getDouble("strictThreshold"), config.getInteger("maxVersion"),
                 config.getInteger("minVersion"), config.getString("maxVersionString"),
-                config.getString("minVersionString"), config.get("mutedChats", ArrayList.class));
+                config.getString("minVersionString"), config.get("mutedChats", ArrayList.class), config.get("announcements", ArrayList.class));
     }
 
     public void setBungeeConfig(ConfigUtil.BungeeConfig config) throws Exception {
@@ -162,6 +413,7 @@ public class MongoHandler {
                         .append("strictChat", config.isStrictChat())
                         .append("strictThreshold", config.getStrictThreshold())
                         .append("mutedChats", config.getMutedChats())
+                        .append("announcements", config.getAnnouncements())
         ));
     }
 
@@ -199,6 +451,15 @@ public class MongoHandler {
         Document doc = playerCollection.find(Filters.and(Filters.eq("username", username), Filters.eq("online", true))).projection(new Document("onlineData", true).append("username", true)).first();
         if (doc == null) return null;
         return doc.get("onlineData", Document.class).getString("server");
+    }
+
+    /**
+     * Set the server the player is connected to
+     * @param uuid the uuid
+     * @param name the server name
+     */
+    public void setPlayerServer(UUID uuid, String name) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("onlineData.server", name));
     }
 
     /**
@@ -244,20 +505,6 @@ public class MongoHandler {
             }
         }
         return source;
-    }
-
-    public void addSpamIPWhitelist(SpamIPWhitelist whitelist) {
-        spamIpWhitelist.insertOne(new Document("ip", whitelist.getAddress()).append("limit", whitelist.getLimit()));
-    }
-
-    public SpamIPWhitelist getSpamIPWhitelist(String address) {
-        Document doc = spamIpWhitelist.find(Filters.eq("ip", address)).first();
-        if (doc == null) return null;
-        return new SpamIPWhitelist(doc.getString("ip"), doc.getInteger("limit"));
-    }
-
-    public void removeSpamIPWhitelist(String address) {
-        spamIpWhitelist.deleteMany(Filters.eq("ip", address));
     }
 
     public List<String> getPlayersFromIP(String ip) {
@@ -765,5 +1012,157 @@ public class MongoHandler {
         Document doc = getPlayer(uuid, new Document("lastWarned", true));
         if (doc == null || !doc.containsKey("lastWarned")) return 0;
         return doc.getLong("lastWarned");
+    }
+
+    /*
+    Password Methods
+     */
+
+    public boolean verifyPassword(UUID uuid, String pass) {
+        Document doc = getPlayer(uuid, new Document("staffPassword", 1));
+        if (doc == null || !doc.containsKey("staffPassword")) return false;
+        String dbPassword = doc.getString("staffPassword");
+        return PalaceBungee.getPasswordUtil().validPassword(pass, dbPassword);
+    }
+
+    public boolean hasPassword(UUID uuid) {
+        return getPlayer(uuid, new Document("staffPassword", 1)).containsKey("staffPassword");
+    }
+
+    public void setPassword(UUID uuid, String pass) {
+        String salt = PalaceBungee.getPasswordUtil().getNewSalt();
+        String hashed = PalaceBungee.getPasswordUtil().hashPassword(pass, salt);
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("staffPassword", hashed), new UpdateOptions().upsert(true));
+    }
+
+    public int getStaffPasswordAttempts(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("staffPasswordAttempts", true));
+        if (doc == null || !doc.containsKey("staffPasswordAttempts")) return 0;
+        return doc.getInteger("staffPasswordAttempts");
+    }
+
+    public void setStaffPasswordAttempts(UUID uuid, int attempts) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("staffPasswordAttempts", attempts));
+    }
+
+    private List<UUID> getIgnoredUsers(Player player) {
+        List<UUID> list = new ArrayList<>();
+        for (Object o : getPlayer(player.getUniqueId(), new Document("ignoring", 1)).get("ignoring", ArrayList.class)) {
+            Document doc = (Document) o;
+            list.add(UUID.fromString(doc.getString("uuid")));
+        }
+        return list;
+    }
+
+    public HashMap<UUID, String> getFriendList(UUID uuid) {
+        return getList(uuid, 1);
+    }
+
+    public HashMap<UUID, String> getFriendRequestList(UUID uuid) {
+        return getList(uuid, 0);
+    }
+
+    public HashMap<UUID, String> getList(UUID uuid, int id) {
+        List<UUID> list = new ArrayList<>();
+        for (Document doc : friendsCollection.find(Filters.or(Filters.eq("sender", uuid.toString()),
+                Filters.eq("receiver", uuid.toString())))) {
+            UUID sender = UUID.fromString(doc.getString("sender"));
+            UUID receiver = UUID.fromString(doc.getString("receiver"));
+            boolean friend = doc.getLong("started") > 0;
+            if (id == 0 && !friend && receiver.equals(uuid)) {
+                list.add(sender);
+            } else if (id == 1 && friend) {
+                if (uuid.equals(sender)) {
+                    list.add(receiver);
+                } else {
+                    list.add(sender);
+                }
+            }
+        }
+        HashMap<UUID, String> map = new HashMap<>();
+        for (UUID uid : list) {
+            map.put(uid, PalaceBungee.getUsername(uid));
+        }
+        return map;
+    }
+
+
+    public void addFriendRequest(UUID sender, UUID receiver) {
+        friendsCollection.insertOne(new Document("sender", sender.toString()).append("receiver", receiver.toString())
+                .append("started", 0L));
+    }
+
+    public void removeFriend(UUID sender, UUID receiver) {
+        friendsCollection.deleteOne(Filters.or(
+                new Document("sender", sender.toString()).append("receiver", receiver.toString()),
+                new Document("receiver", sender.toString()).append("sender", receiver.toString())
+        ));
+    }
+
+    public void acceptFriendRequest(UUID receiver, UUID sender) {
+        friendsCollection.updateOne(new Document("sender", sender.toString()).append("receiver", receiver.toString()),
+                Updates.set("started", System.currentTimeMillis()));
+    }
+
+    public void denyFriendRequest(UUID receiver, UUID sender) {
+        friendsCollection.deleteOne(new Document("sender", sender.toString()).append("receiver", receiver.toString()).append("started", 0L));
+    }
+
+    public boolean getFriendRequestToggle(UUID uuid) {
+        Document doc = getPlayer(uuid, new Document("settings", 1));
+        if (doc == null) {
+            return false;
+        }
+        Document settings = (Document) doc.get("settings");
+        if (settings == null) {
+            return false;
+        }
+        return settings.getBoolean("friendRequestToggle");
+    }
+
+    public void setFriendRequestToggle(UUID uuid, boolean value) {
+        setSetting(uuid, "friendRequestToggle", value);
+    }
+
+    public void staffClock(UUID uuid, boolean b) {
+        staffLoginCollection.insertOne(new Document("uuid", uuid.toString()).append("time", System.currentTimeMillis()).append("login", b));
+    }
+
+    public int getForumMemberId(UUID uuid) {
+        try {
+            Document forumDoc = getPlayer(uuid, new Document("forums", 1));
+            Document forums = (Document) forumDoc.get("forums");
+            return forums.getInteger("member_id");
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    public String getForumLinkingCode(UUID uuid) {
+        try {
+            Document forumDoc = getPlayer(uuid, new Document("forums", 1));
+            Document forums = (Document) forumDoc.get("forums");
+            return forums.getString("linking-code");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public void setForumLinkingCode(UUID uuid, int member_id, String code) {
+        Document forumDoc = new Document("member_id", member_id).append("linking-code", code);
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("forums", forumDoc));
+    }
+
+    public void setForumAccountData(UUID uuid, int member_id) {
+        Document forumDoc = new Document("member_id", member_id);
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("forums", forumDoc));
+    }
+
+    public void unsetForumLinkingCode(UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.unset("forums.linking-code"));
+    }
+
+    public void unlinkForumAccount(UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.unset("forums"));
     }
 }

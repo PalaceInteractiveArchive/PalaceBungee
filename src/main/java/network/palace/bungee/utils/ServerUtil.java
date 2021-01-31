@@ -7,6 +7,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Server;
+import network.palace.bungee.messages.packets.DisablePlayerPacket;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -121,5 +122,27 @@ public class ServerUtil {
         Server server = getServer(serverName, true);
         if (server == null) return;
         server.join(player);
+    }
+
+    public void handleServerSwitch(UUID uuid, ServerInfo fromInfo, ServerInfo toInfo) {
+        Player tp = PalaceBungee.getPlayer(uuid);
+        Server from = fromInfo == null ? null : getServer(fromInfo.getName(), true);
+        Server to = toInfo == null ? null : getServer(toInfo.getName(), true);
+        if (from == null) {
+            // new connection
+            if (tp.isDisabled()) {
+                try {
+                    tp.sendPacket(new DisablePlayerPacket(tp.getUniqueId(), true), true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    tp.kickPlayer("Internal Exception: java.io.IOException: An existing connection was forcibly closed by the remote host", false);
+                }
+            }
+        }
+        if (to == null) {
+            // unknown error
+        } else {
+            PalaceBungee.getMongoHandler().setPlayerServer(uuid, to.getName());
+        }
     }
 }

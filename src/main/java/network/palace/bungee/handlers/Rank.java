@@ -12,7 +12,6 @@ public enum Rank {
     LEAD("Lead", ChatColor.GOLD + "Lead ", ChatColor.GOLD, ChatColor.YELLOW, true, 13),
     DEVELOPER("Developer", ChatColor.BLUE + "Developer ", ChatColor.BLUE, ChatColor.AQUA, true, 13),
     COORDINATOR("Coordinator", ChatColor.YELLOW + "Coordinator ", ChatColor.YELLOW, ChatColor.GREEN, true, 12),
-    ARCHITECT("Architect", ChatColor.YELLOW + "Architect ", ChatColor.YELLOW, ChatColor.GREEN, true, 12),
     BUILDER("Builder", ChatColor.BLUE + "Builder ", ChatColor.BLUE, ChatColor.AQUA, true, 11),
     TECHNICIAN("Technician", ChatColor.BLUE + "Technician ", ChatColor.BLUE, ChatColor.AQUA, true, 11),
     MEDIA("Media", ChatColor.BLUE + "Media ", ChatColor.BLUE, ChatColor.AQUA, true, 11),

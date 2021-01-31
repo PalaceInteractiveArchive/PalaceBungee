@@ -32,6 +32,7 @@ public class ConfigUtil {
     private boolean strictChat;
     private double strictThreshold;
     private List<String> mutedChats;
+    private List<String> announcements;
 
     public String getDashboardURL() {
         try {
@@ -60,6 +61,7 @@ public class ConfigUtil {
         this.strictChat = config.strictChat;
         this.strictThreshold = config.strictThreshold;
         this.mutedChats = config.mutedChats;
+        this.announcements = config.announcements;
 
         ProtocolConstants.setHighVersion(config.maxVersion, config.maxVersionString);
         ProtocolConstants.setLowVersion(config.minVersion, config.minVersionString);
@@ -91,7 +93,17 @@ public class ConfigUtil {
     public DatabaseConnection getMongoDBInfo() {
         try {
             Configuration config = getConfig().getSection("mongodb");
-            return new DatabaseConnection(config.getString("hostname"), config.getString("username"), config.getString("password"), null, 0);
+            return new DatabaseConnection(config.getString("hostname"), config.getString("username"), config.getString("password"), config.getString("database"), 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new DatabaseConnection("", "", "", "", 0);
+        }
+    }
+
+    public DatabaseConnection getSQLInfo() {
+        try {
+            Configuration config = getConfig().getSection("sql");
+            return new DatabaseConnection(config.getString("host"), config.getString("username"), config.getString("password"), config.getString("database"), config.getInt("port"));
         } catch (Exception e) {
             e.printStackTrace();
             return new DatabaseConnection("", "", "", "", 0);
@@ -103,7 +115,7 @@ public class ConfigUtil {
             return PalaceBungee.getMongoHandler().getBungeeConfig();
         } catch (Exception e) {
             e.printStackTrace();
-            return new BungeeConfig(null, "", new String[0], "", false, 2, true, false, 0.8, 0, 0, "", "", new ArrayList<>());
+            return new BungeeConfig(null, "", new String[0], "", false, 2, true, false, 0.8, 0, 0, "", "", new ArrayList<>(), new ArrayList<>());
         }
     }
 
@@ -143,6 +155,11 @@ public class ConfigUtil {
         if (dbUpdate) saveConfigChanges();
     }
 
+    public void setAnnouncements(List<String> announcements, boolean dbUpdate) throws Exception {
+        this.announcements = announcements;
+        if (dbUpdate) saveConfigChanges();
+    }
+
     public void setStrictChat(boolean strictChat) throws Exception {
         this.strictChat = strictChat;
         saveConfigChanges();
@@ -156,7 +173,7 @@ public class ConfigUtil {
     private void saveConfigChanges() throws Exception {
         BungeeConfig config = new BungeeConfig(null, null, null, null,
                 maintenance, chatDelay, dmEnabled, strictChat, strictThreshold,
-                0, 0, null, null, mutedChats);
+                0, 0, null, null, mutedChats, announcements);
         PalaceBungee.getMongoHandler().setBungeeConfig(config);
         PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
@@ -185,5 +202,6 @@ public class ConfigUtil {
         private final String maxVersionString;
         private final String minVersionString;
         private final List<String> mutedChats;
+        private final List<String> announcements;
     }
 }
