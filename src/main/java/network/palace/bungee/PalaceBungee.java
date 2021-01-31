@@ -16,7 +16,6 @@ import network.palace.bungee.commands.moderation.*;
 import network.palace.bungee.commands.staff.*;
 import network.palace.bungee.dashboard.DashboardConnection;
 import network.palace.bungee.handlers.Player;
-import network.palace.bungee.handlers.ProtocolConstants;
 import network.palace.bungee.listeners.PlayerChat;
 import network.palace.bungee.listeners.PlayerJoinAndLeave;
 import network.palace.bungee.listeners.ProxyPing;
@@ -30,7 +29,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,6 +49,7 @@ public class PalaceBungee extends Plugin {
     @Getter private static ModerationUtil moderationUtil;
     @Getter private static PartyUtil partyUtil;
     @Getter private static PasswordUtil passwordUtil;
+    @Getter private static SlackUtil slackUtil;
 
     @Getter private static MongoHandler mongoHandler;
     @Getter private static MessageHandler messageHandler;
@@ -97,6 +96,7 @@ public class PalaceBungee extends Plugin {
         moderationUtil = new ModerationUtil();
         partyUtil = new PartyUtil();
         passwordUtil = new PasswordUtil();
+        slackUtil = new SlackUtil();
 
         registerListeners();
         registerCommands();

@@ -17,11 +17,14 @@ import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.handlers.moderation.ProviderBan;
 import network.palace.bungee.handlers.moderation.ProviderData;
 import network.palace.bungee.messages.packets.FriendJoinPacket;
+import network.palace.bungee.slack.SlackAttachment;
+import network.palace.bungee.slack.SlackMessage;
 import network.palace.bungee.utils.IPUtil;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PlayerJoinAndLeave implements Listener {
@@ -149,11 +152,11 @@ public class PlayerJoinAndLeave implements Listener {
                 }
             }
             if (disable) {
-//                    SlackMessage m = new SlackMessage("");
-//                    SlackAttachment a = new SlackAttachment("*" + rank.getName() + "* `" + player.getUsername() +
-//                            "` connected from a new IP address `" + player.getAddress() + "`");
-//                    a.color("warning");
-//                    PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                SlackMessage m = new SlackMessage("");
+                SlackAttachment a = new SlackAttachment("*" + rank.getName() + "* `" + player.getUsername() +
+                        "` connected from a new IP address `" + player.getAddress() + "`");
+                a.color("warning");
+                PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                 player.sendMessage(ChatColor.YELLOW + "\n\n" + ChatColor.BOLD +
                         "You connected with a new IP address, type " + ChatColor.GREEN + "" + ChatColor.BOLD +
                         "/staff login [password]" + ChatColor.YELLOW + "" + ChatColor.BOLD + " to verify your account.\n");

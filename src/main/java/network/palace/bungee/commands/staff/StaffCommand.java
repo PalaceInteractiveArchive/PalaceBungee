@@ -7,7 +7,10 @@ import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
 import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.messages.packets.DisablePlayerPacket;
+import network.palace.bungee.slack.SlackAttachment;
+import network.palace.bungee.slack.SlackMessage;
 
+import java.util.Collections;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -39,11 +42,11 @@ public class StaffCommand extends PalaceCommand {
                         PalaceBungee.getMessageHandler().sendStaffMessage(player.getRank().getFormattedName() + ChatColor.YELLOW +
                                 " " + player.getUsername() + " has logged in!");
                         player.sendPacket(new DisablePlayerPacket(player.getUniqueId(), false), true);
-//                        SlackMessage m = new SlackMessage("");
-//                        SlackAttachment a = new SlackAttachment("[Successful] *" + player.getRank().getName() + "* `" +
-//                                player.getUsername() + "` `" + player.getAddress() + "`");
-//                        a.color("good");
-//                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                        SlackMessage m = new SlackMessage("");
+                        SlackAttachment a = new SlackAttachment("[Successful] *" + player.getRank().getName() + "* `" +
+                                player.getUsername() + "` `" + player.getAddress() + "`");
+                        a.color("good");
+                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                     } else {
                         int attempts = PalaceBungee.getMongoHandler().getStaffPasswordAttempts(player.getUniqueId()) + 1;
                         if (attempts >= 5) {
@@ -54,21 +57,21 @@ public class StaffCommand extends PalaceCommand {
                             PalaceBungee.getMessageHandler().sendStaffMessage(ChatColor.RED + player.getUsername() + " has been locked out of their account!");
                             player.kickPlayer(ChatColor.RED + "Locked out of staff account. Please contact management to unlock your account.");
                             PalaceBungee.getMongoHandler().setStaffPasswordAttempts(player.getUniqueId(), 0);
-//                            SlackMessage m = new SlackMessage("<!channel> *" + player.getUsername() + " Locked Out*");
-//                            SlackAttachment a = new SlackAttachment("*[Locked] " + player.getRank().getName() + "* `" +
-//                                    player.getUsername() + "` `" + player.getAddress() + "`");
-//                            a.color("danger");
-//                            PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                            SlackMessage m = new SlackMessage("<!channel> *" + player.getUsername() + " Locked Out*");
+                            SlackAttachment a = new SlackAttachment("*[Locked] " + player.getRank().getName() + "* `" +
+                                    player.getUsername() + "` `" + player.getAddress() + "`");
+                            a.color("danger");
+                            PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                             return;
                         }
                         PalaceBungee.getMongoHandler().setStaffPasswordAttempts(player.getUniqueId(), attempts);
                         PalaceBungee.getMessageHandler().sendStaffMessage(ChatColor.GOLD + player.getUsername() + " attempted to login but failed! (" + attempts + "/5)");
                         player.sendMessage(ChatColor.RED + "Incorrect password!");
-//                        SlackMessage m = new SlackMessage("");
-//                        SlackAttachment a = new SlackAttachment("[" + trial + "/5] *" + player.getRank().getName() + "* `" +
-//                                player.getUsername() + "` `" + player.getAddress() + "`");
-//                        a.color("warning");
-//                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                        SlackMessage m = new SlackMessage("");
+                        SlackAttachment a = new SlackAttachment("[" + attempts + "/5] *" + player.getRank().getName() + "* `" +
+                                player.getUsername() + "` `" + player.getAddress() + "`");
+                        a.color("warning");
+                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                     }
                     return;
                 }
@@ -86,20 +89,20 @@ public class StaffCommand extends PalaceCommand {
                         }
                         if (!PalaceBungee.getMongoHandler().verifyPassword(player.getUniqueId(), oldp)) {
                             player.sendMessage(ChatColor.RED + "Your existing password is incorrect!");
-//                            SlackMessage m = new SlackMessage("");
-//                            SlackAttachment a = new SlackAttachment("[Failed PW Change] *" + player.getRank().getName() + "* `" +
-//                                    player.getUsername() + "` `" + player.getAddress() + "`");
-//                            a.color("warning");
-//                            PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                            SlackMessage m = new SlackMessage("");
+                            SlackAttachment a = new SlackAttachment("[Failed PW Change] *" + player.getRank().getName() + "* `" +
+                                    player.getUsername() + "` `" + player.getAddress() + "`");
+                            a.color("warning");
+                            PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                             return;
                         }
                         PalaceBungee.getMongoHandler().setPassword(player.getUniqueId(), newp);
                         player.sendMessage(ChatColor.GREEN + "Your password was successfully changed!");
-//                        SlackMessage m = new SlackMessage("");
-//                        SlackAttachment a = new SlackAttachment("[PW Changed] *" + player.getRank().getName() + "* `" +
-//                                player.getUsername() + "` `" + player.getAddress() + "`");
-//                        a.color("good");
-//                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                        SlackMessage m = new SlackMessage("");
+                        SlackAttachment a = new SlackAttachment("[PW Changed] *" + player.getRank().getName() + "* `" +
+                                player.getUsername() + "` `" + player.getAddress() + "`");
+                        a.color("good");
+                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                         return;
                     } else if (args[0].equalsIgnoreCase("force") && player.getRank().getRankId() >= Rank.DEVELOPER.getRankId()) {
                         String username;
@@ -126,11 +129,11 @@ public class StaffCommand extends PalaceCommand {
                         }
                         PalaceBungee.getMongoHandler().setPassword(uuid, pass);
                         player.sendMessage(ChatColor.GREEN + username + "'s password was successfully changed!");
-//                        SlackMessage m = new SlackMessage("");
-//                        SlackAttachment a = new SlackAttachment("[PW Force-Changed] `" + username +
-//                                "` *changed by* `" + player.getUsername() + "` `" + player.getAddress() + "`");
-//                        a.color("good");
-//                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                        SlackMessage m = new SlackMessage("");
+                        SlackAttachment a = new SlackAttachment("[PW Force-Changed] `" + username +
+                                "` *changed by* `" + player.getUsername() + "` `" + player.getAddress() + "`");
+                        a.color("good");
+                        PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                         return;
                     }
                 }
