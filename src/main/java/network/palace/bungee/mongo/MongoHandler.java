@@ -1186,4 +1186,9 @@ public class MongoHandler {
     public boolean doesPlayerIgnorePlayer(UUID uuid, UUID uuid2) {
         return getIgnoredUsers(uuid).contains(uuid2);
     }
+
+    public void logAFK(UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()),
+                Updates.push("afklogs", System.currentTimeMillis()), new UpdateOptions().upsert(true));
+    }
 }

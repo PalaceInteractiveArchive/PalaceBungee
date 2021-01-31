@@ -17,10 +17,7 @@ import network.palace.bungee.messages.packets.MQPacket;
 import network.palace.bungee.messages.packets.MentionPacket;
 import network.palace.bungee.utils.LinkUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RequiredArgsConstructor
 public class Player {
@@ -43,6 +40,10 @@ public class Player {
     @Getter @Setter private boolean dmEnabled = true;
     @Getter private final List<UUID> ignored = new ArrayList<>();
     @Getter @Setter private long lastChatMessage = 0;
+
+    @Getter private long afkTime = System.currentTimeMillis();
+    @Getter @Setter private boolean isAFK = false;
+    @Getter private final List<Timer> afkTimers = new ArrayList<>();
 
     @Getter @Setter private boolean friendRequestToggle = true;
 
@@ -173,6 +174,10 @@ public class Player {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void afkAction() {
+        afkTime = System.currentTimeMillis();
     }
 
     public boolean hasTag(RankTag tag) {

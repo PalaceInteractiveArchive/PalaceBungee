@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class BroadcastUtil {
 
     public BroadcastUtil() {
+        //TODO need to find way to distribute this system in the future
         PalaceBungee.getProxyServer().getScheduler().schedule(PalaceBungee.getInstance(), new Runnable() {
             int i = 0;
 

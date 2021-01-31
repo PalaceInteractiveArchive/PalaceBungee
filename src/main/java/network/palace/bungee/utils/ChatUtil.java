@@ -131,7 +131,7 @@ public class ChatUtil {
             }
         }
 
-//        if (player.isNewGuest()) TODO new players need chat disabled, allow commands
+        if ((player.isNewGuest() && !command) || player.isDisabled()) return true;
 
         Rank rank = player.getRank();
         String serverName = player.getServerName();
@@ -140,10 +140,30 @@ public class ChatUtil {
         String channel = server.isPark() ? "ParkChat" : serverName;
 
         if (rank.getRankId() >= Rank.TRAINEE.getRankId()) {
-            // TODO AFK timer
+            try {
+                if (player.isAFK()) {
+                    player.setAFK(false);
+                    player.getAfkTimers().forEach(Timer::cancel);
+                    player.getAfkTimers().clear();
+                    player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Your AFK Timer has been reset!");
+                    player.getProxiedPlayer().sendTitle(
+                            BungeeCord.getInstance().createTitle()
+                                    .title(new ComponentBuilder("Confirmed").color(ChatColor.GREEN).bold(true).create())
+                                    .subTitle(new ComponentBuilder("Your AFK Timer has been reset!").color(ChatColor.GREEN).bold(true).create())
+                                    .fadeIn(10)
+                                    .stay(100)
+                                    .fadeOut(20)
+                    );
+                    player.afkAction();
+                    return true;
+                }
+                player.afkAction();
+            } catch (Exception e) {
+                e.printStackTrace();
+                player.sendMessage(ChatColor.RED + "An error occurred while sending your chat message! Please try again in a few minutes. If the issue continues, try logging out and back in.");
+                return true;
+            }
         }
-
-//        if (player.isDisabled()) TODO staff members can be disabled until they enter their password
 
         if (command) {
             String s = msg.toLowerCase().replaceFirst("/", "");

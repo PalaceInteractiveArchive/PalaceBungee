@@ -41,6 +41,7 @@ public class PalaceBungee extends Plugin {
     @Getter private static ConfigUtil configUtil;
     @Getter private static ServerUtil serverUtil;
 
+    @Getter private static AFKUtil afkUtil;
     @Getter private static BroadcastUtil broadcastUtil;
     @Getter private static final JaroWinkler chatAlgorithm = new JaroWinkler();
     @Getter private static ChatUtil chatUtil;
@@ -90,6 +91,7 @@ public class PalaceBungee extends Plugin {
             e.printStackTrace();
         }
 
+        afkUtil = new AFKUtil();
         broadcastUtil = new BroadcastUtil();
         chatUtil = new ChatUtil();
         guideUtil = new GuideUtil();
