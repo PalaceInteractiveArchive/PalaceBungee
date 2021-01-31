@@ -130,7 +130,7 @@ public class FriendUtil {
                 return;
             }
             if (player.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
-                if (!PalaceBungee.getMongoHandler().getFriendRequestToggle(tuuid)) {
+                if (!PalaceBungee.getMongoHandler().getFriendRequestToggle(tuuid) || PalaceBungee.getMongoHandler().doesPlayerIgnorePlayer(tuuid, player.getUniqueId())) {
                     player.sendMessage(ChatColor.RED + "That player is not currently accepting Friend Requests!");
                     return;
                 }

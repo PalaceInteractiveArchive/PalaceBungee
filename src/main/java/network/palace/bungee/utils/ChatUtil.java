@@ -66,7 +66,7 @@ public class ChatUtil {
                 .append(player.getUsername() + ": ").color(ChatColor.GRAY)
                 .append(msg, ComponentBuilder.FormatRetention.NONE).color(rank.getChatColor()).create();
 
-        ChatPacket packet = new ChatPacket(player.getUniqueId(), components, "ParkChat");
+        ChatPacket packet = new ChatPacket(player.getUniqueId(), player.getRank(), components, "ParkChat");
         try {
             PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
         } catch (Exception e) {
@@ -335,6 +335,7 @@ public class ChatUtil {
         String channel = packet.getChannel();
         if (channel.equals("ParkChat")) {
             for (Player player : PalaceBungee.getOnlinePlayers()) {
+                if (packet.getRank().getRankId() < Rank.TRAINEE.getRankId() && player.isIgnored(sender)) continue;
                 if (plainText.matches("(.* )?" + player.getUsername().toLowerCase() + "([.,! ].*)?")) {
                     player.sendMessage(new ComponentBuilder("* ").color(ChatColor.BLUE).append(message).create());
                     player.mention();
@@ -371,6 +372,10 @@ public class ChatUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public void logout(UUID uuid) {
+        messageCache.remove(uuid);
     }
 
     @Getter

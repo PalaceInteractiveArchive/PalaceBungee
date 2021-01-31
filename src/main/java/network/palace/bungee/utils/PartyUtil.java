@@ -7,14 +7,10 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.Player;
-import network.palace.bungee.handlers.Rank;
-import network.palace.bungee.handlers.RankTag;
-import network.palace.bungee.handlers.Subsystem;
+import network.palace.bungee.handlers.*;
 import network.palace.bungee.messages.packets.ChangeChannelPacket;
 import network.palace.bungee.messages.packets.ComponentMessagePacket;
 import network.palace.bungee.messages.packets.SendPlayerPacket;
-import network.palace.bungee.handlers.Party;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,6 +47,10 @@ public class PartyUtil {
         UUID uuid = PalaceBungee.getUUID(invited);
         if (uuid == null || !PalaceBungee.getMongoHandler().isPlayerOnline(uuid)) {
             player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.RED + "Player not found!");
+            return;
+        }
+        if (player.getRank().getRankId() < Rank.TRAINEE.getRankId() && PalaceBungee.getMongoHandler().doesPlayerIgnorePlayer(uuid, player.getUniqueId())) {
+            player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.RED + "You can't invite that player to a party!");
             return;
         }
         if (PalaceBungee.getMongoHandler().getPartyByMember(uuid) != null) {

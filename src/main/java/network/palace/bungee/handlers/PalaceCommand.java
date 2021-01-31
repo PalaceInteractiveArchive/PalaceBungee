@@ -5,11 +5,17 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 import network.palace.bungee.PalaceBungee;
 
-public abstract class PalaceCommand extends Command {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public abstract class PalaceCommand extends Command implements TabExecutor {
     @Getter private final Rank rank;
     @Getter private final RankTag tag;
+    protected boolean tabComplete = false;
 
     public PalaceCommand(String name) {
         this(name, Rank.SETTLER);
@@ -54,5 +60,21 @@ public abstract class PalaceCommand extends Command {
         }
     }
 
+    @Override
+    public Iterable<String> onTabComplete(CommandSender commandSender, String[] args) {
+        if (!tabComplete || !(commandSender instanceof ProxiedPlayer)) return new ArrayList<>();
+        Player player = PalaceBungee.getPlayer(((ProxiedPlayer) commandSender).getUniqueId());
+        if (player == null) return new ArrayList<>();
+        if (player.getRank().getRankId() >= rank.getRankId() || (tag != null && player.getTags().contains(tag))) {
+            return onTabComplete(player, Arrays.asList(args));
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
     public abstract void execute(Player player, String[] args);
+
+    public Iterable<String> onTabComplete(Player player, List<String> args) {
+        return new ArrayList<>();
+    }
 }

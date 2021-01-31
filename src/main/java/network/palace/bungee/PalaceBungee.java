@@ -183,7 +183,11 @@ public class PalaceBungee extends Plugin {
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new BugCommand());
+        pm.registerCommand(this, new DiscordCommand());
+        pm.registerCommand(this, new IgnoreCommand());
         pm.registerCommand(this, new FriendCommand());
+        pm.registerCommand(this, new JoinCommand());
+        pm.registerCommand(this, new LinkCommand());
         pm.registerCommand(this, new MentionsCommand());
         pm.registerCommand(this, new MsgCommand());
         pm.registerCommand(this, new OnlineCountCommand());
@@ -193,6 +197,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new RulesCommand());
         pm.registerCommand(this, new SocialCommand());
         pm.registerCommand(this, new StoreCommand());
+        pm.registerCommand(this, new UptimeCommand());
         pm.registerCommand(this, new WhereAmICommand());
     }
 

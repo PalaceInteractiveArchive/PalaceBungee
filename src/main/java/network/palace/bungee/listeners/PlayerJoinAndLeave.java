@@ -176,6 +176,7 @@ public class PlayerJoinAndLeave implements Listener {
 
         Player player = PalaceBungee.getPlayer(pl.getUniqueId());
         PalaceBungee.logout(pl.getUniqueId(), player);
+        PalaceBungee.getChatUtil().logout(pl.getUniqueId());
         PalaceBungee.getMongoHandler().staffClock(pl.getUniqueId(), false);
         if (player != null) {
             if (player.getRank().getRankId() >= Rank.CHARACTER.getRankId()) {

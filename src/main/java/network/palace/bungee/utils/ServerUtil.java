@@ -145,4 +145,24 @@ public class ServerUtil {
             PalaceBungee.getMongoHandler().setPlayerServer(uuid, to.getName());
         }
     }
+
+    public Server getServerByType(String serverType) {
+        Server server = null;
+        for (Server s : servers.values()) {
+            if (!s.isOnline()) continue;
+            if (s.getServerType().equals(serverType)) {
+                if (server == null) {
+                    server = s;
+                    continue;
+                }
+                if (s.getCount() < server.getCount()) server = s;
+            }
+        }
+        return server;
+    }
+
+    public void sendPlayerByType(Player player, String serverType) {
+        Server server = getServerByType(serverType);
+        if (server != null) server.join(player);
+    }
 }

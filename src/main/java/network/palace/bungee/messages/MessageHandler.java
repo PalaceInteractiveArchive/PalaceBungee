@@ -217,7 +217,7 @@ public class MessageHandler {
                         String channel = packet.getChannel();
 
                         Player player = PalaceBungee.getPlayer(uuid);
-                        if (player == null) return;
+                        if (player == null || player.getChannel().equals(channel)) return;
 
                         player.setChannel(channel);
                         player.sendMessage(ChatColor.GREEN + "You have been moved to the " + ChatColor.AQUA + channel +

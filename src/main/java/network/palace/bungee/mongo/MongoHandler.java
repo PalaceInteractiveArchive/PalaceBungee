@@ -344,7 +344,7 @@ public class MongoHandler {
             player.setNewGuest(!doc.getBoolean("tutorial"));
             PalaceBungee.getProxyServer().getLogger().info("Player Join: " + player.getUsername() + "|" + player.getUniqueId());
 
-            List<UUID> ignored = getIgnoredUsers(player);
+            List<UUID> ignored = getIgnoredUsers(player.getUniqueId());
             ignored.forEach(uuid -> player.setIgnored(uuid, true));
 
             HashMap<UUID, String> friends = getFriendList(player.getUniqueId());
@@ -455,6 +455,7 @@ public class MongoHandler {
 
     /**
      * Set the server the player is connected to
+     *
      * @param uuid the uuid
      * @param name the server name
      */
@@ -1045,9 +1046,9 @@ public class MongoHandler {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("staffPasswordAttempts", attempts));
     }
 
-    private List<UUID> getIgnoredUsers(Player player) {
+    private List<UUID> getIgnoredUsers(UUID uuid) {
         List<UUID> list = new ArrayList<>();
-        for (Object o : getPlayer(player.getUniqueId(), new Document("ignoring", 1)).get("ignoring", ArrayList.class)) {
+        for (Object o : getPlayer(uuid, new Document("ignoring", 1)).get("ignoring", ArrayList.class)) {
             Document doc = (Document) o;
             list.add(UUID.fromString(doc.getString("uuid")));
         }
@@ -1164,5 +1165,25 @@ public class MongoHandler {
 
     public void unlinkForumAccount(UUID uuid) {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.unset("forums"));
+    }
+
+    public void ignorePlayer(Player player, UUID uuid) {
+        long time = System.currentTimeMillis();
+        playerCollection.updateOne(Filters.eq("uuid", player.getUniqueId().toString()), Updates.push("ignoring", new Document("uuid", uuid.toString()).append("started", time)));
+    }
+
+    public void unignorePlayer(Player player, UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", player.getUniqueId().toString()), Updates.pull("ignoring", new Document("uuid", uuid.toString())));
+    }
+
+    /**
+     * Does the first player ignore the second player?
+     *
+     * @param uuid  the first player's uuid
+     * @param uuid2 the second player's uuid
+     * @return true if uuid ignores uuid2
+     */
+    public boolean doesPlayerIgnorePlayer(UUID uuid, UUID uuid2) {
+        return getIgnoredUsers(uuid).contains(uuid2);
     }
 }

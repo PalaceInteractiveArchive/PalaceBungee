@@ -9,7 +9,7 @@ import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 
 public class StoreCommand extends PalaceCommand {
-    static BaseComponent[] message = new ComponentBuilder("\nClick to visit our store!\n").color(ChatColor.YELLOW).bold(true)
+    private static final BaseComponent[] message = new ComponentBuilder("\nClick to visit our store!\n").color(ChatColor.YELLOW).bold(true)
             .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     new ComponentBuilder("Click to open ").color(ChatColor.AQUA).append("https://store.palace.network").color(ChatColor.GREEN).create()))
             .event(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://store.palace.network")).create();
