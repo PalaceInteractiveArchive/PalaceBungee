@@ -11,14 +11,12 @@ import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import network.palace.bungee.PalaceBungee;
-import network.palace.bungee.handlers.Party;
-import network.palace.bungee.handlers.Player;
-import network.palace.bungee.handlers.Rank;
-import network.palace.bungee.handlers.RankTag;
+import network.palace.bungee.handlers.*;
 import network.palace.bungee.handlers.moderation.AddressBan;
 import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.handlers.moderation.ProviderBan;
 import network.palace.bungee.handlers.moderation.ProviderData;
+import network.palace.bungee.messages.packets.FriendJoinPacket;
 import network.palace.bungee.utils.IPUtil;
 import org.bson.Document;
 
@@ -31,6 +29,14 @@ public class PlayerJoinAndLeave implements Listener {
     @EventHandler
     public void onPlayerJoin(LoginEvent event) {
         PendingConnection connection = event.getConnection();
+        if (connection.getVersion() < ProtocolConstants.LOWEST_VERSION.getProtocolId() || connection.getVersion() > ProtocolConstants.HIGHEST_VERSION.getProtocolId()) {
+            event.setCancelled(true);
+            event.setCancelReason(new ComponentBuilder("You must connect with ").color(ChatColor.RED)
+                    .append(ProtocolConstants.getVersionString(), ComponentBuilder.FormatRetention.ALL)
+                    .append("!", ComponentBuilder.FormatRetention.ALL).create());
+            return;
+        }
+
         String address = ((InetSocketAddress) connection.getSocketAddress()).getAddress().toString().replaceAll("/", "");
 
         Document doc = PalaceBungee.getMongoHandler().getPlayer(connection.getUniqueId(), new Document("rank", true).append("tags", true).append("online", true).append("settings", true));
@@ -125,12 +131,32 @@ public class PlayerJoinAndLeave implements Listener {
         if (player == null) {
             pl.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "We are currently experiencing some server-side issues. Please check back soon!"));
         } else {
-            if (player.getRank().getRankId() >= Rank.SPECIALGUEST.getRankId()) {
+            Rank rank = player.getRank();
+            boolean disable = player.isDisabled();
+            if (PalaceBungee.getConfigUtil().isStrictChat() && rank.getRankId() >= Rank.TRAINEE.getRankId())
+                player.sendMessage(ChatColor.RED + "\nChat is currently in strict mode!\n");
+            if (rank.getRankId() >= Rank.CHARACTER.getRankId()) {
+                String msg = rank.getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked in.";
+                if (disable) msg += ChatColor.GRAY + " (not logged in)";
                 try {
-                    PalaceBungee.getMessageHandler().sendStaffMessage(player.getRank().getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked in");
+                    PalaceBungee.getMessageHandler().sendStaffMessage(msg);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                PalaceBungee.getMongoHandler().staffClock(player.getUniqueId(), true);
+                if (rank.getRankId() >= Rank.TRAINEE.getRankId() && PalaceBungee.getChatUtil().isChatMuted("ParkChat")) {
+                    player.sendMessage(ChatColor.RED + "\n\n\nChat is currently muted!\n\n\n");
+                }
+            }
+            if (disable) {
+//                    SlackMessage m = new SlackMessage("");
+//                    SlackAttachment a = new SlackAttachment("*" + rank.getName() + "* `" + player.getUsername() +
+//                            "` connected from a new IP address `" + player.getAddress() + "`");
+//                    a.color("warning");
+//                    PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                player.sendMessage(ChatColor.YELLOW + "\n\n" + ChatColor.BOLD +
+                        "You connected with a new IP address, type " + ChatColor.GREEN + "" + ChatColor.BOLD +
+                        "/staff login [password]" + ChatColor.YELLOW + "" + ChatColor.BOLD + " to verify your account.\n");
             }
         }
     }
@@ -149,15 +175,22 @@ public class PlayerJoinAndLeave implements Listener {
         }
 
         Player player = PalaceBungee.getPlayer(pl.getUniqueId());
+        PalaceBungee.logout(pl.getUniqueId(), player);
+        PalaceBungee.getMongoHandler().staffClock(pl.getUniqueId(), false);
         if (player != null) {
-            if (player.getRank().getRankId() >= Rank.SPECIALGUEST.getRankId()) {
+            if (player.getRank().getRankId() >= Rank.CHARACTER.getRankId()) {
                 try {
                     PalaceBungee.getMessageHandler().sendStaffMessage(player.getRank().getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked out");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            PalaceBungee.logout(player.getUniqueId());
+            try {
+                PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), player.getRank().getTagColor() + player.getUsername(),
+                        new ArrayList<>(player.getFriends().keySet()), false, player.getRank().getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
