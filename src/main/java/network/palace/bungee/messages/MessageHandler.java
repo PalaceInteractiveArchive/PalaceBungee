@@ -396,7 +396,10 @@ public class MessageHandler {
     private void handleSendPacket(SendPlayerPacket packet) {
         String target = packet.getTargetPlayer();
         Server server = PalaceBungee.getServerUtil().getServer(packet.getTargetServer(), true);
-        if (server == null) return;
+        if (server == null) {
+            server = PalaceBungee.getServerUtil().getServerByType(packet.getTargetServer());
+            if (server == null) return;
+        }
         if (target.contains(":")) {
             String fromServer = target.split(":")[1];
             // send all on fromServer to targetServer
