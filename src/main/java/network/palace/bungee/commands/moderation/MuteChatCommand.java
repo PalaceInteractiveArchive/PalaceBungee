@@ -19,9 +19,9 @@ public class MuteChatCommand extends PalaceCommand {
             if (PalaceBungee.getServerUtil().getServer(server, true).isPark()) server = "ParkChat";
             boolean muted = PalaceBungee.getChatUtil().isChatMuted(server);
             if (muted) {
-                PalaceBungee.getChatUtil().unmuteChat(server);
+                PalaceBungee.getChatUtil().unmuteChat(server, player.getUsername());
             } else {
-                PalaceBungee.getChatUtil().muteChat(server);
+                PalaceBungee.getChatUtil().muteChat(server, player.getUsername());
             }
         } catch (Exception e) {
             e.printStackTrace();

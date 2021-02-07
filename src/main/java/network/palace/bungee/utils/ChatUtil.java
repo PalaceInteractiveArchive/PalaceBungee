@@ -85,27 +85,27 @@ public class ChatUtil {
         return new HoverEvent(HoverEvent.Action.SHOW_TEXT, builder.create());
     }
 
-    public void muteChat(String server) throws Exception {
+    public void muteChat(String server, String source) throws Exception {
         List<String> mutedChats = PalaceBungee.getConfigUtil().getMutedChats();
         if (!mutedChats.contains(server)) {
             mutedChats.add(server);
             PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
-            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
         }
         if (server.equals("Creative")) {
-            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, true), "mc_direct", "direct", "Creative");
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, true), "mc_direct", "direct", "Creative");
         }
     }
 
-    public void unmuteChat(String server) throws Exception {
+    public void unmuteChat(String server, String source) throws Exception {
         List<String> mutedChats = PalaceBungee.getConfigUtil().getMutedChats();
         if (mutedChats.contains(server)) {
             mutedChats.remove(server);
             PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
-            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, false), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, false), PalaceBungee.getMessageHandler().ALL_PROXIES);
         }
         if (server.equals("Creative")) {
-            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, false), "mc_direct", "direct", "Creative");
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, false), "mc_direct", "direct", "Creative");
         }
     }
 
