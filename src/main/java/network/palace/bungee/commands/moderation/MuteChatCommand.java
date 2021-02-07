@@ -16,24 +16,12 @@ public class MuteChatCommand extends PalaceCommand {
     public void execute(Player player, String[] args) {
         try {
             String server = player.getServerName();
-            boolean parkchat = PalaceBungee.getServerUtil().getServer(server, true).isPark();
-            if (parkchat) server = "ParkChat";
+            if (PalaceBungee.getServerUtil().getServer(server, true).isPark()) server = "ParkChat";
             boolean muted = PalaceBungee.getChatUtil().isChatMuted(server);
-            String msg;
             if (muted) {
                 PalaceBungee.getChatUtil().unmuteChat(server);
-                msg = ChatColor.WHITE + "[" + ChatColor.DARK_AQUA + "Palace Chat" + ChatColor.WHITE + "] " +
-                        ChatColor.YELLOW + "Chat has been unmuted";
             } else {
                 PalaceBungee.getChatUtil().muteChat(server);
-                msg = ChatColor.WHITE + "[" + ChatColor.DARK_AQUA + "Palace Chat" + ChatColor.WHITE + "] " +
-                        ChatColor.YELLOW + "Chat has been muted";
-            }
-            String msgname = msg + " by " + player.getUsername();
-            for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                if ((parkchat && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(server)) {
-                    tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
-                }
             }
         } catch (Exception e) {
             e.printStackTrace();

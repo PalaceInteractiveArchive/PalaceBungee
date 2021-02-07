@@ -232,6 +232,20 @@ public class MessageHandler {
                         else if (!packet.isMuted())
                             mutedChats.remove(packet.getChannel());
                         PalaceBungee.getConfigUtil().setMutedChats(mutedChats, false);
+                        String msg;
+                        if (packet.isMuted()) {
+                            msg = ChatColor.WHITE + "[" + ChatColor.DARK_AQUA + "Palace Chat" + ChatColor.WHITE + "] " +
+                                    ChatColor.YELLOW + "Chat has been muted";
+                        } else {
+                            msg = ChatColor.WHITE + "[" + ChatColor.DARK_AQUA + "Palace Chat" + ChatColor.WHITE + "] " +
+                                    ChatColor.YELLOW + "Chat has been unmuted";
+                        }
+                        String msgname = msg + " by " + packet.getSource();
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if ((packet.getChannel().equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(packet.getChannel())) {
+                                tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
+                            }
+                        }
                         break;
                     }
                     case 18: {
