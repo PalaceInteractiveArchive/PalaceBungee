@@ -60,6 +60,7 @@ public class PalaceBungee extends Plugin {
 
     @Getter private final static HashMap<UUID, String> usernameCache = new HashMap<>();
 
+    //TODO move to environment variable
     @Getter private final static boolean testNetwork = true;
     @Getter private static DashboardConnection dashboardConnection;
 
@@ -184,6 +185,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new StaffListCommand());
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());
+        pm.registerCommand(this, new AudioCommand());
         pm.registerCommand(this, new BugCommand());
         pm.registerCommand(this, new DiscordCommand());
         pm.registerCommand(this, new IgnoreCommand());
