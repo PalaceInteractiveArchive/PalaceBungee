@@ -227,10 +227,13 @@ public class MessageHandler {
                     case 17: {
                         ChatMutePacket packet = new ChatMutePacket(object);
                         List<String> mutedChats = PalaceBungee.getConfigUtil().getMutedChats();
-                        if (packet.isMuted() && !mutedChats.contains(packet.getChannel()))
+                        if (packet.isMuted() && !mutedChats.contains(packet.getChannel())) {
                             mutedChats.add(packet.getChannel());
-                        else if (!packet.isMuted())
+                        } else if (!packet.isMuted() && mutedChats.contains(packet.getChannel())) {
                             mutedChats.remove(packet.getChannel());
+                        } else {
+                            return;
+                        }
                         PalaceBungee.getConfigUtil().setMutedChats(mutedChats, false);
                         String msg;
                         if (packet.isMuted()) {
