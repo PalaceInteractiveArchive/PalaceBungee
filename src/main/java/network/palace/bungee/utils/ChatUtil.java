@@ -114,6 +114,15 @@ public class ChatUtil {
     }
 
     public boolean chatEvent(Player player, String msg, boolean command) throws Exception {
+        if (player.isDisabled()) {
+            if (command) {
+                String m = msg.replaceFirst("/", "");
+                return !m.startsWith("staff");
+            }
+            return true;
+        }
+        if (player.isNewGuest() && !command) return true;
+
         switch (player.getChannel()) {
             case "party": {
                 PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "pchat " + msg);
@@ -128,8 +137,6 @@ public class ChatUtil {
                 return true;
             }
         }
-
-        if ((player.isNewGuest() && !command) || player.isDisabled()) return true;
 
         Rank rank = player.getRank();
         String serverName = player.getServerName();
@@ -174,6 +181,12 @@ public class ChatUtil {
                 return true;
             }
             return false;
+        }
+
+        if (player.getTotalOnlineTime() < 600) {
+            player.sendMessage(ChatColor.RED + "New guests must be on the server for at least 10 minutes before talking in chat." +
+                    ChatColor.DARK_AQUA + " Learn more at palnet.us/rules");
+            return true;
         }
 
         String processed = processChatMessage(player, msg, channel);
@@ -238,44 +251,44 @@ public class ChatUtil {
             return null;
         }
 
-//        if (player.getRank().getRankId() < Rank.CHARACTER.getRankId()) {
-        if (isChatMuted(channel) && !channel.equals("Creative")) {
-            player.sendMessage(ChatColor.RED + "Chat is currently muted!");
-            return null;
-        }
-
-        if (strictModeCheck(msg)) {
-            player.sendMessage(ChatColor.RED + "Your message was similar to another recently said in chat and was marked as spam. We apologize if this was done in error, we're constantly improving our chat filter.");
-            try {
-                PalaceBungee.getModerationUtil().announceSpamMessage(player.getUsername(), msg);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        if (System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
-            player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
-            return null;
-        }
-        player.setLastChatMessage(System.currentTimeMillis());
-
-        msg = removeCaps(player, msg);
-
-        if (messageCache.containsKey(player.getUniqueId())) {
-            ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
-            //Block saying the same message within a minute
-            if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
-                player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
+        if (player.getRank().getRankId() < Rank.CHARACTER.getRankId()) {
+            if (isChatMuted(channel) && !channel.equals("Creative")) {
+                player.sendMessage(ChatColor.RED + "Chat is currently muted!");
                 return null;
             }
-        }
+
+            if (strictModeCheck(msg)) {
+                player.sendMessage(ChatColor.RED + "Your message was similar to another recently said in chat and was marked as spam. We apologize if this was done in error, we're constantly improving our chat filter.");
+                try {
+                    PalaceBungee.getModerationUtil().announceSpamMessage(player.getUsername(), msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            if (System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
+                player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
+                return null;
+            }
+            player.setLastChatMessage(System.currentTimeMillis());
+
+            msg = removeCaps(player, msg);
+
+            if (messageCache.containsKey(player.getUniqueId())) {
+                ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
+                //Block saying the same message within a minute
+                if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
+                    player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
+                    return null;
+                }
+            }
 //        } else {
 //            if (msg.startsWith(":warn-")) {
 ////                dashboard.getWarningUtil().handle(player, msg.toString());
 //                return null;
 //            }
-//        }
+        }
 
         return msg;
     }

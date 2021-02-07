@@ -23,6 +23,7 @@ import java.util.*;
 public class Player {
     private final UUID uuid;
     @Getter @Setter private boolean disabled = false;
+    //TODO add tutorial for new players, which changes newGuest to false when done
     @Getter @Setter private boolean newGuest = false;
     @Getter private final String username;
     @Getter @Setter @NonNull private Rank rank;
@@ -221,5 +222,9 @@ public class Player {
 
     public boolean hasFriendToggledOff() {
         return friendRequestToggle;
+    }
+
+    public long getTotalOnlineTime() {
+        return ((System.currentTimeMillis() - loginTime) / 1000) + onlineTime;
     }
 }

@@ -97,15 +97,16 @@ public class ServerCommand extends PalaceCommand {
                     break;
                 }
                 try {
-                    Server s = PalaceBungee.getServerUtil().getServer(args[1], true);
-                    if (s == null) {
+                    List<Server> servers = new ArrayList<>(PalaceBungee.getMongoHandler().getServers(PalaceBungee.isTestNetwork()));
+                    Optional<Server> opt = servers.stream().filter(server -> server.getName().equals(args[1])).findFirst();
+                    if (opt.isEmpty()) {
                         player.sendMessage(ChatColor.RED + "Server not found!");
                         return;
                     }
+                    Server s = opt.get();
                     PalaceBungee.getMongoHandler().deleteServer(s.getName());
                     PalaceBungee.getMessageHandler().sendMessage(new DeleteServerPacket(s.getName()), PalaceBungee.getMessageHandler().ALL_PROXIES);
                     player.sendMessage(ChatColor.RED + "Server removed successfully!");
-                    //TODO Send all players on deleted server to another server
                 } catch (Exception e) {
                     e.printStackTrace();
                     player.sendMessage(ChatColor.RED + "There was an error deleting that server! Check your command arguments and console for errors.");
