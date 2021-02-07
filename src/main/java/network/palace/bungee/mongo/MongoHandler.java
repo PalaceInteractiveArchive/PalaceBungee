@@ -1191,4 +1191,8 @@ public class MongoHandler {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()),
                 Updates.push("afklogs", System.currentTimeMillis()), new UpdateOptions().upsert(true));
     }
+
+    public void setOnlineData(UUID uuid, String key, Object value) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("onlineData." + key, value));
+    }
 }
