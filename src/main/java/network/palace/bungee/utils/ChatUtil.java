@@ -92,10 +92,9 @@ public class ChatUtil {
             PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
             PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
         }
-//        if (server.equals("Creative")) {
-//            PacketMuteChat packet = new PacketMuteChat(server, true, "");
-//            sendToServer(server, packet);
-//        }
+        if (server.equals("Creative")) {
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, true), "mc_direct", "direct", "Creative");
+        }
     }
 
     public void unmuteChat(String server) throws Exception {
@@ -105,10 +104,9 @@ public class ChatUtil {
             PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
             PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, false), PalaceBungee.getMessageHandler().ALL_PROXIES);
         }
-//        if (server.equals("Creative")) {
-//            PacketMuteChat packet = new PacketMuteChat(server, false, "");
-//            sendToServer(server, packet);
-//        }
+        if (server.equals("Creative")) {
+            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, false), "mc_direct", "direct", "Creative");
+        }
     }
 
     public boolean isChatMuted(String server) {
