@@ -5,9 +5,11 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.messages.packets.IgnoreListPacket;
 
 import java.text.DateFormatSymbols;
 import java.util.*;
+import java.util.logging.Level;
 
 public class IgnoreCommand extends PalaceCommand {
 
@@ -86,9 +88,14 @@ public class IgnoreCommand extends PalaceCommand {
                 player.setIgnored(uuid, true);
                 PalaceBungee.getMongoHandler().ignorePlayer(player, uuid);
                 player.sendMessage(ChatColor.GREEN + "You have ignored " + name);
-                // TODO Handle creative chat
-//                if (PalaceBungee.getServer(player.getServer()).getServerType().equals("Creative"))
-//                    player.sendServerIgnoreList();
+                if (player.getServerName().equals("Creative")) {
+                    try {
+                        PalaceBungee.getMessageHandler().sendMessage(new IgnoreListPacket(player.getUniqueId(), player.getIgnored()), "mc_direct", "direct", "Creative");
+                    } catch (Exception e) {
+                        player.sendMessage(ChatColor.RED + "An error occurred while syncing your ignore list with Creative. Any changes you made recently may not take effect immediately. If you encounter further issues, log out and reconnect to Palace Network.");
+                        PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error syncing ignore list with Creative", e);
+                    }
+                }
                 break;
             }
             case "remove": {
@@ -106,10 +113,14 @@ public class IgnoreCommand extends PalaceCommand {
                 player.setIgnored(uuid, false);
                 PalaceBungee.getMongoHandler().unignorePlayer(player, uuid);
                 player.sendMessage(ChatColor.GREEN + "You have unignored " + name);
-//                PalaceBungee.getSchedulerManager().runAsync(() -> {
-//                    if (PalaceBungee.getServer(player.getServer()).getServerType().equals("Creative"))
-//                        player.sendServerIgnoreList();
-//                });
+                if (player.getServerName().equals("Creative")) {
+                    try {
+                        PalaceBungee.getMessageHandler().sendMessage(new IgnoreListPacket(player.getUniqueId(), player.getIgnored()), "mc_direct", "direct", "Creative");
+                    } catch (Exception e) {
+                        player.sendMessage(ChatColor.RED + "An error occurred while syncing your ignore list with Creative. Any changes you made recently may not take effect immediately. If you encounter further issues, log out and reconnect to Palace Network.");
+                        PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error syncing ignore list with Creative", e);
+                    }
+                }
                 break;
             }
             default: {
