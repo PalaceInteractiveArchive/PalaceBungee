@@ -7,6 +7,7 @@ import com.rabbitmq.client.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
@@ -341,6 +342,25 @@ public class MessageHandler {
                                 continue;
                             tp.sendMessage(packet.getUsername() + ChatColor.LIGHT_PURPLE + " has " + phrase + ".");
                         }
+                        break;
+                    }
+                    case 32: {
+                        BroadcastComponentPacket packet = new BroadcastComponentPacket(object);
+                        BaseComponent[] message = new ComponentBuilder("[").color(ChatColor.WHITE)
+                                .append("Information").color(ChatColor.AQUA)
+                                .append("] ").color(ChatColor.WHITE)
+                                .append(ComponentSerializer.parse(packet.getSerializedMessage())).create();
+                        BaseComponent[] staffMessage = new ComponentBuilder("[").color(ChatColor.WHITE)
+                                .append(packet.getSender()).color(ChatColor.AQUA)
+                                .append("] ").color(ChatColor.WHITE)
+                                .append(ComponentSerializer.parse(packet.getSerializedMessage())).create();
+                        PalaceBungee.getOnlinePlayers().forEach(player -> {
+                            if (player.getRank().getRankId() >= Rank.TRAINEE.getRankId()) {
+                                player.sendMessage(staffMessage);
+                            } else {
+                                player.sendMessage(message);
+                            }
+                        });
                         break;
                     }
                 }
