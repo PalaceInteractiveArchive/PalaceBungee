@@ -201,6 +201,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new SocialCommand());
         pm.registerCommand(this, new StoreCommand());
         pm.registerCommand(this, new UptimeCommand());
+        pm.registerCommand(this, new VirtualQueueJoinCommand());
         pm.registerCommand(this, new WhereAmICommand());
     }
 

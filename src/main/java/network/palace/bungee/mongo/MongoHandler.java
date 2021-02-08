@@ -47,6 +47,7 @@ public class MongoHandler {
     private final MongoCollection<Document> announcementRequestsCollection;
     private final MongoCollection<Document> friendsCollection;
     private final MongoCollection<Document> staffLoginCollection;
+    private final MongoCollection<Document> virtualQueuesCollection;
 
     public MongoHandler() throws IOException {
         ConfigUtil.DatabaseConnection mongo = PalaceBungee.getConfigUtil().getMongoDBInfo();
@@ -66,6 +67,7 @@ public class MongoHandler {
         announcementRequestsCollection = database.getCollection("announcement_requests");
         friendsCollection = database.getCollection("friends");
         staffLoginCollection = database.getCollection("stafflogin");
+        virtualQueuesCollection = database.getCollection("virtual_queues");
     }
 
     public void stop() {
@@ -1194,5 +1196,9 @@ public class MongoHandler {
 
     public void setOnlineData(UUID uuid, String key, Object value) {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("onlineData." + key, value));
+    }
+
+    public Document getVirtualQueue(String queueId) {
+        return virtualQueuesCollection.find(Filters.eq("queueId", queueId)).first();
     }
 }
