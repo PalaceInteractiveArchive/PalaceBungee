@@ -178,6 +178,12 @@ public class ConfigUtil {
         PalaceBungee.getMessageHandler().sendMessage(new ProxyReloadPacket(), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
+    public boolean isTestNetwork() throws IOException {
+        Configuration config = getConfig();
+        if (config.contains("testNetwork")) return config.getBoolean("testNetwork", true);
+        return true;
+    }
+
     @Getter
     @AllArgsConstructor
     public static class DatabaseConnection {

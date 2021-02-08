@@ -124,6 +124,11 @@ public class ServerUtil {
         server.join(player);
     }
 
+    public void sendPlayer(Player player, Server server) {
+        if (server == null) return;
+        server.join(player);
+    }
+
     public void handleServerSwitch(UUID uuid, ServerInfo fromInfo, ServerInfo toInfo) {
         Player tp = PalaceBungee.getPlayer(uuid);
         Server from = fromInfo == null ? null : getServer(fromInfo.getName(), true);
@@ -147,9 +152,13 @@ public class ServerUtil {
     }
 
     public Server getServerByType(String serverType) {
+        return getServerByType(serverType, null);
+    }
+
+    public Server getServerByType(String serverType, UUID exclude) {
         Server server = null;
         for (Server s : servers.values()) {
-            if (!s.isOnline()) continue;
+            if ((s.getUniqueId().equals(exclude)) || !s.isOnline()) continue;
             if (s.getServerType().equals(serverType)) {
                 if (server == null) {
                     server = s;
@@ -164,5 +173,22 @@ public class ServerUtil {
     public void sendPlayerByType(Player player, String serverType) {
         Server server = getServerByType(serverType);
         if (server != null) server.join(player);
+    }
+
+
+    public Server getEmptyParkServer(UUID exclude) {
+        Server s = null;
+        List<Server> servers = new ArrayList<>(this.servers.values());
+        for (Server server : servers) {
+            if ((server.getUniqueId().equals(exclude)) || !server.isOnline() || !server.isPark()) continue;
+            if (s == null) {
+                s = server;
+                continue;
+            }
+            if (server.getCount() < s.getCount()) {
+                s = server;
+            }
+        }
+        return s;
     }
 }

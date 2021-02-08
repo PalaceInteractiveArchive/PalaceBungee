@@ -8,15 +8,15 @@ import network.palace.bungee.PalaceBungee;
 import java.util.UUID;
 
 public class Server {
-    private UUID uuid = UUID.randomUUID();
+    private final UUID uuid = UUID.randomUUID();
     @Getter private final String name;
     @Getter private final String address;
     @Getter private final boolean park;
     @Getter @Setter private int gameMaxPlayers;
     @Getter private final String serverType;
-    @Getter @Setter private boolean online;
+    @Setter private boolean online;
     private int count = 0;
-    private long lastCountRetrieval = 0;
+    private long lastDBUpdate = 0;
 
     public Server(String name, String address, boolean park, String serverType, boolean online) {
         this.name = name;
@@ -30,11 +30,22 @@ public class Server {
         return uuid;
     }
 
+    public boolean isOnline() {
+        if (System.currentTimeMillis() - lastDBUpdate < 3000) return online;
+        dbUpdate();
+        return online;
+    }
+
     public int getCount() {
-        if (System.currentTimeMillis() - lastCountRetrieval < 3000) return count;
-        count = PalaceBungee.getMongoHandler().getServerCount(name);
-        lastCountRetrieval = System.currentTimeMillis();
+        if (System.currentTimeMillis() - lastDBUpdate < 3000) return count;
+        dbUpdate();
         return count;
+    }
+
+    private void dbUpdate() {
+        count = PalaceBungee.getMongoHandler().getServerCount(name);
+        online = PalaceBungee.getMongoHandler().isServerOnline(name);
+        lastDBUpdate = System.currentTimeMillis();
     }
 
     public void join(Player player) {

@@ -8,8 +8,10 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.moderation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 public class ModerationUtil {
@@ -188,5 +190,10 @@ public class ModerationUtil {
                 .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open ").color(ChatColor.AQUA).append("https://palnet.us/rules").color(ChatColor.GREEN).create()))
                 .append("\n                                                                              \n").color(ChatColor.RED).strikethrough(true)
                 .create();
+    }
+
+    public void announceRankChange(String name, Rank rank, List<RankTag> tags, String source) throws Exception {
+        sendMessage(ChatColor.GREEN + name + "'s rank has been changed by " + source + " to " +
+                RankTag.format(tags) + rank.getFormattedName());
     }
 }

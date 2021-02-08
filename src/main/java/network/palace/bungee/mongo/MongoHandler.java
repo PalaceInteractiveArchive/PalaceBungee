@@ -706,7 +706,31 @@ public class MongoHandler {
     }
 
     public int getServerCount(String name) {
-        return (int) playerCollection.count(Filters.eq("onlineData.server", name));
+        Document doc;
+        if (PalaceBungee.isTestNetwork()) {
+            doc = serversCollection.find(Filters.and(
+                    Filters.eq("playground", true),
+                    Filters.eq("name", name)
+            )).first();
+        } else {
+            doc = serversCollection.find(Filters.eq("name", name)).first();
+        }
+        if (doc == null) return 0;
+        return doc.getInteger("count", 0);
+    }
+
+    public boolean isServerOnline(String name) {
+        Document doc;
+        if (PalaceBungee.isTestNetwork()) {
+            doc = serversCollection.find(Filters.and(
+                    Filters.eq("playground", true),
+                    Filters.eq("name", name)
+            )).first();
+        } else {
+            doc = serversCollection.find(Filters.eq("name", name)).first();
+        }
+        if (doc == null) return false;
+        return doc.getBoolean("online", false);
     }
 
     public HashMap<String, Integer> getServerCounts() {

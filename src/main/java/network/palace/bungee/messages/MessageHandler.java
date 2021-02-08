@@ -20,11 +20,9 @@ import network.palace.bungee.utils.ConfigUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
 public class MessageHandler {
     public static final AMQP.BasicProperties JSON_PROPS = new AMQP.BasicProperties.Builder().contentEncoding("application/json").build();
@@ -359,6 +357,76 @@ public class MessageHandler {
                                 player.sendMessage(staffMessage);
                             } else {
                                 player.sendMessage(message);
+                            }
+                        });
+                        break;
+                    }
+                    case 33: {
+                        EmptyServerPacket packet = new EmptyServerPacket(object);
+                        String name = packet.getServer();
+                        Server server = PalaceBungee.getServerUtil().getServer(name, true);
+                        if (server == null) {
+                            return;
+                        }
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if (tp.getServerName().equals(server.getName())) {
+                                Server target = PalaceBungee.getServerUtil().getServerByType(name.replaceAll("\\d*$", ""), server.getUniqueId());
+                                if (target == null) {
+                                    if (server.getServerType().equalsIgnoreCase("hub")) {
+                                        target = PalaceBungee.getServerUtil().getServerByType("Creative");
+                                    } else {
+                                        target = PalaceBungee.getServerUtil().getServerByType("Hub");
+                                    }
+                                }
+                                if (target == null) {
+                                    target = PalaceBungee.getServerUtil().getEmptyParkServer(server.isPark() ? server.getUniqueId() : null);
+                                }
+                                if (!target.getName().toLowerCase().startsWith("hub") && !target.getName().toLowerCase().startsWith("arcade")) {
+                                    tp.sendMessage(ChatColor.RED + "No fallback servers are available, so you were sent to a Park server.");
+                                }
+                                PalaceBungee.getServerUtil().sendPlayer(tp, target);
+                            }
+                        }
+                        break;
+                    }
+                    case 34: {
+                        RankChangePacket packet = new RankChangePacket(object);
+                        UUID uuid = packet.getUuid();
+                        Rank rank = packet.getRank();
+                        List<String> tags = packet.getTags();
+                        String source = packet.getSource();
+                        Player player = PalaceBungee.getPlayer(uuid);
+
+                        PalaceBungee.getProxyServer().getScheduler().runAsync(PalaceBungee.getInstance(), () -> {
+                            String name;
+                            if (player == null) {
+                                name = PalaceBungee.getMongoHandler().uuidToUsername(uuid);
+                            } else {
+                                player.setRank(rank);
+                                player.getTags().forEach(player::removeTag);
+                                for (String tag : tags) {
+                                    player.addTag(RankTag.fromString(tag));
+                                }
+                                name = player.getUsername();
+                                //TODO discord syncing
+                            }
+                            List<RankTag> realTags = new ArrayList<>();
+                            for (String s : tags) {
+                                realTags.add(RankTag.fromString(s));
+                            }
+                            try {
+                                PalaceBungee.getModerationUtil().announceRankChange(name, rank, realTags, source);
+                            } catch (Exception e) {
+                                PalaceBungee.getInstance().getLogger().log(Level.SEVERE, "Error announcing rank change", e);
+                            }
+
+                            try {
+                                int member_id = PalaceBungee.getMongoHandler().getForumMemberId(uuid);
+                                if (member_id != -1) {
+                                    PalaceBungee.getForumUtil().updatePlayerRank(uuid, member_id, rank, player);
+                                }
+                            } catch (Exception e) {
+                                PalaceBungee.getInstance().getLogger().log(Level.SEVERE, "Error processing rank change", e);
                             }
                         });
                         break;

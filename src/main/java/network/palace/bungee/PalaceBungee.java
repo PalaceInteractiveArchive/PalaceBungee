@@ -14,7 +14,6 @@ import network.palace.bungee.commands.guide.GuideListCommand;
 import network.palace.bungee.commands.guide.HelpMeCommand;
 import network.palace.bungee.commands.moderation.*;
 import network.palace.bungee.commands.staff.*;
-import network.palace.bungee.dashboard.DashboardConnection;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.listeners.PlayerChat;
 import network.palace.bungee.listeners.PlayerJoinAndLeave;
@@ -26,14 +25,12 @@ import network.palace.bungee.utils.*;
 import network.palace.bungee.utils.chat.JaroWinkler;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
 public class PalaceBungee extends Plugin {
     @Getter private static final UUID proxyID = UUID.randomUUID();
@@ -60,15 +57,20 @@ public class PalaceBungee extends Plugin {
 
     @Getter private final static HashMap<UUID, String> usernameCache = new HashMap<>();
 
-    //TODO move to environment variable
-    @Getter private final static boolean testNetwork = true;
-    @Getter private static DashboardConnection dashboardConnection;
+    @Getter private static boolean testNetwork;
 
     @Override
     public void onEnable() {
         instance = this;
 
         configUtil = new ConfigUtil();
+        try {
+            testNetwork = configUtil.isTestNetwork();
+        } catch (IOException e) {
+            testNetwork = true;
+            getLogger().log(Level.WARNING, "Error loading testNetwork setting from config file, defaulting to testNetwork ENABLED", e);
+        }
+        if (testNetwork) getLogger().log(Level.WARNING, "Test network enabled!");
 
         try {
             mongoHandler = new MongoHandler();
@@ -103,13 +105,6 @@ public class PalaceBungee extends Plugin {
 
         registerListeners();
         registerCommands();
-
-        try {
-            dashboardConnection = new DashboardConnection();
-        } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException | InterruptedException e) {
-            e.printStackTrace();
-            getLogger().severe("Error connecting to Dashboard!");
-        }
     }
 
     @Override
