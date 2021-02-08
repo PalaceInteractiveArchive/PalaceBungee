@@ -12,7 +12,7 @@ public class ChatAnalysisPacket extends MQPacket {
     @Getter private final UUID sender;
     @Getter private final Rank rank;
     @Getter private final String message;
-    @Getter private final String server;
+    @Getter private final String channel;
     @Getter private final long created = System.currentTimeMillis();
     @Getter private Runnable callback = null;
 
@@ -23,17 +23,17 @@ public class ChatAnalysisPacket extends MQPacket {
         this.sender = UUID.fromString(object.get("sender").getAsString());
         this.rank = Rank.fromString(object.get("rank").getAsString());
         this.message = object.get("message").getAsString();
-        this.server = object.get("server").getAsString();
+        this.channel = object.get("channel").getAsString();
     }
 
-    public ChatAnalysisPacket(UUID sender, UUID sendingProxy, Rank rank, String message, String server, Runnable callback) {
+    public ChatAnalysisPacket(UUID sender, UUID sendingProxy, Rank rank, String message, String channel, Runnable callback) {
         super(PacketID.Global.CHAT_ANALYSIS.getId(), null);
         this.requestId = UUID.randomUUID();
         this.sendingProxy = sendingProxy;
         this.sender = sender;
         this.rank = rank;
         this.message = message;
-        this.server = server;
+        this.channel = channel;
         this.callback = callback;
     }
 
@@ -45,7 +45,7 @@ public class ChatAnalysisPacket extends MQPacket {
         object.addProperty("sender", sender.toString());
         object.addProperty("rank", rank.getDBName());
         object.addProperty("message", message);
-        object.addProperty("server", server);
+        object.addProperty("channel", channel);
         return object;
     }
 }

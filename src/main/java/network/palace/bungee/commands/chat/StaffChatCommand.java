@@ -21,6 +21,8 @@ public class StaffChatCommand extends PalaceCommand {
             return;
         }
         String msg = String.join(" ", args);
+        PalaceBungee.getMongoHandler().logChatMessage(player.getUniqueId(), msg, "StaffChat",
+                System.currentTimeMillis(), true, "", "");
         try {
             msg = EmojiUtil.convertMessage(player, msg);
         } catch (IllegalArgumentException e) {

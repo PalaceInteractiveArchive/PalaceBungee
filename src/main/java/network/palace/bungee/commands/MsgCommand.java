@@ -48,7 +48,7 @@ public class MsgCommand extends PalaceCommand {
                 String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true);
                 if (processed == null) return;
 
-                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM to " + args[0], () -> {
                     try {
                         String msg;
                         try {
@@ -83,7 +83,7 @@ public class MsgCommand extends PalaceCommand {
                 String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true);
                 if (processed == null) return;
 
-                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM to " + args[0], () -> {
                     try {
                         String msg;
                         try {

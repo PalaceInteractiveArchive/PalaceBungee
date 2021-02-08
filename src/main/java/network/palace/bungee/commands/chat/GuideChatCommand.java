@@ -26,7 +26,7 @@ public class GuideChatCommand extends PalaceCommand {
         String processed = PalaceBungee.getChatUtil().processChatMessage(player, msg, "GC", false);
         if (processed == null) return;
         try {
-            PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+            PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "GuideChat", () -> {
                 try {
                     String message;
                     try {

@@ -40,26 +40,22 @@ public class HelpMeCommand extends PalaceCommand {
                 request.append(" ");
             }
         }
-        if (player.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
-            try {
-                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), request.toString(), player.getServerName(), () -> {
-                    try {
-                        if (PalaceBungee.getChatUtil().strictModeCheck(request.toString())) {
-                            player.sendMessage(ChatColor.RED + "Your message was similar to another recently said in chat and was marked as spam. We apologize if this was done in error, we're constantly improving our chat filter.");
-                            PalaceBungee.getModerationUtil().announceSpamMessage(player.getUsername(), request.toString());
-                            PalaceBungee.getInstance().getLogger().info("CANCELLED CHAT EVENT STRICT MODE");
-                            return;
-                        }
-                        PalaceBungee.getGuideUtil().sendHelpRequest(player, request.toString());
-                    } catch (Exception e) {
-                        e.printStackTrace();
+        try {
+            PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), request.toString(), "/helpme", () -> {
+                try {
+                    if (player.getRank().getRankId() < Rank.CHARACTER.getRankId() && PalaceBungee.getChatUtil().strictModeCheck(request.toString())) {
+                        player.sendMessage(ChatColor.RED + "Your message was similar to another recently said in chat and was marked as spam. We apologize if this was done in error, we're constantly improving our chat filter.");
+                        PalaceBungee.getModerationUtil().announceSpamMessage(player.getUsername(), request.toString());
+                        PalaceBungee.getInstance().getLogger().info("CANCELLED CHAT EVENT STRICT MODE");
+                        return;
                     }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            PalaceBungee.getGuideUtil().sendHelpRequest(player, request.toString());
+                    PalaceBungee.getGuideUtil().sendHelpRequest(player, request.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

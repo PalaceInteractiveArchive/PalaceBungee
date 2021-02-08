@@ -29,11 +29,7 @@ public class ReplyCommand extends PalaceCommand {
             player.sendMessage(ChatColor.AQUA + "No one to reply to! Message someone with " + ChatColor.YELLOW + "/msg [Username] [Message]");
             return;
         }
-        StringBuilder messageBuilder = new StringBuilder();
-        for (int i = 1; i < args.length; i++) {
-            messageBuilder.append(args[i]).append(" ");
-        }
-        String message = messageBuilder.toString().trim();
+        String message = String.join(" ", args);
         Player targetPlayer = PalaceBungee.getPlayer(replyTo);
         if (player.getRank().getRankId() < Rank.CHARACTER.getRankId() && !PalaceBungee.getConfigUtil().isDmEnabled()) {
             player.sendMessage(ChatColor.RED + "Direct messages are currently disabled.");
@@ -52,7 +48,7 @@ public class ReplyCommand extends PalaceCommand {
                 String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true);
                 if (processed == null) return;
 
-                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM Reply to " + args[0], () -> {
                     try {
                         String msg;
                         try {
@@ -87,7 +83,7 @@ public class ReplyCommand extends PalaceCommand {
                 String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true);
                 if (processed == null) return;
 
-                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+                PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM Reply to " + username, () -> {
                     try {
                         String msg;
                         try {

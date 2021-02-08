@@ -40,6 +40,7 @@ public class MongoHandler {
     private final MongoCollection<Document> bansCollection;
     private final MongoCollection<Document> partyCollection;
     @Getter private final MongoCollection<Document> playerCollection;
+    @Getter private final MongoCollection<Document> chatCollection;
     @Getter private final MongoCollection<Document> resourcePackCollection;
     private final MongoCollection<Document> serversCollection;
     private final MongoCollection<Document> serviceConfigCollection;
@@ -57,9 +58,10 @@ public class MongoHandler {
         MongoClientURI connectionString = new MongoClientURI("mongodb://" + username + ":" + password + "@" + hostname);
         client = new MongoClient(connectionString);
         MongoDatabase database = client.getDatabase(mongo.getDatabase());
+        playerCollection = database.getCollection("players");
+        chatCollection = database.getCollection("chat");
         bansCollection = database.getCollection("bans");
         partyCollection = database.getCollection("parties");
-        playerCollection = database.getCollection("players");
         resourcePackCollection = database.getCollection("resourcepacks");
         serversCollection = database.getCollection("servers");
         serviceConfigCollection = database.getCollection("service_configs");
@@ -1224,5 +1226,13 @@ public class MongoHandler {
 
     public Document getVirtualQueue(String queueId) {
         return virtualQueuesCollection.find(Filters.eq("queueId", queueId)).first();
+    }
+
+    public void logChatMessage(UUID sender, String message, String channel, long time, boolean okay, String filterCaught, String offendingText) {
+        Document doc = new Document("uuid", sender.toString()).append("message", message).append("channel", channel).append("time", time / 1000).append("okay", okay);
+        if (!okay) {
+            doc.append("uuid", sender.toString()).append("message", message).append("time", time).append("okay", false).append("filterCaught", filterCaught).append("offendingText", offendingText);
+        }
+        chatCollection.insertOne(doc);
     }
 }

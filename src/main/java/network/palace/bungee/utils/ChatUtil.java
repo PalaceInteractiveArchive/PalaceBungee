@@ -176,7 +176,7 @@ public class ChatUtil {
                     s.startsWith("/eval") || s.startsWith("/evaluate") || s.startsWith("/solve") ||
                     s.startsWith("worldedit:/calc") || s.startsWith("worldedit:/calculate") ||
                     s.startsWith("worldedit:/eval") || s.startsWith("worldedit:/evaluate") ||
-                    s.startsWith("worldedit:/solve"))) {
+                    s.startsWith("worldedit:/solve") || s.startsWith("train") || s.startsWith("cart"))) {
                 player.sendMessage(ChatColor.RED + "That command is disabled.");
                 return true;
             }
@@ -192,7 +192,7 @@ public class ChatUtil {
         String processed = processChatMessage(player, msg, channel);
         if (processed == null) return true;
 
-        analyzeMessage(player.getUniqueId(), player.getRank(), processed, player.getServerName(), () -> {
+        analyzeMessage(player.getUniqueId(), player.getRank(), processed, channel, () -> {
             messageCache.put(player.getUniqueId(), new ChatMessage(player.getUniqueId(), processed));
 
             String emoji;
@@ -203,7 +203,6 @@ public class ChatUtil {
                 return;
             }
 
-            // TODO Log chat message
             if (channel.equals("ParkChat")) {
                 try {
                     sendOutgoingParkChatMessage(player, emoji);
@@ -319,12 +318,16 @@ public class ChatUtil {
         return msg;
     }
 
-    public void analyzeMessage(UUID uuid, Rank rank, String message, String server, Runnable callback) throws Exception {
-        ChatAnalysisPacket packet = new ChatAnalysisPacket(uuid, PalaceBungee.getProxyID(), rank, message, server, callback);
+    public void analyzeMessage(UUID uuid, Rank rank, String message, String channel, Runnable callback) throws Exception {
+        ChatAnalysisPacket packet = new ChatAnalysisPacket(uuid, PalaceBungee.getProxyID(), rank, message, channel, callback);
+        analysisPackets.put(packet.getRequestId(), packet);
+
+        if (rank.getRankId() >= Rank.CHARACTER.getRankId()) {
+            handleAnalysisResponse(new ChatAnalysisResponsePacket(packet.getRequestId(), true, message));
+            return;
+        }
 
         PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().CHAT_ANALYSIS);
-
-        analysisPackets.put(packet.getRequestId(), packet);
     }
 
     public void handleAnalysisResponse(ChatAnalysisResponsePacket packet) {
@@ -333,6 +336,8 @@ public class ChatUtil {
             PalaceBungee.getProxyServer().getLogger().warning("Received chat analysis response for unknown request! Sent to wrong proxy?");
             return;
         }
+        PalaceBungee.getMongoHandler().logChatMessage(originalRequest.getSender(), originalRequest.getMessage(), originalRequest.getChannel(),
+                System.currentTimeMillis(), packet.isOkay(), packet.getFilterCaught(), packet.getOffendingText());
         if (packet.isOkay()) {
             // Empty message field means it passed analysis
             originalRequest.getCallback().run();
