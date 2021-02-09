@@ -222,9 +222,13 @@ public class PalaceBungee extends Plugin {
     public static void login(Player player) {
         players.put(player.getUniqueId(), player);
         mongoHandler.login(player);
+        if (player.isNewGuest()) {
+            player.runTutorial();
+        }
     }
 
     public static void logout(UUID uuid, Player player) {
+        if (player != null && player.isNewGuest()) player.cancelTutorial();
         players.remove(uuid);
         mongoHandler.logout(uuid, player);
     }

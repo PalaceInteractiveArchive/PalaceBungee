@@ -1235,4 +1235,8 @@ public class MongoHandler {
         }
         chatCollection.insertOne(doc);
     }
+
+    public void completeTutorial(UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("tutorial", true));
+    }
 }

@@ -139,7 +139,7 @@ public class PlayerJoinAndLeave implements Listener {
             if (PalaceBungee.getConfigUtil().isStrictChat() && rank.getRankId() >= Rank.TRAINEE.getRankId())
                 player.sendMessage(ChatColor.RED + "\nChat is currently in strict mode!\n");
             if (rank.getRankId() >= Rank.CHARACTER.getRankId()) {
-                String msg = rank.getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked in.";
+                String msg = rank.getFormattedName() + " " + ChatColor.YELLOW + player.getUsername() + " has clocked in";
                 if (disable) msg += ChatColor.GRAY + " (not logged in)";
                 try {
                     PalaceBungee.getMessageHandler().sendStaffMessage(msg);
