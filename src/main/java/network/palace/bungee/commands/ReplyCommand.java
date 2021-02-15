@@ -22,6 +22,11 @@ public class ReplyCommand extends PalaceCommand {
             player.sendMessage(ChatColor.RED + "/reply [Message]");
             return;
         }
+        if (player.getTotalOnlineTime() < 600) {
+            player.sendMessage(ChatColor.RED + "New guests must be on the server for at least 10 minutes before talking in chat." +
+                    ChatColor.DARK_AQUA + " Learn more at palnet.us/rules");
+            return;
+        }
         boolean onlyStaff = player.isMuted();
         UUID replyTo = player.getReplyTo();
         long replyTime = player.getReplyTime();

@@ -24,6 +24,11 @@ public class MsgCommand extends PalaceCommand {
             player.sendMessage(ChatColor.GREEN + "Example: " + ChatColor.YELLOW + "/msg " + player.getUsername() + " Hello there!");
             return;
         }
+        if (player.getTotalOnlineTime() < 600) {
+            player.sendMessage(ChatColor.RED + "New guests must be on the server for at least 10 minutes before talking in chat." +
+                    ChatColor.DARK_AQUA + " Learn more at palnet.us/rules");
+            return;
+        }
         boolean onlyStaff = player.isMuted();
         StringBuilder messageBuilder = new StringBuilder();
         for (int i = 1; i < args.length; i++) {

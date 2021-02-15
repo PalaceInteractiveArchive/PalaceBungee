@@ -46,7 +46,7 @@ public class PlayerJoinAndLeave implements Listener {
 
         if (doc != null && doc.containsKey("online") && doc.getBoolean("online")) {
             event.setCancelled(true);
-            event.setCancelReason(new ComponentBuilder("This account is already connected to this server!").color(ChatColor.RED).create());
+            event.setCancelReason(new ComponentBuilder("You are already connected to this server!").color(ChatColor.RED).create());
             return;
         }
 
@@ -54,8 +54,8 @@ public class PlayerJoinAndLeave implements Listener {
         Rank rank;
         if (doc == null) {
             // new player
-            player = null;
             rank = Rank.SETTLER;
+            player = new Player(connection.getUniqueId(), connection.getName(), rank, new ArrayList<>(), address, connection.getVersion(), true);
         } else {
             AddressBan addressBan = PalaceBungee.getMongoHandler().getAddressBan(address);
             if (addressBan != null) {
@@ -112,7 +112,6 @@ public class PlayerJoinAndLeave implements Listener {
         }
         PalaceBungee.login(player);
         PalaceBungee.getProxyServer().getScheduler().runAsync(PalaceBungee.getInstance(), () -> {
-            assert player != null;
             ProviderData data = IPUtil.getProviderData(player.getAddress());
             if (data != null) {
                 player.setIsp(data.getIsp());

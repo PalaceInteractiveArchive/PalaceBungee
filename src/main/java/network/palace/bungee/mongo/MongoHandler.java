@@ -290,6 +290,13 @@ public class MongoHandler {
         List<Object> ignoring = new ArrayList<>();
         playerDocument.put("ignoring", ignoring);
 
+        playerDocument.put("online", true);
+
+        Map<String, Object> onlineData = new HashMap<>();
+        onlineData.put("proxy", PalaceBungee.getProxyID().toString());
+        onlineData.put("server", "Hub1");
+        playerDocument.put("onlineData", onlineData);
+
         playerCollection.insertOne(playerDocument);
 
         updatePreviousUsernames(player.getUniqueId(), player.getUsername());
@@ -359,10 +366,11 @@ public class MongoHandler {
                         "pending friend request" + (requests.size() > 1 ? "s" : "") + "! View them with " +
                         ChatColor.YELLOW + ChatColor.BOLD + "/friend requests");
             }
-            PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
-                    new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
-            Mute mute = getCurrentMute(player.getUniqueId());
-            player.setMute(mute);
+            if (friends.size() > 0) {
+                PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
+                        new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            }
+            player.setMute(getCurrentMute(player.getUniqueId()));
         } catch (Exception e) {
             PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error handling player login", e);
         }
@@ -889,6 +897,7 @@ public class MongoHandler {
 
     public Mute getCurrentMute(UUID uuid) {
         Document doc = getPlayer(uuid, new Document("mutes", 1));
+        if (doc == null) return null;
         for (Object o : doc.get("mutes", ArrayList.class)) {
             Document muteDoc = (Document) o;
             if (muteDoc == null || !muteDoc.getBoolean("active")) continue;

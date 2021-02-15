@@ -48,22 +48,33 @@ public class MessageHandler {
         PUBLISHING_CONNECTION = factory.newConnection();
         CONSUMING_CONNECTION = factory.newConnection();
 
-        PUBLISHING_CONNECTION.addShutdownListener(e -> {
-            PalaceBungee.getProxyServer().getLogger().warning("Publishing connection has been closed - reinitializing!");
-            try {
-                PUBLISHING_CONNECTION = factory.newConnection();
-            } catch (IOException | TimeoutException ioException) {
-                PalaceBungee.getProxyServer().getLogger().severe("Failed to reinitialize publishing connection!");
-                ioException.printStackTrace();
+        ((Recoverable) PUBLISHING_CONNECTION).addRecoveryListener(new RecoveryListener() {
+            @Override
+            public void handleRecovery(Recoverable recoverable) {
+                BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED)
+                        .append("] ").color(ChatColor.WHITE)
+                        .append("Re-established connection to Message Queue")
+                        .color(ChatColor.GREEN)
+                        .create();
+                for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                    if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) continue;
+                    tp.sendMessage(components);
+                }
             }
-        });
-        CONSUMING_CONNECTION.addShutdownListener(e -> {
-            PalaceBungee.getProxyServer().getLogger().warning("Consuming connection has been closed - reinitializing!");
-            try {
-                CONSUMING_CONNECTION = factory.newConnection();
-            } catch (IOException | TimeoutException ioException) {
-                PalaceBungee.getProxyServer().getLogger().severe("Failed to reinitialize consuming connection!");
-                ioException.printStackTrace();
+
+            @Override
+            public void handleRecoveryStarted(Recoverable recoverable) {
+                BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED)
+                        .append("] ").color(ChatColor.WHITE)
+                        .append("Error connecting to Message Queue - please notify a Developer or Lead+")
+                        .color(ChatColor.GREEN)
+                        .create();
+                for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                    if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) continue;
+                    tp.sendMessage(components);
+                }
             }
         });
     }

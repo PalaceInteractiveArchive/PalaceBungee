@@ -13,6 +13,11 @@ public class PartyChatCommand extends PalaceCommand {
 
     @Override
     public void execute(Player player, String[] args) {
+        if (player.getTotalOnlineTime() < 600) {
+            player.sendMessage(ChatColor.RED + "New guests must be on the server for at least 10 minutes before talking in chat." +
+                    ChatColor.DARK_AQUA + " Learn more at palnet.us/rules");
+            return;
+        }
         try {
             PalaceBungee.getPartyUtil().chat(player, String.join(" ", args));
         } catch (Exception e) {
