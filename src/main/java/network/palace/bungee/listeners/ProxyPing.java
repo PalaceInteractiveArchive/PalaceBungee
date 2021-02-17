@@ -23,13 +23,13 @@ public class ProxyPing implements Listener {
 
             p.setName(ProtocolConstants.getVersionString());
 
-            event.setResponse(new ServerPing(p, new ServerPing.Players(2000, PalaceBungee.getInstance().getProxy().getOnlineCount(), null),
+            event.setResponse(new ServerPing(p, new ServerPing.Players(2000, PalaceBungee.getServerUtil().getOnlineCount(), null),
                     PalaceBungee.getConfigUtil().getMotd(), PalaceBungee.getConfigUtil().getFavicon()));
 
             if (PalaceBungee.getConfigUtil().isMaintenance()) {
                 event.setResponse(new ServerPing(p, new ServerPing.Players(0, 0, PalaceBungee.getConfigUtil().getMotdInfo()), PalaceBungee.getConfigUtil().getMaintenanceMotd(), PalaceBungee.getConfigUtil().getFavicon()));
             } else {
-                event.setResponse(new ServerPing(p, new ServerPing.Players(2000, PalaceBungee.getProxyServer().getOnlineCount(),
+                event.setResponse(new ServerPing(p, new ServerPing.Players(2000, PalaceBungee.getServerUtil().getOnlineCount(),
                         PalaceBungee.getConfigUtil().getMotdInfo()), PalaceBungee.getConfigUtil().getMotd(), PalaceBungee.getConfigUtil().getFavicon()));
             }
         } catch (Exception ignored) {
