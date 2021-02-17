@@ -52,6 +52,7 @@ public abstract class PalaceCommand extends Command implements TabExecutor {
         if (!(commandSender instanceof ProxiedPlayer)) return;
         Player player = PalaceBungee.getPlayer(((ProxiedPlayer) commandSender).getUniqueId());
         if (player == null) return;
+        if (player.isDisabled() && !getName().equals("staff")) return;
         if (player.getRank().getRankId() >= rank.getRankId() || (tag != null && player.getTags().contains(tag))) {
             // either player meets the rank requirement, or the tag requirement
             execute(player, strings);
