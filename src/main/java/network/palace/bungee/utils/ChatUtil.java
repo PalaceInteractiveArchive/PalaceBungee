@@ -422,6 +422,7 @@ public class ChatUtil {
         String channel = packet.getChannel();
         if (channel.equals("ParkChat")) {
             for (Player player : PalaceBungee.getOnlinePlayers()) {
+                if (player.isDisabled()) continue;
                 if (!PalaceBungee.getServerUtil().getChannel(player).equals("ParkChat")) continue;
                 if (packet.getRank().getRankId() < Rank.TRAINEE.getRankId() && player.isIgnored(sender)) continue;
                 if (plainText.matches("(.* )?" + player.getUsername().toLowerCase() + "([.,! ].*)?")) {
