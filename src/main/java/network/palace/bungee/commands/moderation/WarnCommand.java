@@ -16,6 +16,8 @@ public class WarnCommand extends PalaceCommand {
 
     public WarnCommand() {
         super("warn", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

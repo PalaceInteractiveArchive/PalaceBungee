@@ -18,6 +18,8 @@ public class ModlogCommand extends PalaceCommand {
 
     public ModlogCommand() {
         super("modlog", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

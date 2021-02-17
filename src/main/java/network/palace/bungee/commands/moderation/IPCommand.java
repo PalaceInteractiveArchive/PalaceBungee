@@ -11,6 +11,8 @@ public class IPCommand extends PalaceCommand {
 
     public IPCommand() {
         super("ip", Rank.LEAD);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

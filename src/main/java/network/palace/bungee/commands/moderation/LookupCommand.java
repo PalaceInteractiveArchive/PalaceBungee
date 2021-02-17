@@ -22,6 +22,8 @@ public class LookupCommand extends PalaceCommand {
 
     public LookupCommand() {
         super("lookup", Rank.TRAINEE, "bseen");
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

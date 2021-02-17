@@ -16,6 +16,8 @@ public class MuteCommand extends PalaceCommand {
 
     public MuteCommand() {
         super("mute", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

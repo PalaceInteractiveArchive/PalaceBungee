@@ -14,7 +14,6 @@ import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
 import network.palace.bungee.handlers.moderation.*;
-import network.palace.bungee.messages.packets.FriendJoinPacket;
 import network.palace.bungee.utils.ConfigUtil;
 import network.palace.bungee.utils.NameUtil;
 import org.bson.BsonInt32;
@@ -1235,5 +1234,16 @@ public class MongoHandler {
 
     public void completeTutorial(UUID uuid) {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("tutorial", true));
+    }
+
+    public List<String> getOnlinePlayerNames() {
+        List<String> names = new ArrayList<>();
+        for (Document doc : playerCollection.find(Filters.eq("online", true)).projection(new Document("username", true))) {
+            try {
+                names.add(doc.getString("username"));
+            } catch (Exception ignored) {
+            }
+        }
+        return names;
     }
 }

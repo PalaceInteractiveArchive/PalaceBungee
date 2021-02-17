@@ -10,12 +10,13 @@ import network.palace.bungee.PalaceBungee;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class PalaceCommand extends Command implements TabExecutor {
     @Getter private final Rank rank;
     @Getter private final RankTag tag;
-    protected boolean tabComplete = false;
+    protected boolean tabComplete = false, tabCompletePlayers = false;
 
     public PalaceCommand(String name) {
         this(name, Rank.SETTLER);
@@ -67,7 +68,25 @@ public abstract class PalaceCommand extends Command implements TabExecutor {
         Player player = PalaceBungee.getPlayer(((ProxiedPlayer) commandSender).getUniqueId());
         if (player == null) return new ArrayList<>();
         if (player.getRank().getRankId() >= rank.getRankId() || (tag != null && player.getTags().contains(tag))) {
-            return onTabComplete(player, Arrays.asList(args));
+            if (tabCompletePlayers) {
+                List<String> list = new ArrayList<>(PalaceBungee.getServerUtil().getOnlinePlayerNames());
+                if (args.length > 0) {
+                    String arg2 = args[args.length - 1];
+                    List<String> l2 = new ArrayList<>();
+                    for (String s : list) {
+                        if (s.toLowerCase().startsWith(arg2.toLowerCase())) {
+                            l2.add(s);
+                        }
+                    }
+                    Collections.sort(l2);
+                    return l2;
+                } else {
+                    Collections.sort(list);
+                    return list;
+                }
+            } else {
+                return onTabComplete(player, Arrays.asList(args));
+            }
         } else {
             return new ArrayList<>();
         }

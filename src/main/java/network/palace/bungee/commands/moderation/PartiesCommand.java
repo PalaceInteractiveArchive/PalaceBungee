@@ -15,6 +15,8 @@ public class PartiesCommand extends PalaceCommand {
 
     public PartiesCommand() {
         super("parties", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

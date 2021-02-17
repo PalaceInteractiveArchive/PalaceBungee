@@ -16,6 +16,8 @@ public class KickCommand extends PalaceCommand {
 
     public KickCommand() {
         super("kick", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

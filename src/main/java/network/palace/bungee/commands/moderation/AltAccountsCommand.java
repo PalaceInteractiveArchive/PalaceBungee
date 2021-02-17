@@ -19,6 +19,8 @@ public class AltAccountsCommand extends PalaceCommand {
 
     public AltAccountsCommand() {
         super("altaccounts", Rank.TRAINEE, "alts");
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

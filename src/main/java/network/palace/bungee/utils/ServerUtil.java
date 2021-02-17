@@ -18,6 +18,7 @@ public class ServerUtil {
     private final HashMap<String, Server> servers = new HashMap<>();
     private ServerInfo currentHub;
     @Getter private int onlineCount = 0;
+    @Getter private final List<String> onlinePlayerNames = new ArrayList<>();
 
     public ServerUtil() {
         loadServers();
@@ -50,6 +51,13 @@ public class ServerUtil {
                     onlineCount = PalaceBungee.getMongoHandler().getOnlineCount();
                 } catch (Exception e) {
                     PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error retrieving global player count", e);
+                }
+                try {
+                    List<String> names = PalaceBungee.getMongoHandler().getOnlinePlayerNames();
+                    onlinePlayerNames.clear();
+                    onlinePlayerNames.addAll(names);
+                } catch (Exception e) {
+                    PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error updating online player name list", e);
                 }
                 try {
                     int currentCount = servers.get(currentHub.getName()).getCount();

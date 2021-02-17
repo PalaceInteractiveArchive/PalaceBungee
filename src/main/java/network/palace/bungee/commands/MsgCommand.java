@@ -1,6 +1,7 @@
 package network.palace.bungee.commands;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.CommandSender;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
@@ -14,6 +15,8 @@ public class MsgCommand extends PalaceCommand {
 
     public MsgCommand() {
         super("msg", "m", "tell", "w");
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override
@@ -116,5 +119,10 @@ public class MsgCommand extends PalaceCommand {
                 player.sendMessage(ChatColor.RED + "There was an error sending your direct message. Try again soon!");
             }
         }
+    }
+
+    @Override
+    public Iterable<String> onTabComplete(CommandSender commandSender, String[] args) {
+        return super.onTabComplete(commandSender, args);
     }
 }

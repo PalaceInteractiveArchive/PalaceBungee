@@ -10,6 +10,8 @@ public class FindCommand extends PalaceCommand {
 
     public FindCommand() {
         super("find", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override
