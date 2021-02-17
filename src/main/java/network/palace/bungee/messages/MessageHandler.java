@@ -116,6 +116,7 @@ public class MessageHandler {
                         RankTag tag = packet.getTag();
                         BaseComponent[] components = packet.isComponentMessage() ? ComponentSerializer.parse(packet.getMessage()) : null;
                         PalaceBungee.getOnlinePlayers().stream().filter(p -> {
+                            if (p.isDisabled()) return false;
                             if (packet.isExact())
                                 return p.getRank().equals(packet.getRank()) || (tag != null && p.getTags().contains(packet.getTag()));
                             else
