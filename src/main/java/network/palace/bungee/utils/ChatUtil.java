@@ -5,10 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
@@ -369,14 +367,40 @@ public class ChatUtil {
                     .create());
 
             try {
-                MessageByRankPacket chatPacket = new MessageByRankPacket("[" + ChatColor.RED + "CHAT" +
-                        ChatColor.WHITE + "] " + ChatColor.GREEN + "Message from " + ChatColor.AQUA + player.getUsername() +
-                        ChatColor.GREEN + " blocked: " + ChatColor.RED + packet.getFilterCaught() + ", " + ChatColor.AQUA + "'" +
-                        originalRequest.getMessage() + "', " + ChatColor.RED + "'" + packet.getOffendingText() + "'", Rank.TRAINEE, null, false, false);
+                BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
+                        .append("CHAT").color(ChatColor.RED)
+                        .append("] ").color(ChatColor.WHITE)
+                        .append("Message from ").color(ChatColor.GREEN)
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to warn this player").color(ChatColor.GREEN).create()))
+                        .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warn " + player.getUsername() + " " + getWarningText(packet.getFilterCaught())))
+                        .append(player.getUsername()).color(ChatColor.AQUA)
+                        .append(" blocked: ").color(ChatColor.GREEN)
+                        .append(packet.getFilterCaught() + ", ").color(ChatColor.RED)
+                        .append("'" + originalRequest.getMessage() + "', ").color(ChatColor.AQUA)
+                        .append("'" + packet.getOffendingText() + "'", ComponentBuilder.FormatRetention.NONE).color(ChatColor.RED)
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to visit ").color(ChatColor.GREEN).append(packet.getOffendingText()).color(ChatColor.AQUA)
+                                .append("\nBE CAREFUL OF ANY LINKS YOU CLICK!").color(ChatColor.RED).create()))
+                        .event(new ClickEvent(ClickEvent.Action.OPEN_URL, packet.getOffendingText()))
+                        .create();
+                MessageByRankPacket chatPacket = new MessageByRankPacket(ComponentSerializer.toString(components), Rank.TRAINEE, null, false, true);
                 PalaceBungee.getMessageHandler().sendMessage(chatPacket, PalaceBungee.getMessageHandler().ALL_PROXIES);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private String getWarningText(String filterCaught) {
+        switch (filterCaught) {
+            case "inappropriate content":
+                return "Please keep chat appropriate.";
+            case "link sharing":
+                return "Please do not advertise or share links.";
+//            case "blocked character":
+//            case "blocked characters":
+//                return "";
+            default:
+                return "";
         }
     }
 
