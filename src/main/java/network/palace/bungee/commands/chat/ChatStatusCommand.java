@@ -16,6 +16,10 @@ public class ChatStatusCommand extends PalaceCommand {
     @Override
     public void execute(Player player, String[] args) {
         Server s = PalaceBungee.getServerUtil().getServer(player.getServerName(), true);
+        if (s == null) {
+            player.sendMessage(ChatColor.RED + "An error occurred while retrieving chat status - unknown server '" + player.getServerName() + "'!");
+            return;
+        }
         boolean park = s.isPark();
         String name;
         int count = 0;

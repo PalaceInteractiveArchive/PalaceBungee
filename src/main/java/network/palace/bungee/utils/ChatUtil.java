@@ -94,7 +94,7 @@ public class ChatUtil {
                     ChatColor.YELLOW + "Chat has been muted";
             String msgname = msg + " by " + source;
             for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                if ((server.equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(server)) {
+                if ((server.equals("ParkChat") && PalaceBungee.getServerUtil().isOnPark(tp)) || tp.getServerName().equals(server)) {
                     tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
                 }
             }
@@ -114,7 +114,7 @@ public class ChatUtil {
                     ChatColor.YELLOW + "Chat has been unmuted";
             String msgname = msg + " by " + source;
             for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                if ((server.equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(server)) {
+                if ((server.equals("ParkChat") && PalaceBungee.getServerUtil().isOnPark(tp)) || tp.getServerName().equals(server)) {
                     tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
                 }
             }

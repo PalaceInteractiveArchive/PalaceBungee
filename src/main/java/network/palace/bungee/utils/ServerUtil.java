@@ -212,6 +212,14 @@ public class ServerUtil {
     public String getChannel(Player player) {
         String serverName = player.getServerName();
         Server server = getServer(serverName, true);
+        if (server == null) {
+            return "";
+        }
         return server.isPark() ? "ParkChat" : server.getName();
+    }
+
+    public boolean isOnPark(Player tp) {
+        Server server = getServer(tp.getServerName(), true);
+        return server != null && server.isPark();
     }
 }

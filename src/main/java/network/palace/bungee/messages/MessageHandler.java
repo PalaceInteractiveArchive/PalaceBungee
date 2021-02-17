@@ -256,7 +256,7 @@ public class MessageHandler {
                         }
                         String msgname = msg + " by " + packet.getSource();
                         for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                            if ((packet.getChannel().equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(packet.getChannel())) {
+                            if ((packet.getChannel().equals("ParkChat") && PalaceBungee.getServerUtil().isOnPark(tp)) || tp.getServerName().equals(packet.getChannel())) {
                                 tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
                             }
                         }
@@ -449,8 +449,7 @@ public class MessageHandler {
                         for (Player tp : PalaceBungee.getOnlinePlayers()) {
                             if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId() || tp.getUniqueId().equals(packet.getSender()))
                                 continue;
-                            if (park && !PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark())
-                                continue;
+                            if (park && !PalaceBungee.getServerUtil().isOnPark(tp)) continue;
                             if (!park && !tp.getServerName().equals(packet.getChannel())) continue;
                             tp.sendMessage(packet.getMessage());
                         }
@@ -465,7 +464,7 @@ public class MessageHandler {
         registerConsumer("proxy_direct", "direct", PalaceBungee.getProxyID().toString(), (consumerTag, delivery) -> {
             try {
                 JsonObject object = parseDelivery(delivery);
-                PalaceBungee.getProxyServer().getLogger().severe(object.toString());
+                PalaceBungee.getProxyServer().getLogger().warning(object.toString());
                 switch (object.get("id").getAsInt()) {
                     // DM
                     case 4: {
