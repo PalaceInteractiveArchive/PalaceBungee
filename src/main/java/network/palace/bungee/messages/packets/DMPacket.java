@@ -2,6 +2,7 @@ package network.palace.bungee.messages.packets;
 
 import com.google.gson.JsonObject;
 import lombok.Getter;
+import network.palace.bungee.handlers.Rank;
 
 import java.util.UUID;
 
@@ -9,7 +10,8 @@ import java.util.UUID;
 public class DMPacket extends MQPacket {
     private final String from, to, message, channel, command;
     private final UUID fromUUID, toUUID;
-    private final boolean initialSend, senderIsStaff;
+    private final boolean initialSend;
+    private final Rank rank;
 
     public DMPacket(JsonObject object) {
         super(PacketID.Global.DM.getId(), object);
@@ -30,10 +32,10 @@ public class DMPacket extends MQPacket {
         this.command = object.has("command") ? object.get("command").getAsString() : "msg";
         this.sendingProxy = UUID.fromString(object.get("sendingProxy").getAsString());
         this.initialSend = object.get("initialSend").getAsBoolean();
-        this.senderIsStaff = object.get("senderIsStaff").getAsBoolean();
+        this.rank = Rank.fromString(object.get("rank").getAsString());
     }
 
-    public DMPacket(String from, String to, String message, String channel, String command, UUID fromUUID, UUID toUUID, UUID sendingProxy, boolean initialSend, boolean senderIsStaff) {
+    public DMPacket(String from, String to, String message, String channel, String command, UUID fromUUID, UUID toUUID, UUID sendingProxy, boolean initialSend, Rank rank) {
         super(PacketID.Global.DM.getId(), null);
         this.from = from;
         this.to = to;
@@ -44,7 +46,7 @@ public class DMPacket extends MQPacket {
         this.toUUID = toUUID;
         this.sendingProxy = sendingProxy;
         this.initialSend = initialSend;
-        this.senderIsStaff = senderIsStaff;
+        this.rank = rank;
     }
 
     @Override
@@ -57,7 +59,7 @@ public class DMPacket extends MQPacket {
         object.addProperty("message", message);
         object.addProperty("sendingProxy", sendingProxy.toString());
         object.addProperty("initialSend", initialSend);
-        object.addProperty("senderIsStaff", senderIsStaff);
+        object.addProperty("rank", rank.getDBName());
         return object;
     }
 }

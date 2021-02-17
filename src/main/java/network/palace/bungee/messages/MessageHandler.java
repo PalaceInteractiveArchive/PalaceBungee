@@ -475,16 +475,16 @@ public class MessageHandler {
                             // message to target
                             DMPacket response;
                             if (player == null) {
-                                response = new DMPacket("", packet.getFrom(), "", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                response = new DMPacket("", packet.getFrom(), "", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.getRank());
                             } else {
-                                if (!packet.isSenderIsStaff() && (!player.isDmEnabled() || (player.isIgnored(packet.getFromUUID()) && player.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
+                                if (packet.getRank().getRankId() < Rank.CHARACTER.getRankId() && (!player.isDmEnabled() || (player.isIgnored(packet.getFromUUID()) && player.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
                                     // if sender is not staff, and the target player either has dm's disabled or has ignored the sender
-                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.getRank());
                                 } else {
                                     PalaceBungee.getChatUtil().socialSpyMessage(player.getUniqueId(), packet.getFrom(), player.getUsername(), PalaceBungee.getServerUtil().getChannel(player), packet.getMessage(), packet.getCommand());
-                                    player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
+                                    player.sendMessage(packet.getRank().getFormattedName() + ChatColor.GRAY + " " + packet.getFrom() + ChatColor.GREEN + " -> " + ChatColor.LIGHT_PURPLE + "You: " + ChatColor.WHITE + packet.getMessage());
                                     player.mention();
-                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getChannel(), packet.getCommand(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getChannel(), packet.getCommand(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, player.getRank());
                                     player.setReplyTo(packet.getFromUUID());
                                     player.setReplyTime(System.currentTimeMillis());
                                 }
@@ -500,7 +500,7 @@ public class MessageHandler {
                                     player.sendMessage(packet.getMessage());
                                 }
                             } else {
-                                player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
+                                player.sendMessage(ChatColor.LIGHT_PURPLE + "You" + ChatColor.GREEN + " -> " + packet.getRank().getFormattedName() + ChatColor.GRAY + " " + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
                                 player.setReplyTo(packet.getToUUID());
                                 player.setReplyTime(System.currentTimeMillis());
                             }
