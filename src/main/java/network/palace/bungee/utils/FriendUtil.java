@@ -51,15 +51,17 @@ public class FriendUtil {
         }
         List<String> currentFriends = new ArrayList<>();
         for (Map.Entry<UUID, String> entry : friends.entrySet()) {
+            String server;
             Player tp = PalaceBungee.getPlayer(entry.getKey());
             if (tp == null) {
+                server = PalaceBungee.getMongoHandler().getPlayerServer(entry.getValue());
+            } else {
+                server = tp.getServerName();
+            }
+            if (server == null) {
                 currentFriends.add(entry.getValue() == null ? "unknown" : entry.getValue());
             } else {
-                String sname = PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).getServerType();
-                if (sname.startsWith("New")) {
-                    sname = sname.replaceAll("New", "");
-                }
-                currentFriends.add(entry.getValue() + ":" + sname);
+                currentFriends.add(entry.getValue() + ":" + server);
             }
         }
         currentFriends.sort((o1, o2) -> {
@@ -231,25 +233,5 @@ public class FriendUtil {
                 "/friend accept [player] " + y + "- Accepts someone's friend request\n" + dash +
                 "/friend deny [player] " + y + "- Denies someone's friend request\n" + dash + "/friend requests " +
                 y + "- Lists all of your friend requests");
-    }
-
-    public void friendMessage(Player player, HashMap<UUID, String> friendList, String joinMessage) {
-        if (player.getRank().getRankId() >= Rank.TRAINEE.getRankId()) {
-            for (Map.Entry<UUID, String> entry : friendList.entrySet()) {
-                Player tp = PalaceBungee.getPlayer(entry.getKey());
-                if (tp != null) {
-                    if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
-                        tp.sendMessage(joinMessage);
-                    }
-                }
-            }
-        } else {
-            for (Map.Entry<UUID, String> entry : friendList.entrySet()) {
-                Player tp = PalaceBungee.getPlayer(entry.getKey());
-                if (tp != null) {
-                    tp.sendMessage(joinMessage);
-                }
-            }
-        }
     }
 }
