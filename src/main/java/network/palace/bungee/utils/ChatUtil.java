@@ -91,6 +91,14 @@ public class ChatUtil {
             mutedChats.add(server);
             PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
             PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            String msg = ChatColor.WHITE + "[" + ChatColor.DARK_AQUA + "Palace Chat" + ChatColor.WHITE + "] " +
+                    ChatColor.YELLOW + "Chat has been muted";
+            String msgname = msg + " by " + source;
+            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                if ((server.equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(server)) {
+                    tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
+                }
+            }
         }
         if (server.equals("Creative")) {
             PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, true), "mc_direct", "direct", "Creative");
@@ -103,6 +111,14 @@ public class ChatUtil {
             mutedChats.remove(server);
             PalaceBungee.getConfigUtil().setMutedChats(mutedChats, true);
             PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, false), PalaceBungee.getMessageHandler().ALL_PROXIES);
+            String msg = ChatColor.WHITE + "[" + ChatColor.DARK_AQUA + "Palace Chat" + ChatColor.WHITE + "] " +
+                    ChatColor.YELLOW + "Chat has been unmuted";
+            String msgname = msg + " by " + source;
+            for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                if ((server.equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(server)) {
+                    tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
+                }
+            }
         }
         if (server.equals("Creative")) {
             PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, false), "mc_direct", "direct", "Creative");
