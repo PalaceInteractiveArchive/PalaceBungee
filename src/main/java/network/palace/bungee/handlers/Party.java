@@ -15,14 +15,15 @@ import java.util.UUID;
 public class Party {
     public static final String MESSAGE_BARS = ChatColor.GOLD + "-----------------------------------------------------";
 
-    @Getter private final String partyID;
+    @Getter private final String partyID, leaderName;
     @Getter private final UUID leader;
     private final HashMap<UUID, String> members;
     private final HashMap<UUID, Long> invited;
 
-    public Party(String partyID, UUID leader, HashMap<UUID, String> members, HashMap<UUID, Long> invited) {
+    public Party(String partyID, UUID leader, String leaderName, HashMap<UUID, String> members, HashMap<UUID, Long> invited) {
         this.partyID = partyID;
         this.leader = leader;
+        this.leaderName = leaderName;
         this.members = members;
         this.invited = invited;
     }
@@ -30,6 +31,7 @@ public class Party {
     public Party(Document doc) throws Exception {
         this.partyID = doc.getObjectId("_id").toHexString();
         this.leader = UUID.fromString(doc.getString("leader"));
+        this.leaderName = PalaceBungee.getUsername(leader);
         this.members = new HashMap<>();
         this.invited = new HashMap<>();
         for (Object o : doc.get("members", ArrayList.class)) {

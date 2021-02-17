@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Getter
 public class DMPacket extends MQPacket {
-    private final String from, to, message;
+    private final String from, to, message, channel, command;
     private final UUID fromUUID, toUUID;
     private final boolean initialSend, senderIsStaff;
 
@@ -26,16 +26,20 @@ public class DMPacket extends MQPacket {
             this.toUUID = null;
         }
         this.message = object.get("message").getAsString();
+        this.channel = object.has("channel") ? object.get("channel").getAsString() : "ParkChat";
+        this.command = object.has("command") ? object.get("command").getAsString() : "msg";
         this.sendingProxy = UUID.fromString(object.get("sendingProxy").getAsString());
         this.initialSend = object.get("initialSend").getAsBoolean();
         this.senderIsStaff = object.get("senderIsStaff").getAsBoolean();
     }
 
-    public DMPacket(String from, String to, String message, UUID fromUUID, UUID toUUID, UUID sendingProxy, boolean initialSend, boolean senderIsStaff) {
+    public DMPacket(String from, String to, String message, String channel, String command, UUID fromUUID, UUID toUUID, UUID sendingProxy, boolean initialSend, boolean senderIsStaff) {
         super(PacketID.Global.DM.getId(), null);
         this.from = from;
         this.to = to;
         this.message = message;
+        this.channel = channel;
+        this.command = command;
         this.fromUUID = fromUUID;
         this.toUUID = toUUID;
         this.sendingProxy = sendingProxy;

@@ -442,6 +442,19 @@ public class MessageHandler {
                         });
                         break;
                     }
+                    case 37: {
+                        SocialSpyPacket packet = new SocialSpyPacket(object);
+                        boolean park = packet.getChannel().equals("ParkChat");
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId() || tp.getUniqueId().equals(packet.getSender()))
+                                continue;
+                            if (park && !PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark())
+                                continue;
+                            if (!park && !tp.getServerName().equals(packet.getChannel())) continue;
+                            tp.sendMessage(packet.getMessage());
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -461,15 +474,16 @@ public class MessageHandler {
                             // message to target
                             DMPacket response;
                             if (player == null) {
-                                response = new DMPacket("", packet.getFrom(), "", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                response = new DMPacket("", packet.getFrom(), "", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
                             } else {
                                 if (!packet.isSenderIsStaff() && (!player.isDmEnabled() || (player.isIgnored(packet.getFromUUID()) && player.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
                                     // if sender is not staff, and the target player either has dm's disabled or has ignored the sender
-                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
                                 } else {
+                                    PalaceBungee.getChatUtil().socialSpyMessage(player.getUniqueId(), packet.getFrom(), player.getUsername(), PalaceBungee.getServerUtil().getChannel(player), packet.getMessage(), packet.getCommand());
                                     player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
                                     player.mention();
-                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getChannel(), packet.getCommand(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
                                     player.setReplyTo(packet.getFromUUID());
                                     player.setReplyTime(System.currentTimeMillis());
                                 }

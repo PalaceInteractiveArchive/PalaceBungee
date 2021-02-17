@@ -14,6 +14,7 @@ import network.palace.bungee.handlers.RankTag;
 import network.palace.bungee.handlers.Server;
 import network.palace.bungee.messages.packets.*;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -402,6 +403,16 @@ public class ChatUtil {
             default:
                 return "";
         }
+    }
+
+    public void socialSpyMessage(UUID sender, String from, String to, String channel, String message, String command) throws IOException {
+        PalaceBungee.getMessageHandler().sendMessage(new SocialSpyPacket(sender, ChatColor.WHITE + from + ": /" + command + " " + to + " " + message, channel),
+                PalaceBungee.getMessageHandler().ALL_PROXIES);
+    }
+
+    public void socialSpyParty(UUID sender, String from, String leader, String channel, String message) throws IOException {
+        PalaceBungee.getMessageHandler().sendMessage(new SocialSpyPacket(sender, ChatColor.BOLD + "" + ChatColor.YELLOW + "[P] " + ChatColor.LIGHT_PURPLE + from + ": /pchat" + " " + leader + " " + message, channel),
+                PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
     public void handleIncomingChatPacket(ChatPacket packet) throws Exception {

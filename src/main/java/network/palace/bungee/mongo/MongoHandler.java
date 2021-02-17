@@ -590,7 +590,7 @@ public class MongoHandler {
                 .append("createdOn", System.currentTimeMillis()).append("invited", new ArrayList<>());
         partyCollection.insertOne(doc);
         doc = partyCollection.find(Filters.eq("leader", leader.toString())).first();
-        return new Party(doc.getObjectId("_id").toHexString(), leader, new HashMap<>(), new HashMap<>());
+        return new Party(doc.getObjectId("_id").toHexString(), leader, PalaceBungee.getUsername(leader), new HashMap<>(), new HashMap<>());
     }
 
     public boolean hasPendingInvite(UUID uuid) {

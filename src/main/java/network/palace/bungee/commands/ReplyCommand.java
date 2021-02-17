@@ -62,6 +62,7 @@ public class ReplyCommand extends PalaceCommand {
                             player.sendMessage(ChatColor.RED + e.getMessage());
                             return;
                         }
+                        PalaceBungee.getChatUtil().socialSpyMessage(player.getUniqueId(), player.getUsername(), targetPlayer.getUsername(), PalaceBungee.getServerUtil().getChannel(player), msg, "r");
                         player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + targetPlayer.getUsername() + ": " + ChatColor.WHITE + msg);
                         targetPlayer.sendMessage(ChatColor.GREEN + player.getUsername() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + msg);
                         targetPlayer.mention();
@@ -102,7 +103,8 @@ public class ReplyCommand extends PalaceCommand {
                             player.sendMessage(ChatColor.RED + "Player not found!");
                             return;
                         }
-                        DMPacket packet = new DMPacket(player.getUsername(), username, msg, player.getUniqueId(), null, PalaceBungee.getProxyID(), true, player.getRank().getRankId() >= Rank.CHARACTER.getRankId());
+                        DMPacket packet = new DMPacket(player.getUsername(), username, msg, PalaceBungee.getServerUtil().getChannel(player), "r",
+                                player.getUniqueId(), null, PalaceBungee.getProxyID(), true, player.getRank().getRankId() >= Rank.CHARACTER.getRankId());
                         PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);
                     } catch (Exception e) {
                         e.printStackTrace();

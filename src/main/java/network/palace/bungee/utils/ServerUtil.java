@@ -191,4 +191,10 @@ public class ServerUtil {
         }
         return s;
     }
+
+    public String getChannel(Player player) {
+        String serverName = player.getServerName();
+        Server server = getServer(serverName, true);
+        return server.isPark() ? "ParkChat" : server.getName();
+    }
 }

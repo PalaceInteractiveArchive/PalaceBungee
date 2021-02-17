@@ -255,6 +255,7 @@ public class PartyUtil {
                     player.sendMessage(ChatColor.RED + e.getMessage());
                     return;
                 }
+                PalaceBungee.getChatUtil().socialSpyParty(player.getUniqueId(), player.getUsername(), party.getLeaderName(), PalaceBungee.getServerUtil().getChannel(player), message);
                 message = Subsystem.PARTY.getPrefix() + (party.isLeader(player.getUniqueId()) ? ChatColor.YELLOW + "* " : "") +
                         RankTag.format(player.getTags()) + rank.getFormattedName() + ChatColor.GRAY + " " + player.getUsername() + ": " + ChatColor.WHITE +
                         (rank.getRankId() >= Rank.TRAINEE.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message);
