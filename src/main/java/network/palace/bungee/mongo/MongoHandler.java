@@ -1237,8 +1237,8 @@ public class MongoHandler {
         return virtualQueuesCollection.find(Filters.eq("queueId", queueId)).first();
     }
 
-    public void logChatMessage(UUID sender, String message, String channel, long time, boolean okay, String filterCaught, String offendingText) {
-        Document doc = new Document("uuid", sender.toString()).append("message", message).append("channel", channel).append("time", time / 1000).append("okay", okay);
+    public void logChatMessage(UUID sender, String message, String channel, long time, boolean okay, String filterCaught, String offendingText, boolean staff) {
+        Document doc = new Document("uuid", sender.toString()).append("message", message).append("channel", channel).append("time", time / 1000).append("okay", okay).append("staff", staff);
         if (!okay) {
             doc.append("uuid", sender.toString()).append("message", message).append("time", time).append("okay", false).append("filterCaught", filterCaught).append("offendingText", offendingText);
         }

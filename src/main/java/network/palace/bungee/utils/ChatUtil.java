@@ -337,7 +337,7 @@ public class ChatUtil {
             return;
         }
         PalaceBungee.getMongoHandler().logChatMessage(originalRequest.getSender(), originalRequest.getMessage(), originalRequest.getChannel(),
-                System.currentTimeMillis(), packet.isOkay(), packet.getFilterCaught(), packet.getOffendingText());
+                System.currentTimeMillis(), packet.isOkay(), packet.getFilterCaught(), packet.getOffendingText(), originalRequest.getRank().getRankId() >= Rank.CHARACTER.getRankId());
         if (packet.isOkay()) {
             // Empty message field means it passed analysis
             originalRequest.getCallback().run();
