@@ -358,18 +358,6 @@ public class MongoHandler {
             List<UUID> ignored = getIgnoredUsers(player.getUniqueId());
             ignored.forEach(uuid -> player.setIgnored(uuid, true));
 
-            HashMap<UUID, String> friends = getFriendList(player.getUniqueId());
-            HashMap<UUID, String> requests = getFriendRequestList(player.getUniqueId());
-            if (requests.size() > 0) {
-                player.sendMessage(ChatColor.AQUA + "You have " + ChatColor.YELLOW + "" + ChatColor.BOLD +
-                        requests.size() + " " + ChatColor.AQUA +
-                        "pending friend request" + (requests.size() > 1 ? "s" : "") + "! View them with " +
-                        ChatColor.YELLOW + ChatColor.BOLD + "/friend requests");
-            }
-            if (friends.size() > 0) {
-                PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
-                        new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
-            }
             player.setMute(getCurrentMute(player.getUniqueId()));
         } catch (Exception e) {
             PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error handling player login", e);

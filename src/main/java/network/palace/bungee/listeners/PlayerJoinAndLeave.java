@@ -23,9 +23,8 @@ import network.palace.bungee.utils.IPUtil;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.logging.Level;
 
 public class PlayerJoinAndLeave implements Listener {
 
@@ -159,6 +158,22 @@ public class PlayerJoinAndLeave implements Listener {
                 player.sendMessage(ChatColor.YELLOW + "\n\n" + ChatColor.BOLD +
                         "You connected with a new IP address, type " + ChatColor.GREEN + "" + ChatColor.BOLD +
                         "/staff login [password]" + ChatColor.YELLOW + "" + ChatColor.BOLD + " to verify your account.\n");
+            }
+            try {
+                HashMap<UUID, String> requests = PalaceBungee.getMongoHandler().getFriendRequestList(player.getUniqueId());
+                if (requests.size() > 0) {
+                    player.sendMessage(ChatColor.AQUA + "You have " + ChatColor.YELLOW + "" + ChatColor.BOLD +
+                            requests.size() + " " + ChatColor.AQUA +
+                            "pending friend request" + (requests.size() > 1 ? "s" : "") + "! View them with " +
+                            ChatColor.YELLOW + ChatColor.BOLD + "/friend requests");
+                }
+                HashMap<UUID, String> friends = PalaceBungee.getMongoHandler().getFriendList(player.getUniqueId());
+                if (friends.size() > 0) {
+                    PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
+                            new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
+                }
+            } catch (Exception e) {
+                PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error sending friend/request notifications", e);
             }
         }
     }
