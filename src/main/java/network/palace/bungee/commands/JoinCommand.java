@@ -30,7 +30,13 @@ public class JoinCommand extends PalaceCommand {
                     return;
                 }
                 try {
-                    PalaceBungee.getServerUtil().sendPlayerByType(player, formatName(args[0]));
+                    String type = formatName(args[0]);
+                    Server server = PalaceBungee.getServerUtil().getServerByType(type);
+                    if (server == null) {
+                        player.sendMessage(ChatColor.RED + "No '" + type + "' server is available right now! Please try again soon.");
+                        return;
+                    }
+                    server.join(player);
                 } catch (Exception e) {
                     PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error sending player to server", e);
                     player.sendMessage(ChatColor.RED + "There was a problem joining that server!");
