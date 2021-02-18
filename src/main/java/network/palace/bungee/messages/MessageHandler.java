@@ -163,7 +163,7 @@ public class MessageHandler {
                     // Chat Clear
                     case 7: {
                         ClearChatPacket packet = new ClearChatPacket(object);
-                        String chat = packet.getChat();
+                        String channel = packet.getChat();
                         UUID target = packet.getTarget();
                         if (target != null) {
                             String username = PalaceBungee.getUsername(target);
@@ -177,16 +177,23 @@ public class MessageHandler {
                                 tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
                             return;
                         }
-                        if (System.currentTimeMillis() - (lastCleared.getOrDefault(chat, 0L)) < 2000) {
-                            //if this chat was last cleared up to 2 seconds ago, prevent it from being cleared again
+                        if (System.currentTimeMillis() - (lastCleared.getOrDefault(channel, 0L)) < 2000) {
+                            //if this channel was last cleared up to 2 seconds ago, prevent it from being cleared again
                             Player player = PalaceBungee.getPlayer(packet.getSource());
                             if (player != null)
                                 player.sendMessage(ChatColor.YELLOW + "It hasn't been 2 seconds since the last chat clear!");
                             return;
                         }
-                        lastCleared.put(chat, System.currentTimeMillis());
+                        lastCleared.put(channel, System.currentTimeMillis());
+                        boolean park = channel.equals("ParkChat");
                         for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                            if (tp.getServerName().equals(chat)) {
+                            boolean clear = false;
+                            if (park) {
+                                if (PalaceBungee.getServerUtil().isOnPark(tp)) clear = true;
+                            } else {
+                                if (tp.getServerName().equals(channel)) clear = true;
+                            }
+                            if (clear) {
                                 if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
                                     tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
                                 } else {
