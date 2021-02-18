@@ -71,6 +71,15 @@ public class ServerUtil {
                 } catch (Exception e) {
                     PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error determining currentHub", e);
                 }
+                try {
+                    for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                        if (tp.getProxiedPlayer() == null && (System.currentTimeMillis() - tp.getLoginTime()) > 5000) {
+                            PalaceBungee.logout(tp.getUniqueId(), tp);
+                        }
+                    }
+                } catch (Exception e) {
+                    PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error maintaining online player list", e);
+                }
             }
         }, 2000L, 5000L);
     }
