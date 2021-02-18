@@ -73,7 +73,7 @@ public class ServerUtil {
                 }
                 try {
                     for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                        if (tp.getProxiedPlayer() == null && (System.currentTimeMillis() - tp.getLoginTime()) > 5000) {
+                        if (tp.getProxiedPlayer().isEmpty() && (System.currentTimeMillis() - tp.getLoginTime()) > 5000) {
                             PalaceBungee.logout(tp.getUniqueId(), tp);
                         }
                     }

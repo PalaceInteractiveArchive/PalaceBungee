@@ -33,7 +33,7 @@ public class LookupCommand extends PalaceCommand {
             return;
         }
         Player tp = PalaceBungee.getPlayer(args[0]);
-        boolean online = tp != null;
+        boolean online = tp != null && tp.getProxiedPlayer().isPresent();
         String name = online ? tp.getUsername() : args[0];
         UUID uuid = online ? tp.getUniqueId() : PalaceBungee.getMongoHandler().usernameToUUID(name);
         if (uuid == null) {

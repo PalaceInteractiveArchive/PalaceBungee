@@ -64,7 +64,7 @@ public class AFKUtil {
             public void run() {
                 try {
                     if (player.isAFK()) {
-                        player.getProxiedPlayer().sendTitle(
+                        player.getProxiedPlayer().ifPresent(p -> p.sendTitle(
                                 BungeeCord.getInstance().createTitle()
                                         .title(new ComponentBuilder("Are you AFK?").color(ChatColor.RED).bold(true).create())
                                         .subTitle(new ComponentBuilder("AFK kick in ").color(ChatColor.RED)
@@ -72,7 +72,7 @@ public class AFKUtil {
                                                 .append("minutes!").color(ChatColor.RED).create())
                                         .fadeIn(10)
                                         .stay(1200).fadeOut(20)
-                        );
+                        ));
                         i++;
                         for (String m : msgs) {
                             player.sendMessage(m);

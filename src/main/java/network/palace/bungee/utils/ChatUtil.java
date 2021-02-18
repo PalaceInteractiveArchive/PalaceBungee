@@ -6,6 +6,7 @@ import lombok.Setter;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.chat.ComponentSerializer;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.Player;
@@ -137,18 +138,20 @@ public class ChatUtil {
             return true;
         }
         if (player.isNewGuest() && !command) return true;
+        Optional<ProxiedPlayer> proxiedPlayer = player.getProxiedPlayer();
+        if (proxiedPlayer.isEmpty()) return true;
 
         switch (player.getChannel()) {
             case "party": {
-                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "pchat " + msg);
+                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "pchat " + msg);
                 return true;
             }
             case "staff": {
-                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "sc " + msg);
+                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "sc " + msg);
                 return true;
             }
             case "admin": {
-                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "ho " + msg);
+                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "ho " + msg);
                 return true;
             }
         }
@@ -166,7 +169,7 @@ public class ChatUtil {
                     player.getAfkTimers().forEach(Timer::cancel);
                     player.getAfkTimers().clear();
                     player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Your AFK Timer has been reset!");
-                    player.getProxiedPlayer().sendTitle(
+                    proxiedPlayer.get().sendTitle(
                             BungeeCord.getInstance().createTitle()
                                     .title(new ComponentBuilder("Confirmed").color(ChatColor.GREEN).bold(true).create())
                                     .subTitle(new ComponentBuilder("Your AFK Timer has been reset!").color(ChatColor.GREEN).bold(true).create())
