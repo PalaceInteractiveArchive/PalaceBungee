@@ -207,7 +207,7 @@ public class Player {
      */
     public void sendPacket(MQPacket packet, boolean mcServer) throws Exception {
         if (mcServer) {
-            PalaceBungee.getMessageHandler().sendMessage(packet, "mc_direct", "direct", getServerName());
+            PalaceBungee.getMessageHandler().sendDirectServerMessage(packet, getServerName());
         } else {
             UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(uuid);
             if (targetProxy != null) PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);

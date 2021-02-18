@@ -21,8 +21,7 @@ public class VirtualQueueJoinCommand extends PalaceCommand {
         try {
             Document queueDoc = PalaceBungee.getMongoHandler().getVirtualQueue(args[0]);
             if (queueDoc == null) return;
-            PalaceBungee.getMessageHandler().sendMessage(new PlayerQueuePacket(queueDoc.getString("queueId"), player.getUniqueId(), true),
-                    "mc_direct", "direct", queueDoc.getString("server"));
+            PalaceBungee.getMessageHandler().sendDirectServerMessage(new PlayerQueuePacket(queueDoc.getString("queueId"), player.getUniqueId(), true), queueDoc.getString("server"));
         } catch (Exception e) {
             PalaceBungee.getInstance().getLogger().log(Level.SEVERE, "Error requesting player to join virtual queue", e);
             player.sendMessage(ChatColor.RED + "An error occurred while joining that virtual queue, try again in a few minutes!");

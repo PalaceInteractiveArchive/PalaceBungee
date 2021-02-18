@@ -100,7 +100,7 @@ public class ChatUtil {
             }
         }
         if (server.equals("Creative")) {
-            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, true), "mc_direct", "direct", "Creative");
+            PalaceBungee.getMessageHandler().sendDirectServerMessage(new ChatMutePacket(server, source, true), "Creative");
         }
     }
 
@@ -120,7 +120,7 @@ public class ChatUtil {
             }
         }
         if (server.equals("Creative")) {
-            PalaceBungee.getMessageHandler().sendMessage(new ChatMutePacket(server, source, false), "mc_direct", "direct", "Creative");
+            PalaceBungee.getMessageHandler().sendDirectServerMessage(new ChatMutePacket(server, source, false), "Creative");
         }
     }
 
