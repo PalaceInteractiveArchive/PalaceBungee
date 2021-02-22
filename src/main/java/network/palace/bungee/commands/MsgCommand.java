@@ -57,6 +57,7 @@ public class MsgCommand extends PalaceCommand {
                 if (processed == null) return;
 
                 PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM to " + args[0], () -> {
+                    PalaceBungee.getChatUtil().saveMessageCache(player.getUniqueId(), processed);
                     try {
                         String msg;
                         try {

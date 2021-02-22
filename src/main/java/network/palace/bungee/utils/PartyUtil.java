@@ -246,6 +246,7 @@ public class PartyUtil {
         }
 
         PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "PartyChat", () -> {
+            PalaceBungee.getChatUtil().saveMessageCache(player.getUniqueId(), processed);
             try {
                 Rank rank = player.getRank();
                 String message;

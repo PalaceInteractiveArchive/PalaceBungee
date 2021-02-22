@@ -213,7 +213,7 @@ public class ChatUtil {
         if (processed == null) return true;
 
         analyzeMessage(player.getUniqueId(), player.getRank(), processed, channel, () -> {
-            messageCache.put(player.getUniqueId(), new ChatMessage(player.getUniqueId(), processed));
+            saveMessageCache(player.getUniqueId(), processed);
 
             String emoji;
             try {
@@ -235,6 +235,10 @@ public class ChatUtil {
             }
         });
         return true;
+    }
+
+    public void saveMessageCache(UUID uuid, String msg) {
+        messageCache.put(uuid, new ChatMessage(msg));
     }
 
     /**
@@ -302,8 +306,8 @@ public class ChatUtil {
 
             if (messageCache.containsKey(player.getUniqueId())) {
                 ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
-                //Block saying the same message within a minute
-                if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
+                //Block saying the same message within 20 seconds
+                if ((System.currentTimeMillis() - cachedMessage.getTime() < 20 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
                     player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
                     return null;
                 }
@@ -511,7 +515,6 @@ public class ChatUtil {
     @Getter
     @AllArgsConstructor
     public static class ChatMessage {
-        private final UUID uuid;
         private final String message;
         private final long time = System.currentTimeMillis();
     }
