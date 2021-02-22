@@ -236,7 +236,7 @@ public class PartyUtil {
     }
 
     public void chat(Player player, String msg) throws Exception {
-        String processed = PalaceBungee.getChatUtil().processChatMessage(player, msg, "PC", false);
+        String processed = PalaceBungee.getChatUtil().processChatMessage(player, msg, "PC", false, false);
         if (processed == null) return;
 
         Party party = PalaceBungee.getMongoHandler().getPartyByMember(player.getUniqueId());
