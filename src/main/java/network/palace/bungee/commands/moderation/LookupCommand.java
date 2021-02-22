@@ -29,14 +29,45 @@ public class LookupCommand extends PalaceCommand {
     @Override
     public void execute(Player player, String[] args) {
         if (args.length < 1) {
-            player.sendMessage(ChatColor.RED + "/lookup [Username]");
+            player.sendMessage(ChatColor.RED + "/lookup [Username/UUID]");
             return;
         }
-        Player tp = PalaceBungee.getPlayer(args[0]);
+        String name;
+        UUID uuid;
+        if (args[0].length() <= 16) {
+            name = args[0];
+            uuid = null;
+        } else {
+            try {
+                uuid = getUUID(args[0]);
+                name = null;
+            } catch (Exception e) {
+                uuid = null;
+                name = null;
+            }
+            if (uuid == null) {
+                player.sendMessage(ChatColor.RED + "/lookup [Username/UUID]");
+                return;
+            }
+        }
+        Player tp;
+        if (name == null) {
+            tp = PalaceBungee.getPlayer(uuid);
+        } else {
+            tp = PalaceBungee.getPlayer(name);
+        }
         boolean online = tp != null && tp.getProxiedPlayer().isPresent();
-        String name = online ? tp.getUsername() : args[0];
-        UUID uuid = online ? tp.getUniqueId() : PalaceBungee.getMongoHandler().usernameToUUID(name);
-        if (uuid == null) {
+        if (online) {
+            name = tp.getUsername();
+            uuid = tp.getUniqueId();
+        } else {
+            if (name == null) {
+                name = PalaceBungee.getMongoHandler().uuidToUsername(uuid);
+            } else {
+                uuid = PalaceBungee.getMongoHandler().usernameToUUID(name);
+            }
+        }
+        if (name == null || uuid == null) {
             player.sendMessage(ChatColor.RED + "Player not found!");
             return;
         }
@@ -116,5 +147,14 @@ public class LookupCommand extends PalaceCommand {
                         new ComponentBuilder("Click to join this server!").color(ChatColor.GREEN)
                                 .create())).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                         "/server " + server)).create());
+    }
+
+    private UUID getUUID(String s) {
+        if (s.length() == 32) {
+            return UUID.fromString(s.replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5"));
+        } else if (s.length() == 36) {
+            return UUID.fromString(s);
+        }
+        return null;
     }
 }
