@@ -466,14 +466,16 @@ public class MessageHandler {
                             if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId() ||
                                     tp.getUniqueId().equals(packet.getSender()) ||
                                     (party == null && tp.getUniqueId().equals(packet.getReceiver())) ||
+                                    (party != null && party.isMember(tp.getUniqueId())) ||
                                     !park && !tp.getServerName().equals(packet.getChannel()) ||
                                     park && !PalaceBungee.getServerUtil().isOnPark(tp))
                                 // Skip if:
                                 // 1. Player is not Trainee+
                                 // 2. Player is the sender
                                 // 3. Party is null (meaning it's a DM) and the player is the receiver
-                                // 4. Message was not sent in ParkChat and TP is not on the server
-                                // 5. Message was sent in ParkChat and TP is not in ParkChat
+                                // 4. Party is not null (meaning it's Party Chat) and the player is in the party
+                                // 5. Message was not sent in ParkChat and TP is not on the server
+                                // 6. Message was sent in ParkChat and TP is not in ParkChat
                                 continue;
                             tp.sendMessage(packet.getMessage());
                         }

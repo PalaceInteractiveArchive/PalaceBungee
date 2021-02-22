@@ -147,6 +147,10 @@ public class ChatUtil {
                     PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "pchat " + msg);
                     return true;
                 }
+                case "guide": {
+                    PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "gc " + msg);
+                    return true;
+                }
                 case "staff": {
                     PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "sc " + msg);
                     return true;
