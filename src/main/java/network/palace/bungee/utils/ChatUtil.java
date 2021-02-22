@@ -141,18 +141,24 @@ public class ChatUtil {
         Optional<ProxiedPlayer> proxiedPlayer = player.getProxiedPlayer();
         if (proxiedPlayer.isEmpty()) return true;
 
-        switch (player.getChannel()) {
-            case "party": {
-                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "pchat " + msg);
-                return true;
-            }
-            case "staff": {
-                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "sc " + msg);
-                return true;
-            }
-            case "admin": {
-                PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "ho " + msg);
-                return true;
+        if (!command) {
+            switch (player.getChannel()) {
+                case "party": {
+                    PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "pchat " + msg);
+                    return true;
+                }
+                case "guide": {
+                    PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "gc " + msg);
+                    return true;
+                }
+                case "staff": {
+                    PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "sc " + msg);
+                    return true;
+                }
+                case "admin": {
+                    PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(proxiedPlayer.get(), "ho " + msg);
+                    return true;
+                }
             }
         }
 
@@ -211,7 +217,7 @@ public class ChatUtil {
         if (processed == null) return true;
 
         analyzeMessage(player.getUniqueId(), player.getRank(), processed, channel, () -> {
-            messageCache.put(player.getUniqueId(), new ChatMessage(player.getUniqueId(), processed));
+            saveMessageCache(player.getUniqueId(), processed);
 
             String emoji;
             try {
@@ -235,6 +241,10 @@ public class ChatUtil {
         return true;
     }
 
+    public void saveMessageCache(UUID uuid, String msg) {
+        messageCache.put(uuid, new ChatMessage(msg));
+    }
+
     /**
      * Process chat message locally
      *
@@ -245,21 +255,22 @@ public class ChatUtil {
      * @implNote this method will return null if the message should be blocked
      */
     public String processChatMessage(Player player, String msg, String channel) {
-        return processChatMessage(player, msg, channel, false);
+        return processChatMessage(player, msg, channel, false, true);
     }
 
 
     /**
      * Process chat message locally
      *
-     * @param player      the player
-     * @param msg         the message
-     * @param channel     the chat channel
-     * @param ignoreMuted whether to ignore the player's mute state
+     * @param player         the player
+     * @param msg            the message
+     * @param channel        the chat channel
+     * @param ignoreMuted    whether to ignore the player's mute state
+     * @param checkChatDelay whether to perform the chat delay check
      * @return the message (modified if necessary), or null if the message should be blocked
      * @implNote this method will return null if the message should be blocked
      */
-    public String processChatMessage(Player player, String msg, String channel, boolean ignoreMuted) {
+    public String processChatMessage(Player player, String msg, String channel, boolean ignoreMuted, boolean checkChatDelay) {
         // Remove multiple spaces between words
         msg = msg.replaceAll(" +", " ");
 
@@ -284,44 +295,77 @@ public class ChatUtil {
                 return null;
             }
 
-            if (System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
+            if (checkChatDelay && System.currentTimeMillis() - player.getLastChatMessage() < (PalaceBungee.getConfigUtil().getChatDelay() * 1000L)) {
                 player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
+                return null;
+            }
+
+            msg = removeCapsAndCheckSpam(player, msg);
+
+            if (msg == null) {
+                player.sendMessage(ChatColor.RED + "Please do not spam chat with excessive amounts of characters.");
                 return null;
             }
             player.setLastChatMessage(System.currentTimeMillis());
 
-            msg = removeCaps(player, msg);
-
             if (messageCache.containsKey(player.getUniqueId())) {
                 ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
-                //Block saying the same message within a minute
-                if ((System.currentTimeMillis() - cachedMessage.getTime() < 60 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
+                //Block saying the same message within 20 seconds
+                if ((System.currentTimeMillis() - cachedMessage.getTime() < 20 * 1000) && msg.equalsIgnoreCase(cachedMessage.getMessage())) {
                     player.sendMessage(ChatColor.RED + "Please do not repeat the same message!");
                     return null;
                 }
             }
-//        } else {
-//            if (msg.startsWith(":warn-")) {
-////                dashboard.getWarningUtil().handle(player, msg.toString());
-//                return null;
-//            }
         }
 
         return msg;
     }
 
-    private String removeCaps(Player player, String msg) {
+    /**
+     * Check for excessive capitalization and spam characters
+     * - If the message is shorter than 10 characters, it is ignored and passes both checks
+     * - If the message contains at least 5 of the same character in sequence (ignoring case), it fails the spam check
+     * -- 'Hellooooo' fails
+     * -- 'Heyyyy thereeee' doesn't fail
+     * <p>
+     * - If at least 50% of the characters are uppercase, it fails the excessive caps check
+     * -- 'WHATS GOING on' fails
+     * -- 'HellO THEre' doesn't fail
+     *
+     * @param player the player
+     * @param msg    the message
+     * @return null if it failed the spam check, otherwise the String message (potentially with excessive caps removed)
+     */
+    private String removeCapsAndCheckSpam(Player player, String msg) {
         int size = msg.toCharArray().length;
         if (size < 10) {
             return msg;
         }
-        int amount = 0;
+        int capsAmount = 0;
+        Character last = null;
+        int charAmount = 0;
         for (char c : msg.toCharArray()) {
+            if (last == null) {
+                last = Character.toLowerCase(c);
+            } else if (charAmount >= 5) {
+                return null;
+            }
             if (Character.isUpperCase(c)) {
-                amount++;
+                capsAmount++;
+                if (Character.toLowerCase(c) == last) {
+                    charAmount++;
+                } else {
+                    charAmount = 0;
+                    last = null;
+                }
+            } else if (c == last) {
+                charAmount++;
+            } else {
+                charAmount = 0;
+                last = Character.toLowerCase(c);
             }
         }
-        if (Math.floor(100 * (((float) amount) / size)) >= 50.0) {
+        if (Math.floor(100 * (((float) capsAmount) / size)) >= 50.0) {
             player.sendMessage(ChatColor.RED + "Please do not use excessive capitals in your messages.");
             StringBuilder s = new StringBuilder();
             for (int i = 0; i < msg.length(); i++) {
@@ -408,14 +452,16 @@ public class ChatUtil {
         }
     }
 
-    public void socialSpyMessage(UUID sender, String from, String to, String channel, String message, String command) throws IOException {
-        PalaceBungee.getMessageHandler().sendMessage(new SocialSpyPacket(sender, ChatColor.WHITE + from + ": /" + command + " " + to + " " + message, channel),
-                PalaceBungee.getMessageHandler().ALL_PROXIES);
+    public void socialSpyMessage(UUID sender, UUID receiver, String from, String to, String channel, String message, String command) throws IOException {
+        PalaceBungee.getMessageHandler().sendMessage(new SocialSpyPacket(sender, receiver,
+                ChatColor.WHITE + from + ": /" + command + " " + to + " " + message,
+                channel), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
     public void socialSpyParty(UUID sender, String from, String leader, String channel, String message) throws IOException {
-        PalaceBungee.getMessageHandler().sendMessage(new SocialSpyPacket(sender, ChatColor.BOLD + "" + ChatColor.YELLOW + "[P] " + ChatColor.LIGHT_PURPLE + from + ": /pchat" + " " + leader + " " + message, channel),
-                PalaceBungee.getMessageHandler().ALL_PROXIES);
+        PalaceBungee.getMessageHandler().sendMessage(new SocialSpyPacket(sender, null,
+                ChatColor.BOLD + "" + ChatColor.YELLOW + "[P] " + ChatColor.LIGHT_PURPLE + from + ": /pchat" + " " + leader + " " + message,
+                channel), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
     public void handleIncomingChatPacket(ChatPacket packet) throws Exception {
@@ -473,7 +519,6 @@ public class ChatUtil {
     @Getter
     @AllArgsConstructor
     public static class ChatMessage {
-        private final UUID uuid;
         private final String message;
         private final long time = System.currentTimeMillis();
     }

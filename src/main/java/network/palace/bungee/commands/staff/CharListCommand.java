@@ -25,7 +25,7 @@ public class CharListCommand extends PalaceCommand {
             player.sendMessage(ChatColor.RED + "There are no Characters online!");
             return;
         }
-        ComponentBuilder comp = new ComponentBuilder("Online Special Guests (" + members.size() + "): ").color(Rank.CHARACTER.getTagColor());
+        ComponentBuilder comp = new ComponentBuilder("Online Characters (" + members.size() + "): ").color(Rank.CHARACTER.getTagColor());
         int i = 0;
         for (String s : members) {
             String[] list = s.split(":");

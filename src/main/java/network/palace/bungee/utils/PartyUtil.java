@@ -78,7 +78,7 @@ public class PartyUtil {
         PalaceBungee.getMessageHandler().sendMessage(packet, PalaceBungee.getMessageHandler().ALL_PROXIES);
 
         party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has asked " + PalaceBungee.getUsername(uuid) +
-                " to join the party! They have 30 seconds to accept.", true);
+                " to join the party! They have 30 seconds to accept.", true, false);
     }
 
     public void removeFromParty(Player player, String username) throws Exception {
@@ -99,7 +99,7 @@ public class PartyUtil {
         party.removeMember(uuid);
         PalaceBungee.getMongoHandler().removePartyMember(party.getPartyID(), uuid);
 
-        party.messageAllMembers(ChatColor.AQUA + PalaceBungee.getUsername(uuid) + " has been removed from the party!", true);
+        party.messageAllMembers(ChatColor.AQUA + PalaceBungee.getUsername(uuid) + " has been removed from the party!", true, false);
 
         PalaceBungee.getMessageHandler().sendMessageToPlayer(uuid, ChatColor.GREEN + "You have been removed from " + player.getUsername() + "'s party.");
     }
@@ -114,7 +114,7 @@ public class PartyUtil {
             // Invite accepted
             party = PalaceBungee.getMongoHandler().getPartyByMember(player.getUniqueId());
             party.addMember(player.getUniqueId(), player.getUsername());
-            party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has joined the party!", true);
+            party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has joined the party!", true, false);
         } else {
             // No invite to accept
             player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.AQUA + "You don't have any pending party invites!");
@@ -131,7 +131,7 @@ public class PartyUtil {
             player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.RED + "Only the party leader can close the party!");
             return;
         }
-        party.messageAllMembers(ChatColor.RED + player.getUsername() + " has closed the party!", true);
+        party.messageAllMembers(ChatColor.RED + player.getUsername() + " has closed the party!", true, false);
         closeParty(party);
     }
 
@@ -161,7 +161,7 @@ public class PartyUtil {
         party.removeMember(player.getUniqueId());
         PalaceBungee.getMongoHandler().removePartyMember(party.getPartyID(), player.getUniqueId());
 
-        party.messageAllMembers(ChatColor.AQUA + player.getUsername() + " has left the party!", true);
+        party.messageAllMembers(ChatColor.AQUA + player.getUsername() + " has left the party!", true, false);
         player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.AQUA + "You have left " + PalaceBungee.getUsername(party.getLeader()) + "'s party!");
     }
 
@@ -201,7 +201,7 @@ public class PartyUtil {
             player.sendSubsystemMessage(Subsystem.PARTY, ChatColor.RED + "Only the party leader can warp players to their server!");
             return;
         }
-        party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has warped the party to their server!", true);
+        party.messageAllMembers(ChatColor.YELLOW + player.getUsername() + " has warped the party to their server!", true, false);
         party.forAllMembers(uuid -> {
             try {
                 if (uuid.equals(player.getUniqueId())) return;
@@ -232,11 +232,11 @@ public class PartyUtil {
             return;
         }
         PalaceBungee.getMongoHandler().setPartyLeader(party.getPartyID(), player.getUniqueId(), uuid);
-        party.messageAllMembers(ChatColor.YELLOW + PalaceBungee.getUsername(uuid) + " has been promoted to party leader!", true);
+        party.messageAllMembers(ChatColor.YELLOW + PalaceBungee.getUsername(uuid) + " has been promoted to party leader!", true, false);
     }
 
     public void chat(Player player, String msg) throws Exception {
-        String processed = PalaceBungee.getChatUtil().processChatMessage(player, msg, "PC", false);
+        String processed = PalaceBungee.getChatUtil().processChatMessage(player, msg, "PC", false, false);
         if (processed == null) return;
 
         Party party = PalaceBungee.getMongoHandler().getPartyByMember(player.getUniqueId());
@@ -246,6 +246,7 @@ public class PartyUtil {
         }
 
         PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "PartyChat", () -> {
+            PalaceBungee.getChatUtil().saveMessageCache(player.getUniqueId(), processed);
             try {
                 Rank rank = player.getRank();
                 String message;
@@ -259,7 +260,7 @@ public class PartyUtil {
                 message = Subsystem.PARTY.getPrefix() + (party.isLeader(player.getUniqueId()) ? ChatColor.YELLOW + "* " : "") +
                         RankTag.format(player.getTags()) + rank.getFormattedName() + ChatColor.GRAY + " " + player.getUsername() + ": " + ChatColor.WHITE +
                         (rank.getRankId() >= Rank.TRAINEE.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message);
-                party.messageAllMembers(message, false);
+                party.messageAllMembers(message, false, true);
             } catch (Exception e) {
                 e.printStackTrace();
                 player.sendMessage(ChatColor.RED + "An error occurred while sending your party chat message! Please try again in a few minutes.");

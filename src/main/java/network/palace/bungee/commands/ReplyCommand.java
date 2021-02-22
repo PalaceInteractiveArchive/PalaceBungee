@@ -50,10 +50,11 @@ public class ReplyCommand extends PalaceCommand {
                 return;
             }
             try {
-                String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true);
+                String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true, false);
                 if (processed == null) return;
 
                 PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM Reply to " + args[0], () -> {
+                    PalaceBungee.getChatUtil().saveMessageCache(player.getUniqueId(), processed);
                     try {
                         String msg;
                         try {
@@ -62,7 +63,7 @@ public class ReplyCommand extends PalaceCommand {
                             player.sendMessage(ChatColor.RED + e.getMessage());
                             return;
                         }
-                        PalaceBungee.getChatUtil().socialSpyMessage(player.getUniqueId(), player.getUsername(), targetPlayer.getUsername(), PalaceBungee.getServerUtil().getChannel(player), msg, "r");
+                        PalaceBungee.getChatUtil().socialSpyMessage(player.getUniqueId(), targetPlayer.getUniqueId(), player.getUsername(), targetPlayer.getUsername(), PalaceBungee.getServerUtil().getChannel(player), msg, "r");
                         player.sendMessage(ChatColor.LIGHT_PURPLE + "You" + ChatColor.GREEN + " -> " + targetPlayer.getRank().getFormattedName() + ChatColor.GRAY + " " + targetPlayer.getUsername() + ": " + ChatColor.WHITE + msg);
                         targetPlayer.sendMessage(player.getRank().getFormattedName() + ChatColor.GRAY + " " + player.getUsername() + ChatColor.GREEN + " -> " + ChatColor.LIGHT_PURPLE + "You: " + ChatColor.WHITE + msg);
                         targetPlayer.mention();
@@ -86,7 +87,7 @@ public class ReplyCommand extends PalaceCommand {
                     return;
                 }
                 String username = PalaceBungee.getMongoHandler().uuidToUsername(replyTo);
-                String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true);
+                String processed = PalaceBungee.getChatUtil().processChatMessage(player, message, "DM", true, false);
                 if (processed == null) return;
 
                 PalaceBungee.getChatUtil().analyzeMessage(player.getUniqueId(), player.getRank(), processed, "DM Reply to " + username, () -> {

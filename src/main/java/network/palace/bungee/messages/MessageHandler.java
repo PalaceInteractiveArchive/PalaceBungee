@@ -169,12 +169,12 @@ public class MessageHandler {
                             String username = PalaceBungee.getUsername(target);
                             for (Player tp : PalaceBungee.getOnlinePlayers()) {
                                 if (tp.getRank().getRankId() >= Rank.TRAINEE.getRankId()) {
-                                    tp.sendMessage("\n" + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + username + "'s chat has been cleared by " + packet.getSource());
+                                    tp.sendMessage("\n" + ChatColor.DARK_AQUA + username + "'s chat has been cleared by " + packet.getSource());
                                 }
                             }
                             Player tp = PalaceBungee.getPlayer(target);
                             if (tp != null && tp.getRank().getRankId() < Rank.TRAINEE.getRankId())
-                                tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
+                                tp.sendMessage(clearMessage + ChatColor.DARK_AQUA + "Chat has been cleared");
                             return;
                         }
                         if (System.currentTimeMillis() - (lastCleared.getOrDefault(channel, 0L)) < 2000) {
@@ -195,9 +195,9 @@ public class MessageHandler {
                             }
                             if (clear) {
                                 if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
-                                    tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
+                                    tp.sendMessage(clearMessage + ChatColor.DARK_AQUA + "Chat has been cleared");
                                 } else {
-                                    tp.sendMessage("\n" + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared by " + packet.getSource());
+                                    tp.sendMessage("\n" + ChatColor.DARK_AQUA + "Chat has been cleared by " + packet.getSource());
                                 }
                             }
                         }
@@ -219,6 +219,12 @@ public class MessageHandler {
                         ProxyServer.getInstance().getServers().remove(packet.getName());
                         PalaceBungee.getServerUtil().deleteServer(packet.getName());
                         PalaceBungee.getProxyServer().getLogger().info("Server deleted: " + packet.getName());
+                        break;
+                    }
+                    // Mention
+                    case 10: {
+                        MentionPacket packet = new MentionPacket(object);
+                        PalaceBungee.getOnlinePlayers().stream().filter(p -> packet.getPlayers().contains(p.getUniqueId())).forEach(Player::mention);
                         break;
                     }
                     // Chat
@@ -455,11 +461,22 @@ public class MessageHandler {
                     case 37: {
                         SocialSpyPacket packet = new SocialSpyPacket(object);
                         boolean park = packet.getChannel().equals("ParkChat");
+                        Party party = packet.getReceiver() == null ? PalaceBungee.getMongoHandler().getPartyByMember(packet.getSender()) : null;
                         for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                            if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId() || tp.getUniqueId().equals(packet.getSender()))
+                            if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId() ||
+                                    tp.getUniqueId().equals(packet.getSender()) ||
+                                    (party == null && tp.getUniqueId().equals(packet.getReceiver())) ||
+                                    (party != null && party.isMember(tp.getUniqueId())) ||
+                                    !park && !tp.getServerName().equals(packet.getChannel()) ||
+                                    park && !PalaceBungee.getServerUtil().isOnPark(tp))
+                                // Skip if:
+                                // 1. Player is not Trainee+
+                                // 2. Player is the sender
+                                // 3. Party is null (meaning it's a DM) and the player is the receiver
+                                // 4. Party is not null (meaning it's Party Chat) and the player is in the party
+                                // 5. Message was not sent in ParkChat and TP is not on the server
+                                // 6. Message was sent in ParkChat and TP is not in ParkChat
                                 continue;
-                            if (park && !PalaceBungee.getServerUtil().isOnPark(tp)) continue;
-                            if (!park && !tp.getServerName().equals(packet.getChannel())) continue;
                             tp.sendMessage(packet.getMessage());
                         }
                         break;
@@ -489,7 +506,7 @@ public class MessageHandler {
                                     // if sender is not staff, and the target player either has dm's disabled or has ignored the sender
                                     response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.getRank());
                                 } else {
-                                    PalaceBungee.getChatUtil().socialSpyMessage(player.getUniqueId(), packet.getFrom(), player.getUsername(), PalaceBungee.getServerUtil().getChannel(player), packet.getMessage(), packet.getCommand());
+                                    PalaceBungee.getChatUtil().socialSpyMessage(packet.getFromUUID(), packet.getToUUID(), packet.getFrom(), player.getUsername(), PalaceBungee.getServerUtil().getChannel(player), packet.getMessage(), packet.getCommand());
                                     player.sendMessage(packet.getRank().getFormattedName() + ChatColor.GRAY + " " + packet.getFrom() + ChatColor.GREEN + " -> " + ChatColor.LIGHT_PURPLE + "You: " + ChatColor.WHITE + packet.getMessage());
                                     player.mention();
                                     response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getChannel(), packet.getCommand(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, player.getRank());
