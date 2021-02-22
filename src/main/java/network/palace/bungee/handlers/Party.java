@@ -86,10 +86,11 @@ public class Party {
         PalaceBungee.getMessageHandler().sendMessageToPlayer(uuid, message);
     }
 
-    public void messageAllMembers(String message, boolean bars) throws Exception {
+    public void messageAllMembers(String message, boolean bars, boolean mention) throws Exception {
         if (bars) message = MESSAGE_BARS + "\n" + message + "\n" + MESSAGE_BARS;
         PalaceBungee.getMessageHandler().sendMessage(new MessagePacket(message, getMembers()), PalaceBungee.getMessageHandler().ALL_PROXIES);
-        PalaceBungee.getMessageHandler().sendMessage(new MentionPacket(getMembers().toArray(new UUID[0])), PalaceBungee.getMessageHandler().ALL_PROXIES);
+        if (mention)
+            PalaceBungee.getMessageHandler().sendMessage(new MentionPacket(getMembers().toArray(new UUID[0])), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
     public void forAllMembers(PalaceCallback.UUIDCallback callback) {

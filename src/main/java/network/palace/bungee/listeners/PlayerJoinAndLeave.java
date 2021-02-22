@@ -184,7 +184,7 @@ public class PlayerJoinAndLeave implements Listener {
         try {
             Party party = PalaceBungee.getMongoHandler().getPartyByLeader(pl.getUniqueId());
             if (party != null) {
-                party.messageAllMembers("The party has been closed because " + pl.getName() + " has disconnected!", true);
+                party.messageAllMembers("The party has been closed because " + pl.getName() + " has disconnected!", true, false);
                 PalaceBungee.getPartyUtil().closeParty(party);
             }
         } catch (Exception e) {
