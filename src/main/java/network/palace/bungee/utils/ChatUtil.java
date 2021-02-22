@@ -299,7 +299,6 @@ public class ChatUtil {
                 player.sendMessage(ChatColor.RED + "You must wait " + PalaceBungee.getConfigUtil().getChatDelay() + " seconds before chatting!");
                 return null;
             }
-            player.setLastChatMessage(System.currentTimeMillis());
 
             msg = removeCapsAndCheckSpam(player, msg);
 
@@ -307,6 +306,7 @@ public class ChatUtil {
                 player.sendMessage(ChatColor.RED + "Please do not spam chat with excessive amounts of characters.");
                 return null;
             }
+            player.setLastChatMessage(System.currentTimeMillis());
 
             if (messageCache.containsKey(player.getUniqueId())) {
                 ChatMessage cachedMessage = messageCache.get(player.getUniqueId());
@@ -341,17 +341,17 @@ public class ChatUtil {
         if (size < 10) {
             return msg;
         }
-        int amount = 0;
+        int capsAmount = 0;
         Character last = null;
         int charAmount = 0;
         for (char c : msg.toCharArray()) {
             if (last == null) {
-                last = c;
+                last = Character.toLowerCase(c);
             } else if (charAmount >= 5) {
                 return null;
             }
             if (Character.isUpperCase(c)) {
-                amount++;
+                capsAmount++;
                 if (Character.toLowerCase(c) == last) {
                     charAmount++;
                 } else {
@@ -362,10 +362,10 @@ public class ChatUtil {
                 charAmount++;
             } else {
                 charAmount = 0;
-                last = null;
+                last = Character.toLowerCase(c);
             }
         }
-        if (Math.floor(100 * (((float) amount) / size)) >= 50.0) {
+        if (Math.floor(100 * (((float) capsAmount) / size)) >= 50.0) {
             player.sendMessage(ChatColor.RED + "Please do not use excessive capitals in your messages.");
             StringBuilder s = new StringBuilder();
             for (int i = 0; i < msg.length(); i++) {
