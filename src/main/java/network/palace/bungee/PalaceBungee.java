@@ -172,6 +172,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new BroadcastClockCommand());
         pm.registerCommand(this, new BroadcastCommand());
         pm.registerCommand(this, new CharListCommand());
+        pm.registerCommand(this, new DirectChatCommand());
         pm.registerCommand(this, new MotionCaptureCommand());
         pm.registerCommand(this, new ServerCommand());
         pm.registerCommand(this, new SGListCommand());
