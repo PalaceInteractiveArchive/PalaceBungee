@@ -34,37 +34,41 @@ public class ConfigUtil {
     private List<String> mutedChats;
     private List<String> announcements;
 
-    public String getDashboardURL() {
-        try {
-            Configuration config = getConfig();
-            return config.getString("dashboardURL");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "null";
-        }
-    }
-
     public void reload() throws IOException {
-        BungeeConfig config = getBungeeConfig();
-        this.favicon = config.favicon;
-        this.motdTemp = config.motd;
-        this.motd = this.motdTemp.replaceAll("%n%", System.getProperty("line.separator"));
-        this.motdInfo = new ServerPing.PlayerInfo[config.motdInfo.length];
-        for (int i = 0; i < config.motdInfo.length; i++) {
-            this.motdInfo[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', config.motdInfo[i]), "");
+        Configuration fileConfig = getConfig();
+        boolean versionOverride;
+        if (fileConfig.contains("versions")) {
+            PalaceBungee.getInstance().getLogger().warning("Bypassing MongoDB config for MC version settings due to file override");
+            Configuration versions = fileConfig.getSection("versions");
+            ProtocolConstants.setHighVersion(versions.getInt("maxVersion"), versions.getString("maxVersionText"));
+            ProtocolConstants.setLowVersion(versions.getInt("minVersion"), versions.getString("minVersionText"));
+            versionOverride = true;
+        } else {
+            versionOverride = false;
         }
-        this.maintenanceMotdTemp = config.maintenanceMotd;
-        this.maintenanceMotd = this.maintenanceMotdTemp.replaceAll("%n%", System.getProperty("line.separator"));
-        this.maintenance = config.maintenance;
-        this.chatDelay = config.chatDelay;
-        this.dmEnabled = config.dmEnabled;
-        this.strictChat = config.strictChat;
-        this.strictThreshold = config.strictThreshold;
-        this.mutedChats = config.mutedChats;
-        this.announcements = config.announcements;
 
-        ProtocolConstants.setHighVersion(config.maxVersion, config.maxVersionString);
-        ProtocolConstants.setLowVersion(config.minVersion, config.minVersionString);
+        BungeeConfig bungeeConfig = getBungeeConfig();
+        this.favicon = bungeeConfig.favicon;
+        this.motdTemp = bungeeConfig.motd;
+        this.motd = this.motdTemp.replaceAll("%n%", System.getProperty("line.separator"));
+        this.motdInfo = new ServerPing.PlayerInfo[bungeeConfig.motdInfo.length];
+        for (int i = 0; i < bungeeConfig.motdInfo.length; i++) {
+            this.motdInfo[i] = new ServerPing.PlayerInfo(ChatColor.translateAlternateColorCodes('&', bungeeConfig.motdInfo[i]), "");
+        }
+        this.maintenanceMotdTemp = bungeeConfig.maintenanceMotd;
+        this.maintenanceMotd = this.maintenanceMotdTemp.replaceAll("%n%", System.getProperty("line.separator"));
+        this.maintenance = bungeeConfig.maintenance;
+        this.chatDelay = bungeeConfig.chatDelay;
+        this.dmEnabled = bungeeConfig.dmEnabled;
+        this.strictChat = bungeeConfig.strictChat;
+        this.strictThreshold = bungeeConfig.strictThreshold;
+        this.mutedChats = bungeeConfig.mutedChats;
+        this.announcements = bungeeConfig.announcements;
+
+        if (!versionOverride) {
+            ProtocolConstants.setHighVersion(bungeeConfig.maxVersion, bungeeConfig.maxVersionString);
+            ProtocolConstants.setLowVersion(bungeeConfig.minVersion, bungeeConfig.minVersionString);
+        }
 
         if (this.maintenance) {
             for (Player tp : new ArrayList<>(PalaceBungee.getOnlinePlayers())) {
