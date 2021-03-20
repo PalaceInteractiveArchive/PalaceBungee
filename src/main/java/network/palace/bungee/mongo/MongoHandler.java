@@ -313,6 +313,7 @@ public class MongoHandler {
                 playerCollection.updateOne(new Document("uuid", player.getUniqueId().toString()), new Document("$set",
                         new Document("online", true)
                                 .append("onlineData", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1"))
+                        .append("lastOnline", System.currentTimeMillis())
                 ));
             }
             Rank rank = player.getRank();
