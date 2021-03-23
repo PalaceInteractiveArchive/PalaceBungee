@@ -8,7 +8,7 @@ import network.palace.bungee.handlers.Rank;
 public class DirectChatCommand extends PalaceCommand {
 
     public DirectChatCommand() {
-        super("dc", RANK.CM);
+        super("dc", Rank.CM);
     }
 
     @Override

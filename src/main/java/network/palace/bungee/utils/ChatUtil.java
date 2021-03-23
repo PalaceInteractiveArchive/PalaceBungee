@@ -48,7 +48,7 @@ public class ChatUtil {
             return;
         }
         Rank rank = player.getRank();
-        String msg = player.getRank().getRankId() >= RANK.CM.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message;
+        String msg = player.getRank().getRankId() >= Rank.CM.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message;
 
         String serverName;
         Server s;

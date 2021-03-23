@@ -13,7 +13,7 @@ import java.util.logging.Level;
 public class BanProviderCommand extends PalaceCommand {
 
     public BanProviderCommand() {
-        super("banprovider", RANK.CM);
+        super("banprovider", Rank.CM);
     }
 
     @Override

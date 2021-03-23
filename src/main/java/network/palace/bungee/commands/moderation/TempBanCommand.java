@@ -16,7 +16,7 @@ import java.util.logging.Level;
 public class TempBanCommand extends PalaceCommand {
 
     public TempBanCommand() {
-        super("tempban", RANK.CM);
+        super("tempban", Rank.CM);
         tabComplete = true;
         tabCompletePlayers = true;
     }

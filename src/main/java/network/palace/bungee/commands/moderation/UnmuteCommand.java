@@ -13,7 +13,7 @@ import java.util.logging.Level;
 public class UnmuteCommand extends PalaceCommand {
 
     public UnmuteCommand() {
-        super("unmute", RANK.CM);
+        super("unmute", Rank.CM);
         tabComplete = true;
         tabCompletePlayers = true;
     }

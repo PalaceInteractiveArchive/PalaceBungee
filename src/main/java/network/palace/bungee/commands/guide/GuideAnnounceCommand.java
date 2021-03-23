@@ -16,7 +16,7 @@ public class GuideAnnounceCommand extends PalaceCommand {
     @Override
     public void execute(Player player, String[] args) {
         Rank rank = player.getRank();
-        if ((rank.getRankId() < RANK.CM.getRankId() && rank.getRankId() >= Rank.TRAINEE.getRankId()) ||
+        if ((rank.getRankId() < Rank.CM.getRankId() && rank.getRankId() >= Rank.TRAINEE.getRankId()) ||
                 (rank.getRankId() < Rank.TRAINEE.getRankId() && player.hasTag(RankTag.GUIDE))) {
             // if trainee or non-staff guide
             if (args.length < 1) {

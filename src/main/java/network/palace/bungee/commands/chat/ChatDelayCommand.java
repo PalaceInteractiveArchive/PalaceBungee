@@ -9,7 +9,7 @@ import network.palace.bungee.handlers.Rank;
 public class ChatDelayCommand extends PalaceCommand {
 
     public ChatDelayCommand() {
-        super("chatdelay", RANK.CM);
+        super("chatdelay", Rank.CM);
     }
 
     @Override
