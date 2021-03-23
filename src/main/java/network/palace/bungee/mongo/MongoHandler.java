@@ -1020,13 +1020,13 @@ public class MongoHandler {
 
     public Rank getRank(String username) {
         Document doc = getPlayer(username, new Document("rank", true));
-        if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
+        if (doc == null || !doc.containsKey("rank")) return Rank.GUEST;
         return Rank.fromString(doc.getString("rank"));
     }
 
     public Rank getRank(UUID uuid) {
         Document doc = getPlayer(uuid, new Document("rank", true));
-        if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
+        if (doc == null || !doc.containsKey("rank")) return Rank.GUEST;
         return Rank.fromString(doc.getString("rank"));
     }
 
