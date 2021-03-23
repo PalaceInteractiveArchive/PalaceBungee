@@ -62,7 +62,7 @@ public class ChatUtil {
                 .append(serverName).color(ChatColor.GREEN)
                 .append("] ").color(ChatColor.WHITE)
                 .append(RankTag.format(player.getTags()))
-                .append(" [" + rank.getFormattedName() + "] ")
+                .append("[" + rank.getFormattedName() + ChatColor.WHITE + "] ")
                 .append(player.getUsername() + ": ").color(ChatColor.GRAY)
                 .append(msg, ComponentBuilder.FormatRetention.NONE).color(rank.getChatColor()).create();
 
