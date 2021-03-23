@@ -261,7 +261,7 @@ public class ForumUtil {
 
     private int getForumGroup(Rank rank) {
         switch (rank) {
-            case DIRECTOR:
+            case EXEC:
                 return 4;
             case MANAGER:
                 return 33;
@@ -273,11 +273,11 @@ public class ForumUtil {
                 return 9;
             case BUILDER:
                 return 19;
-            case TECHNICIAN:
+            case IMAGINEER:
                 return 35;
             case MEDIA:
                 return 37;
-            case MOD:
+            case CM:
                 return 6;
             case TRAINEETECH:
                 return 34;
@@ -285,17 +285,17 @@ public class ForumUtil {
                 return 46;
             case TRAINEE:
                 return 10;
-            case SPECIALGUEST:
+            case VIP:
                 return 22;
             case SHAREHOLDER:
                 return 38;
-            case HONORABLE:
+            case CLUB:
                 return 17;
-            case MAJESTIC:
+            case DVC:
                 return 16;
-            case NOBLE:
+            case PASSPORT:
                 return 15;
-            case DWELLER:
+            case PASSHOLDER:
                 return 14;
         }
         return 13;
