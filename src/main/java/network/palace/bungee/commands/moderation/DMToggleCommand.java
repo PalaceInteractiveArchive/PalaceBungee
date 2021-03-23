@@ -9,7 +9,7 @@ import network.palace.bungee.handlers.Rank;
 public class DMToggleCommand extends PalaceCommand {
 
     public DMToggleCommand() {
-        super("dmtoggle", Rank.MOD);
+        super("dmtoggle", RANK.CM);
     }
 
     @Override

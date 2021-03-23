@@ -172,7 +172,7 @@ public class GuideUtil {
             player.sendMessage(new ComponentBuilder("Unfortunately, there aren't any staff online to accept this announcement request.").color(ChatColor.AQUA).create());
         } else {
             try {
-                PalaceBungee.getMessageHandler().sendMessage(new MessageByRankPacket(ComponentSerializer.toString(components), Rank.MOD, null, false, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
+                PalaceBungee.getMessageHandler().sendMessage(new MessageByRankPacket(ComponentSerializer.toString(components), RANK.CM, null, false, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
                 PalaceBungee.getMongoHandler().makeAnnouncementRequest(player.getUniqueId(), announcement);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -10,7 +10,7 @@ import network.palace.bungee.messages.packets.BroadcastPacket;
 public class BroadcastCommand extends PalaceCommand {
 
     public BroadcastCommand() {
-        super("broadcast", Rank.MOD, "b");
+        super("broadcast", RANK.CM, "b");
     }
 
     @Override
