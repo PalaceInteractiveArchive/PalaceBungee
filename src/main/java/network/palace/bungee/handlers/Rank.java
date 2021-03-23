@@ -27,7 +27,7 @@ public enum Rank {
     DVC("DVC", ChatColor.GOLD + "DVC ", ChatColor.GOLD, ChatColor.WHITE, false, 4),
     PASSPORT("Premier Passport", ChatColor.YELLOW + "Premier ", ChatColor.YELLOW, ChatColor.WHITE, false, 3),
     PASSHOLDER("Passholder", ChatColor.DARK_AQUA + "Passholder ", ChatColor.DARK_AQUA, ChatColor.WHITE, false, 2),
-    GUEST("Guest", ChatColor.GRAY + "", ChatColor.DARK_AQUA, ChatColor.GRAY, false, 1);
+    GUEST("Guest", ChatColor.GRAY + "", ChatColor.GRAY, ChatColor.GRAY, false, 1);
 
     @Getter private final String name;
     @Getter private final String scoreboardName;
