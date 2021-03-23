@@ -73,7 +73,6 @@ public enum Rank {
      * @return the rank name with any additional formatting that should exist
      */
     public String getFormattedName() {
-        String bold = getRankId() >= Rank.TRAINEE.getRankId() ? "" + ChatColor.BOLD : "";
-        return getTagColor() + bold + getName();
+        return getTagColor() + getName();
     }
 }
