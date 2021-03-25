@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import network.palace.bungee.PalaceBungee;
+import network.palace.bungee.messages.packets.MentionPacket;
 import network.palace.bungee.messages.packets.MessagePacket;
 import org.bson.Document;
 
@@ -15,14 +16,15 @@ import java.util.UUID;
 public class Party {
     public static final String MESSAGE_BARS = ChatColor.GOLD + "-----------------------------------------------------";
 
-    @Getter private final String partyID;
+    @Getter private final String partyID, leaderName;
     @Getter private final UUID leader;
     private final HashMap<UUID, String> members;
     private final HashMap<UUID, Long> invited;
 
-    public Party(String partyID, UUID leader, HashMap<UUID, String> members, HashMap<UUID, Long> invited) {
+    public Party(String partyID, UUID leader, String leaderName, HashMap<UUID, String> members, HashMap<UUID, Long> invited) {
         this.partyID = partyID;
         this.leader = leader;
+        this.leaderName = leaderName;
         this.members = members;
         this.invited = invited;
     }
@@ -30,6 +32,7 @@ public class Party {
     public Party(Document doc) throws Exception {
         this.partyID = doc.getObjectId("_id").toHexString();
         this.leader = UUID.fromString(doc.getString("leader"));
+        this.leaderName = PalaceBungee.getUsername(leader);
         this.members = new HashMap<>();
         this.invited = new HashMap<>();
         for (Object o : doc.get("members", ArrayList.class)) {
@@ -83,9 +86,11 @@ public class Party {
         PalaceBungee.getMessageHandler().sendMessageToPlayer(uuid, message);
     }
 
-    public void messageAllMembers(String message, boolean bars) throws Exception {
+    public void messageAllMembers(String message, boolean bars, boolean mention) throws Exception {
         if (bars) message = MESSAGE_BARS + "\n" + message + "\n" + MESSAGE_BARS;
         PalaceBungee.getMessageHandler().sendMessage(new MessagePacket(message, getMembers()), PalaceBungee.getMessageHandler().ALL_PROXIES);
+        if (mention)
+            PalaceBungee.getMessageHandler().sendMessage(new MentionPacket(getMembers().toArray(new UUID[0])), PalaceBungee.getMessageHandler().ALL_PROXIES);
     }
 
     public void forAllMembers(PalaceCallback.UUIDCallback callback) {

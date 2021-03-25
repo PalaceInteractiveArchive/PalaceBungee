@@ -16,6 +16,8 @@ public class BanCommand extends PalaceCommand {
 
     public BanCommand() {
         super("ban", Rank.MOD);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

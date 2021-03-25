@@ -47,7 +47,7 @@ public class ServerCommand extends PalaceCommand {
                 player.sendMessage(ChatColor.RED + "Server not found!");
             } else {
                 player.sendMessage(ChatColor.GREEN + "Sending you to " + ChatColor.YELLOW + info.getName() + "...");
-                player.getProxiedPlayer().connect(info);
+                player.getProxiedPlayer().ifPresent(p -> p.connect(info));
             }
             return;
         }
@@ -131,7 +131,7 @@ public class ServerCommand extends PalaceCommand {
                     player.sendMessage(ChatColor.RED + "Server not found!");
                 } else {
                     player.sendMessage(ChatColor.GREEN + "Sending you to " + ChatColor.YELLOW + info.getName() + "...");
-                    player.getProxiedPlayer().connect(info);
+                    player.getProxiedPlayer().ifPresent(p -> p.connect(info));
                 }
                 break;
         }

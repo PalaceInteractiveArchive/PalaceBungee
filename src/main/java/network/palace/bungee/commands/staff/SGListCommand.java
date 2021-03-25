@@ -14,7 +14,7 @@ import java.util.TreeMap;
 public class SGListCommand extends PalaceCommand {
 
     public SGListCommand() {
-        super("sglist", Rank.TRAINEE);
+        super("sglist", Rank.SPECIALGUEST);
     }
 
     @Override

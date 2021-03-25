@@ -41,7 +41,7 @@ public class SendCommand extends PalaceCommand {
                 return;
             }
             case "current": {
-                Server currentServer = PalaceBungee.getServerUtil().getServer(player.getServer().getInfo().getName(), true);
+                Server currentServer = PalaceBungee.getServerUtil().getServer(player.getServerName(), true);
                 if (currentServer == null) {
                     player.sendMessage(ChatColor.RED + "An error occurred while attempting to perform this command!");
                     return;

@@ -1,5 +1,6 @@
 package network.palace.bungee.utils;
 
+import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ReconnectHandler;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -16,6 +17,8 @@ import java.util.logging.Level;
 public class ServerUtil {
     private final HashMap<String, Server> servers = new HashMap<>();
     private ServerInfo currentHub;
+    @Getter private int onlineCount = 0;
+    @Getter private final List<String> onlinePlayerNames = new ArrayList<>();
 
     public ServerUtil() {
         loadServers();
@@ -34,25 +37,48 @@ public class ServerUtil {
 
             @Override
             public void save() {
-
             }
 
             @Override
             public void close() {
-
             }
         });
 
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                int currentCount = servers.get(currentHub.getName()).getCount();
-                for (Server server : servers.values()) {
-                    if (!server.getName().startsWith("Hub")) continue;
-                    if (server.getCount() < currentCount) {
-                        currentCount = server.getCount();
-                        currentHub = getServerInfo(server.getName(), true);
+                try {
+                    onlineCount = PalaceBungee.getMongoHandler().getOnlineCount();
+                } catch (Exception e) {
+                    PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error retrieving global player count", e);
+                }
+                try {
+                    List<String> names = PalaceBungee.getMongoHandler().getOnlinePlayerNames();
+                    onlinePlayerNames.clear();
+                    onlinePlayerNames.addAll(names);
+                } catch (Exception e) {
+                    PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error updating online player name list", e);
+                }
+                try {
+                    int currentCount = servers.get(currentHub.getName()).getCount();
+                    for (Server server : servers.values()) {
+                        if (!server.getName().startsWith("Hub")) continue;
+                        if (server.getCount() < currentCount) {
+                            currentCount = server.getCount();
+                            currentHub = getServerInfo(server.getName(), true);
+                        }
                     }
+                } catch (Exception e) {
+                    PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error determining currentHub", e);
+                }
+                try {
+                    for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                        if (tp.getProxiedPlayer().isEmpty() && (System.currentTimeMillis() - tp.getLoginTime()) > 5000) {
+                            PalaceBungee.logout(tp.getUniqueId(), tp);
+                        }
+                    }
+                } catch (Exception e) {
+                    PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error maintaining online player list", e);
                 }
             }
         }, 2000L, 5000L);
@@ -190,5 +216,19 @@ public class ServerUtil {
             }
         }
         return s;
+    }
+
+    public String getChannel(Player player) {
+        String serverName = player.getServerName();
+        Server server = getServer(serverName, true);
+        if (server == null) {
+            return "";
+        }
+        return server.isPark() ? "ParkChat" : server.getName();
+    }
+
+    public boolean isOnPark(Player tp) {
+        Server server = getServer(tp.getServerName(), true);
+        return server != null && server.isPark();
     }
 }

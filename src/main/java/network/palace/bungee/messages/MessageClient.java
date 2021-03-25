@@ -10,24 +10,15 @@ import java.util.concurrent.TimeoutException;
 
 @Getter
 public class MessageClient {
-    private Channel channel;
+    private final Channel channel;
     private final String name;
-    private boolean queue;
+    private final boolean queue;
 
     public MessageClient(ConnectionType type, String exchange, String exchangeType) throws Exception {
         queue = false;
         this.channel = PalaceBungee.getMessageHandler().getConnection(type).createChannel();
         this.name = exchange;
         channel.exchangeDeclare(exchange, exchangeType);
-        channel.addShutdownListener(e -> {
-            PalaceBungee.getProxyServer().getLogger().warning("The " + exchange + " channel has been closed - recreating!");
-            try {
-                channel = PalaceBungee.getMessageHandler().getConnection(type).createChannel();
-            } catch (IOException | TimeoutException ioException) {
-                ioException.printStackTrace();
-                PalaceBungee.getProxyServer().getLogger().warning("There was an error recreating the " + exchange + " channel!");
-            }
-        });
     }
 
     public MessageClient(ConnectionType type, String queueName, boolean durable) throws Exception {
@@ -52,5 +43,9 @@ public class MessageClient {
         } else {
             channel.basicPublish(name, routingKey, props, bytes);
         }
+    }
+
+    public void close() throws IOException, TimeoutException {
+        channel.close();
     }
 }

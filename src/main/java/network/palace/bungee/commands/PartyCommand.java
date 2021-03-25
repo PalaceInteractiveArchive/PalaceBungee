@@ -90,7 +90,7 @@ public class PartyCommand extends PalaceCommand {
                     try {
                         String[] argsMinusOne = new String[args.length - 1];
                         System.arraycopy(args, 1, argsMinusOne, 0, args.length - 1);
-                        PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(player.getProxiedPlayer(), "pchat " + String.join(" ", argsMinusOne));
+                        player.getProxiedPlayer().ifPresent(p -> PalaceBungee.getProxyServer().getPluginManager().dispatchCommand(p, "pchat " + String.join(" ", argsMinusOne)));
                     } catch (Exception e) {
                         e.printStackTrace();
                         player.sendMessage(ChatColor.RED + "An error occurred while sending your party chat message! Please try again in a few minutes.");

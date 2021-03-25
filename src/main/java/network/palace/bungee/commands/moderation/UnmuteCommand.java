@@ -14,6 +14,8 @@ public class UnmuteCommand extends PalaceCommand {
 
     public UnmuteCommand() {
         super("unmute", Rank.MOD);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

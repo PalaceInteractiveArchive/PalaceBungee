@@ -16,7 +16,7 @@ public class MuteChatCommand extends PalaceCommand {
     public void execute(Player player, String[] args) {
         try {
             String server = player.getServerName();
-            if (PalaceBungee.getServerUtil().getServer(server, true).isPark()) server = "ParkChat";
+            if (PalaceBungee.getServerUtil().isOnPark(player)) server = "ParkChat";
             boolean muted = PalaceBungee.getChatUtil().isChatMuted(server);
             if (muted) {
                 PalaceBungee.getChatUtil().unmuteChat(server, player.getUsername());

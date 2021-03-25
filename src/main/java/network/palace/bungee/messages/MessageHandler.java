@@ -28,7 +28,7 @@ public class MessageHandler {
     public static final AMQP.BasicProperties JSON_PROPS = new AMQP.BasicProperties.Builder().contentEncoding("application/json").build();
 
     public Connection PUBLISHING_CONNECTION, CONSUMING_CONNECTION;
-    public MessageClient ALL_PROXIES, CHAT_ANALYSIS;
+    public MessageClient ALL_PROXIES, CHAT_ANALYSIS, PROXY_DIRECT, MC_DIRECT;
 
     private final ConnectionFactory factory;
     private final HashMap<String, Channel> channels = new HashMap<>();
@@ -48,22 +48,33 @@ public class MessageHandler {
         PUBLISHING_CONNECTION = factory.newConnection();
         CONSUMING_CONNECTION = factory.newConnection();
 
-        PUBLISHING_CONNECTION.addShutdownListener(e -> {
-            PalaceBungee.getProxyServer().getLogger().warning("Publishing connection has been closed - reinitializing!");
-            try {
-                PUBLISHING_CONNECTION = factory.newConnection();
-            } catch (IOException | TimeoutException ioException) {
-                PalaceBungee.getProxyServer().getLogger().severe("Failed to reinitialize publishing connection!");
-                ioException.printStackTrace();
+        ((Recoverable) PUBLISHING_CONNECTION).addRecoveryListener(new RecoveryListener() {
+            @Override
+            public void handleRecovery(Recoverable recoverable) {
+                BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED)
+                        .append("] ").color(ChatColor.WHITE)
+                        .append("Re-established connection to Message Queue")
+                        .color(ChatColor.GREEN)
+                        .create();
+                for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                    if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) continue;
+                    tp.sendMessage(components);
+                }
             }
-        });
-        CONSUMING_CONNECTION.addShutdownListener(e -> {
-            PalaceBungee.getProxyServer().getLogger().warning("Consuming connection has been closed - reinitializing!");
-            try {
-                CONSUMING_CONNECTION = factory.newConnection();
-            } catch (IOException | TimeoutException ioException) {
-                PalaceBungee.getProxyServer().getLogger().severe("Failed to reinitialize consuming connection!");
-                ioException.printStackTrace();
+
+            @Override
+            public void handleRecoveryStarted(Recoverable recoverable) {
+                BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED)
+                        .append("] ").color(ChatColor.WHITE)
+                        .append("Error connecting to Message Queue - please notify a Developer or Lead+")
+                        .color(ChatColor.GREEN)
+                        .create();
+                for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                    if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) continue;
+                    tp.sendMessage(components);
+                }
             }
         });
     }
@@ -72,6 +83,8 @@ public class MessageHandler {
         try {
             ALL_PROXIES = new MessageClient(ConnectionType.PUBLISHING, "all_proxies", "fanout");
             CHAT_ANALYSIS = new MessageClient(ConnectionType.PUBLISHING, "chat_analysis", true);
+            PROXY_DIRECT = new MessageClient(ConnectionType.PUBLISHING, "proxy_direct", "direct");
+            MC_DIRECT = new MessageClient(ConnectionType.PUBLISHING, "mc_direct", "direct");
         } catch (Exception e) {
             e.printStackTrace();
             PalaceBungee.getProxyServer().getLogger().severe("There was an error initializing essential message publishing queues!");
@@ -105,6 +118,7 @@ public class MessageHandler {
                         RankTag tag = packet.getTag();
                         BaseComponent[] components = packet.isComponentMessage() ? ComponentSerializer.parse(packet.getMessage()) : null;
                         PalaceBungee.getOnlinePlayers().stream().filter(p -> {
+                            if (p.isDisabled()) return false;
                             if (packet.isExact())
                                 return p.getRank().equals(packet.getRank()) || (tag != null && p.getTags().contains(packet.getTag()));
                             else
@@ -149,34 +163,41 @@ public class MessageHandler {
                     // Chat Clear
                     case 7: {
                         ClearChatPacket packet = new ClearChatPacket(object);
-                        String chat = packet.getChat();
+                        String channel = packet.getChat();
                         UUID target = packet.getTarget();
                         if (target != null) {
                             String username = PalaceBungee.getUsername(target);
                             for (Player tp : PalaceBungee.getOnlinePlayers()) {
                                 if (tp.getRank().getRankId() >= Rank.TRAINEE.getRankId()) {
-                                    tp.sendMessage("\n" + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + username + "'s chat has been cleared by " + packet.getSource());
+                                    tp.sendMessage("\n" + ChatColor.DARK_AQUA + username + "'s chat has been cleared by " + packet.getSource());
                                 }
                             }
                             Player tp = PalaceBungee.getPlayer(target);
                             if (tp != null && tp.getRank().getRankId() < Rank.TRAINEE.getRankId())
-                                tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
+                                tp.sendMessage(clearMessage + ChatColor.DARK_AQUA + "Chat has been cleared");
                             return;
                         }
-                        if (System.currentTimeMillis() - (lastCleared.getOrDefault(chat, 0L)) < 2000) {
-                            //if this chat was last cleared up to 2 seconds ago, prevent it from being cleared again
+                        if (System.currentTimeMillis() - (lastCleared.getOrDefault(channel, 0L)) < 2000) {
+                            //if this channel was last cleared up to 2 seconds ago, prevent it from being cleared again
                             Player player = PalaceBungee.getPlayer(packet.getSource());
                             if (player != null)
                                 player.sendMessage(ChatColor.YELLOW + "It hasn't been 2 seconds since the last chat clear!");
                             return;
                         }
-                        lastCleared.put(chat, System.currentTimeMillis());
+                        lastCleared.put(channel, System.currentTimeMillis());
+                        boolean park = channel.equals("ParkChat");
                         for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                            if (tp.getServerName().equals(chat)) {
+                            boolean clear = false;
+                            if (park) {
+                                if (PalaceBungee.getServerUtil().isOnPark(tp)) clear = true;
+                            } else {
+                                if (tp.getServerName().equals(channel)) clear = true;
+                            }
+                            if (clear) {
                                 if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId()) {
-                                    tp.sendMessage(clearMessage + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared");
+                                    tp.sendMessage(clearMessage + ChatColor.DARK_AQUA + "Chat has been cleared");
                                 } else {
-                                    tp.sendMessage("\n" + Subsystem.CHAT.getPrefix() + ChatColor.DARK_AQUA + "Chat has been cleared by " + packet.getSource());
+                                    tp.sendMessage("\n" + ChatColor.DARK_AQUA + "Chat has been cleared by " + packet.getSource());
                                 }
                             }
                         }
@@ -198,6 +219,12 @@ public class MessageHandler {
                         ProxyServer.getInstance().getServers().remove(packet.getName());
                         PalaceBungee.getServerUtil().deleteServer(packet.getName());
                         PalaceBungee.getProxyServer().getLogger().info("Server deleted: " + packet.getName());
+                        break;
+                    }
+                    // Mention
+                    case 10: {
+                        MentionPacket packet = new MentionPacket(object);
+                        PalaceBungee.getOnlinePlayers().stream().filter(p -> packet.getPlayers().contains(p.getUniqueId())).forEach(Player::mention);
                         break;
                     }
                     // Chat
@@ -244,7 +271,7 @@ public class MessageHandler {
                         }
                         String msgname = msg + " by " + packet.getSource();
                         for (Player tp : PalaceBungee.getOnlinePlayers()) {
-                            if ((packet.getChannel().equals("ParkChat") && PalaceBungee.getServerUtil().getServer(tp.getServerName(), true).isPark()) || tp.getServerName().equals(packet.getChannel())) {
+                            if ((packet.getChannel().equals("ParkChat") && PalaceBungee.getServerUtil().isOnPark(tp)) || tp.getServerName().equals(packet.getChannel())) {
                                 tp.sendMessage(tp.getRank().getRankId() >= Rank.TRAINEE.getRankId() ? msgname : msg);
                             }
                         }
@@ -431,6 +458,29 @@ public class MessageHandler {
                         });
                         break;
                     }
+                    case 37: {
+                        SocialSpyPacket packet = new SocialSpyPacket(object);
+                        boolean park = packet.getChannel().equals("ParkChat");
+                        Party party = packet.getReceiver() == null ? PalaceBungee.getMongoHandler().getPartyByMember(packet.getSender()) : null;
+                        for (Player tp : PalaceBungee.getOnlinePlayers()) {
+                            if (tp.getRank().getRankId() < Rank.TRAINEE.getRankId() ||
+                                    tp.getUniqueId().equals(packet.getSender()) ||
+                                    (party == null && tp.getUniqueId().equals(packet.getReceiver())) ||
+                                    (party != null && party.isMember(tp.getUniqueId())) ||
+                                    !park && !tp.getServerName().equals(packet.getChannel()) ||
+                                    park && !PalaceBungee.getServerUtil().isOnPark(tp))
+                                // Skip if:
+                                // 1. Player is not Trainee+
+                                // 2. Player is the sender
+                                // 3. Party is null (meaning it's a DM) and the player is the receiver
+                                // 4. Party is not null (meaning it's Party Chat) and the player is in the party
+                                // 5. Message was not sent in ParkChat and TP is not on the server
+                                // 6. Message was sent in ParkChat and TP is not in ParkChat
+                                continue;
+                            tp.sendMessage(packet.getMessage());
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 handleError(consumerTag, delivery, e);
@@ -440,7 +490,7 @@ public class MessageHandler {
         registerConsumer("proxy_direct", "direct", PalaceBungee.getProxyID().toString(), (consumerTag, delivery) -> {
             try {
                 JsonObject object = parseDelivery(delivery);
-                PalaceBungee.getProxyServer().getLogger().severe(object.toString());
+                PalaceBungee.getProxyServer().getLogger().warning(object.toString());
                 switch (object.get("id").getAsInt()) {
                     // DM
                     case 4: {
@@ -450,15 +500,16 @@ public class MessageHandler {
                             // message to target
                             DMPacket response;
                             if (player == null) {
-                                response = new DMPacket("", packet.getFrom(), "", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                response = new DMPacket("", packet.getFrom(), "", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.getRank());
                             } else {
-                                if (!packet.isSenderIsStaff() && (!player.isDmEnabled() || (player.isIgnored(packet.getFromUUID()) && player.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
+                                if (packet.getRank().getRankId() < Rank.CHARACTER.getRankId() && (!player.isDmEnabled() || (player.isIgnored(packet.getFromUUID()) && player.getRank().getRankId() < Rank.CHARACTER.getRankId()))) {
                                     // if sender is not staff, and the target player either has dm's disabled or has ignored the sender
-                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    response = new DMPacket("", packet.getFrom(), ChatColor.RED + "This person has messages disabled!", packet.getChannel(), packet.getCommand(), packet.getFromUUID(), packet.getToUUID(), PalaceBungee.getProxyID(), false, packet.getRank());
                                 } else {
-                                    player.sendMessage(ChatColor.GREEN + packet.getFrom() + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + "You: " + ChatColor.WHITE + packet.getMessage());
+                                    PalaceBungee.getChatUtil().socialSpyMessage(packet.getFromUUID(), packet.getToUUID(), packet.getFrom(), player.getUsername(), PalaceBungee.getServerUtil().getChannel(player), packet.getMessage(), packet.getCommand());
+                                    player.sendMessage(packet.getRank().getFormattedName() + ChatColor.GRAY + " " + packet.getFrom() + ChatColor.GREEN + " -> " + ChatColor.LIGHT_PURPLE + "You: " + ChatColor.WHITE + packet.getMessage());
                                     player.mention();
-                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, packet.isSenderIsStaff());
+                                    response = new DMPacket(player.getUsername(), packet.getFrom(), packet.getMessage(), packet.getChannel(), packet.getCommand(), packet.getFromUUID(), player.getUniqueId(), PalaceBungee.getProxyID(), false, player.getRank());
                                     player.setReplyTo(packet.getFromUUID());
                                     player.setReplyTime(System.currentTimeMillis());
                                 }
@@ -474,7 +525,7 @@ public class MessageHandler {
                                     player.sendMessage(packet.getMessage());
                                 }
                             } else {
-                                player.sendMessage(ChatColor.GREEN + "You" + ChatColor.LIGHT_PURPLE + " -> " + ChatColor.GREEN + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
+                                player.sendMessage(ChatColor.LIGHT_PURPLE + "You" + ChatColor.GREEN + " -> " + packet.getRank().getFormattedName() + ChatColor.GRAY + " " + packet.getFrom() + ": " + ChatColor.WHITE + packet.getMessage());
                                 player.setReplyTo(packet.getToUUID());
                                 player.setReplyTime(System.currentTimeMillis());
                             }
@@ -587,6 +638,34 @@ public class MessageHandler {
     }
 
     public void shutdown() {
+        if (ALL_PROXIES != null) {
+            try {
+                ALL_PROXIES.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (CHAT_ANALYSIS != null) {
+            try {
+                CHAT_ANALYSIS.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (PROXY_DIRECT != null) {
+            try {
+                PROXY_DIRECT.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (MC_DIRECT != null) {
+            try {
+                MC_DIRECT.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         channels.forEach((queueName, channel) -> {
             try {
                 Connection connection = channel.getConnection();
@@ -609,6 +688,7 @@ public class MessageHandler {
     public void sendMessage(MQPacket packet, String exchange, String exchangeType, String routingKey) throws Exception {
         MessageClient client = new MessageClient(ConnectionType.PUBLISHING, exchange, exchangeType);
         client.basicPublish(packet.toBytes(), routingKey);
+        client.close();
     }
 
     public void sendStaffMessage(String message) throws Exception {
@@ -638,7 +718,7 @@ public class MessageHandler {
     }
 
     public void sendToProxy(MQPacket packet, UUID targetProxy) throws Exception {
-        sendMessage(packet, new MessageClient(ConnectionType.PUBLISHING, "proxy_direct", "direct"), targetProxy.toString());
+        sendMessage(packet, PROXY_DIRECT, targetProxy.toString());
     }
 
     public Connection getConnection(ConnectionType type) throws IOException, TimeoutException {
@@ -650,5 +730,9 @@ public class MessageHandler {
             default:
                 return factory.newConnection();
         }
+    }
+
+    public void sendDirectServerMessage(MQPacket packet, String server) throws IOException {
+        sendMessage(packet, MC_DIRECT, server);
     }
 }

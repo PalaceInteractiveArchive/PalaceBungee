@@ -5,6 +5,7 @@ import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.PalaceCommand;
 import network.palace.bungee.handlers.Player;
 import network.palace.bungee.handlers.Rank;
+import network.palace.bungee.handlers.RankTag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +23,13 @@ public class ChatCommand extends PalaceCommand {
             list.add("all");
             list.add("party");
             if (player.getRank().getRankId() >= Rank.TRAINEE.getRankId()) {
+                list.add("guide");
                 list.add("staff");
                 if (player.getRank().getRankId() >= Rank.DEVELOPER.getRankId()) {
                     list.add("admin");
                 }
+            } else if (player.hasTag(RankTag.GUIDE)) {
+                list.add("guide");
             }
             if (args.length <= 0) {
                 StringBuilder m = new StringBuilder(ChatColor.AQUA + "You are currently in the " + ChatColor.GREEN + player.getChannel() +

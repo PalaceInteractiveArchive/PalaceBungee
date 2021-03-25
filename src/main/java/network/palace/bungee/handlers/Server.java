@@ -50,6 +50,6 @@ public class Server {
 
     public void join(Player player) {
         ServerInfo info = PalaceBungee.getServerUtil().getServerInfo(name, true);
-        if (info != null) player.getProxiedPlayer().connect(info);
+        if (info != null) player.getProxiedPlayer().ifPresent(p -> p.connect(info));
     }
 }

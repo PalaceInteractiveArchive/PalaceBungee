@@ -17,6 +17,8 @@ public class TempBanCommand extends PalaceCommand {
 
     public TempBanCommand() {
         super("tempban", Rank.MOD);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

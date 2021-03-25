@@ -82,17 +82,17 @@ public class Player {
         return uuid;
     }
 
-    public ProxiedPlayer getProxiedPlayer() {
+    public Optional<ProxiedPlayer> getProxiedPlayer() {
         if (proxiedPlayer == null) this.proxiedPlayer = PalaceBungee.getProxyServer().getPlayer(uuid);
-        return proxiedPlayer;
+        return Optional.ofNullable(proxiedPlayer);
     }
 
     public void sendMessage(String message) {
-        getProxiedPlayer().sendMessage(LinkUtil.fromString(message));
+        getProxiedPlayer().ifPresent(p -> p.sendMessage(LinkUtil.fromString(message)));
     }
 
     public void sendMessage(TextComponent message) {
-        getProxiedPlayer().sendMessage(LinkUtil.fromComponent(message));
+        getProxiedPlayer().ifPresent(p -> p.sendMessage(LinkUtil.fromComponent(message)));
     }
 
     public void sendMessage(BaseComponent[] components) {
@@ -105,7 +105,7 @@ public class Player {
                 components[i] = LinkUtil.fromComponent(components[i]);
             }
         }
-        getProxiedPlayer().sendMessage(components);
+        getProxiedPlayer().ifPresent(p -> p.sendMessage(components));
     }
 
     public void sendSubsystemMessage(Subsystem subsystem, String message) {
@@ -127,7 +127,7 @@ public class Player {
         }
         BaseComponent[] r = new ComponentBuilder(pre).color(ChatColor.RED)
                 .append(reason).color(ChatColor.AQUA).create();
-        getProxiedPlayer().disconnect(r);
+        getProxiedPlayer().ifPresent(p -> p.disconnect(r));
     }
 
     public void kickPlayer(TextComponent reason) {
@@ -135,7 +135,7 @@ public class Player {
             return;
         }
         kicking = true;
-        getProxiedPlayer().disconnect(reason);
+        getProxiedPlayer().ifPresent(p -> p.disconnect(reason));
     }
 
     public void kickPlayer(BaseComponent[] reason) {
@@ -143,11 +143,12 @@ public class Player {
             return;
         }
         kicking = true;
-        getProxiedPlayer().disconnect(reason);
+        getProxiedPlayer().ifPresent(p -> p.disconnect(reason));
     }
 
     public Server getServer() {
-        return getProxiedPlayer().getServer();
+        Optional<ProxiedPlayer> opt = getProxiedPlayer();
+        return opt.map(ProxiedPlayer::getServer).orElse(null);
     }
 
     public String getServerName() {
@@ -207,7 +208,7 @@ public class Player {
      */
     public void sendPacket(MQPacket packet, boolean mcServer) throws Exception {
         if (mcServer) {
-            PalaceBungee.getMessageHandler().sendMessage(packet, "mc_direct", "direct", getServerName());
+            PalaceBungee.getMessageHandler().sendDirectServerMessage(packet, getServerName());
         } else {
             UUID targetProxy = PalaceBungee.getMongoHandler().findPlayer(uuid);
             if (targetProxy != null) PalaceBungee.getMessageHandler().sendToProxy(packet, targetProxy);

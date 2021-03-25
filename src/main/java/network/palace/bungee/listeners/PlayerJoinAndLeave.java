@@ -23,9 +23,8 @@ import network.palace.bungee.utils.IPUtil;
 import org.bson.Document;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.logging.Level;
 
 public class PlayerJoinAndLeave implements Listener {
 
@@ -46,7 +45,7 @@ public class PlayerJoinAndLeave implements Listener {
 
         if (doc != null && doc.containsKey("online") && doc.getBoolean("online")) {
             event.setCancelled(true);
-            event.setCancelReason(new ComponentBuilder("This account is already connected to this server!").color(ChatColor.RED).create());
+            event.setCancelReason(new ComponentBuilder("You are already connected to this server!").color(ChatColor.RED).create());
             return;
         }
 
@@ -54,8 +53,8 @@ public class PlayerJoinAndLeave implements Listener {
         Rank rank;
         if (doc == null) {
             // new player
-            player = null;
             rank = Rank.SETTLER;
+            player = new Player(connection.getUniqueId(), connection.getName(), rank, new ArrayList<>(), address, connection.getVersion(), true);
         } else {
             AddressBan addressBan = PalaceBungee.getMongoHandler().getAddressBan(address);
             if (addressBan != null) {
@@ -112,7 +111,6 @@ public class PlayerJoinAndLeave implements Listener {
         }
         PalaceBungee.login(player);
         PalaceBungee.getProxyServer().getScheduler().runAsync(PalaceBungee.getInstance(), () -> {
-            assert player != null;
             ProviderData data = IPUtil.getProviderData(player.getAddress());
             if (data != null) {
                 player.setIsp(data.getIsp());
@@ -161,6 +159,22 @@ public class PlayerJoinAndLeave implements Listener {
                         "You connected with a new IP address, type " + ChatColor.GREEN + "" + ChatColor.BOLD +
                         "/staff login [password]" + ChatColor.YELLOW + "" + ChatColor.BOLD + " to verify your account.\n");
             }
+            try {
+                HashMap<UUID, String> requests = PalaceBungee.getMongoHandler().getFriendRequestList(player.getUniqueId());
+                if (requests.size() > 0) {
+                    player.sendMessage(ChatColor.AQUA + "You have " + ChatColor.YELLOW + "" + ChatColor.BOLD +
+                            requests.size() + " " + ChatColor.AQUA +
+                            "pending friend request" + (requests.size() > 1 ? "s" : "") + "! View them with " +
+                            ChatColor.YELLOW + ChatColor.BOLD + "/friend requests");
+                }
+                HashMap<UUID, String> friends = PalaceBungee.getMongoHandler().getFriendList(player.getUniqueId());
+                if (friends.size() > 0) {
+                    PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
+                            new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
+                }
+            } catch (Exception e) {
+                PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error sending friend/request notifications", e);
+            }
         }
     }
 
@@ -170,7 +184,7 @@ public class PlayerJoinAndLeave implements Listener {
         try {
             Party party = PalaceBungee.getMongoHandler().getPartyByLeader(pl.getUniqueId());
             if (party != null) {
-                party.messageAllMembers("The party has been closed because " + pl.getName() + " has disconnected!", true);
+                party.messageAllMembers("The party has been closed because " + pl.getName() + " has disconnected!", true, false);
                 PalaceBungee.getPartyUtil().closeParty(party);
             }
         } catch (Exception e) {

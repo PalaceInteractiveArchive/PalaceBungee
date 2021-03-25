@@ -16,6 +16,8 @@ public class WarnCommand extends PalaceCommand {
 
     public WarnCommand() {
         super("warn", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override
@@ -30,9 +32,9 @@ public class WarnCommand extends PalaceCommand {
             player.sendMessage(ChatColor.RED + "Player not found!");
             return;
         }
-        if (System.currentTimeMillis() - PalaceBungee.getMongoHandler().getWarningCooldown(uuid) < 5000) {
-            //players can't be warned until at least 4 seconds after their previous warn
-            player.sendMessage(ChatColor.RED + "That player was warned recently, wait at least 5 seconds before warning again.");
+        if (System.currentTimeMillis() - PalaceBungee.getMongoHandler().getWarningCooldown(uuid) < 15000) {
+            //players can't be warned until at least 15 seconds after their previous warn
+            player.sendMessage(ChatColor.RED + "That player was warned recently, wait at least 15 seconds before warning again.");
             return;
         }
         StringBuilder r = new StringBuilder();
@@ -40,6 +42,7 @@ public class WarnCommand extends PalaceCommand {
             r.append(args[i]).append(" ");
         }
         String reason = (r.substring(0, 1).toUpperCase() + r.substring(1)).trim();
+        if (reason.length() < 3) return;
         Warning warn = new Warning(uuid, reason, player.getUniqueId().toString());
         try {
             PalaceBungee.getMessageHandler().sendMessage(

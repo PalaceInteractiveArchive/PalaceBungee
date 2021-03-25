@@ -18,6 +18,8 @@ public class NamecheckCommand extends PalaceCommand {
 
     public NamecheckCommand() {
         super("namecheck", Rank.TRAINEE);
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override

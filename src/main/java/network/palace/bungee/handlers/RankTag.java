@@ -27,7 +27,7 @@ public enum RankTag {
     @Getter private int id;
 
     public String getTag() {
-        return ChatColor.WHITE + "[" + color + tag + ChatColor.WHITE + "] ";
+        return ChatColor.WHITE + "[" + color + ChatColor.BOLD + tag + ChatColor.WHITE + "] ";
     }
 
     /**

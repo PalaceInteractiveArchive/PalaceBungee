@@ -25,12 +25,19 @@ public class JoinCommand extends PalaceCommand {
     public void execute(Player player, String[] args) {
         if (args.length == 1) {
             if (exists(args[0])) {
-                if (PalaceBungee.getServerUtil().getServer(player.getServerName(), true).getServerType().equalsIgnoreCase(args[0])) {
+                Server currentServer;
+                if ((currentServer = PalaceBungee.getServerUtil().getServer(player.getServerName(), true)) != null && currentServer.getServerType().equalsIgnoreCase(args[0])) {
                     player.sendMessage(ChatColor.RED + "You are already on this server!");
                     return;
                 }
                 try {
-                    PalaceBungee.getServerUtil().sendPlayerByType(player, formatName(args[0]));
+                    String type = formatName(args[0]);
+                    Server server = PalaceBungee.getServerUtil().getServerByType(type);
+                    if (server == null) {
+                        player.sendMessage(ChatColor.RED + "No '" + type + "' server is available right now! Please try again soon.");
+                        return;
+                    }
+                    server.join(player);
                 } catch (Exception e) {
                     PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error sending player to server", e);
                     player.sendMessage(ChatColor.RED + "There was a problem joining that server!");

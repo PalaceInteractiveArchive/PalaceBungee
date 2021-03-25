@@ -14,7 +14,6 @@ import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
 import network.palace.bungee.handlers.moderation.*;
-import network.palace.bungee.messages.packets.FriendJoinPacket;
 import network.palace.bungee.utils.ConfigUtil;
 import network.palace.bungee.utils.NameUtil;
 import org.bson.BsonInt32;
@@ -290,6 +289,13 @@ public class MongoHandler {
         List<Object> ignoring = new ArrayList<>();
         playerDocument.put("ignoring", ignoring);
 
+        playerDocument.put("online", true);
+
+        Map<String, Object> onlineData = new HashMap<>();
+        onlineData.put("proxy", PalaceBungee.getProxyID().toString());
+        onlineData.put("server", "Hub1");
+        playerDocument.put("onlineData", onlineData);
+
         playerCollection.insertOne(playerDocument);
 
         updatePreviousUsernames(player.getUniqueId(), player.getUsername());
@@ -307,6 +313,7 @@ public class MongoHandler {
                 playerCollection.updateOne(new Document("uuid", player.getUniqueId().toString()), new Document("$set",
                         new Document("online", true)
                                 .append("onlineData", new Document("proxy", PalaceBungee.getProxyID().toString()).append("server", "Hub1"))
+                        .append("lastOnline", System.currentTimeMillis())
                 ));
             }
             Rank rank = player.getRank();
@@ -351,18 +358,7 @@ public class MongoHandler {
             List<UUID> ignored = getIgnoredUsers(player.getUniqueId());
             ignored.forEach(uuid -> player.setIgnored(uuid, true));
 
-            HashMap<UUID, String> friends = getFriendList(player.getUniqueId());
-            HashMap<UUID, String> requests = getFriendRequestList(player.getUniqueId());
-            if (requests.size() > 0) {
-                player.sendMessage(ChatColor.AQUA + "You have " + ChatColor.YELLOW + "" + ChatColor.BOLD +
-                        requests.size() + " " + ChatColor.AQUA +
-                        "pending friend request" + (requests.size() > 1 ? "s" : "") + "! View them with " +
-                        ChatColor.YELLOW + ChatColor.BOLD + "/friend requests");
-            }
-            PalaceBungee.getMessageHandler().sendMessage(new FriendJoinPacket(player.getUniqueId(), rank.getTagColor() + player.getUsername(),
-                    new ArrayList<>(friends.keySet()), true, rank.getRankId() >= Rank.CHARACTER.getRankId()), PalaceBungee.getMessageHandler().ALL_PROXIES);
-            Mute mute = getCurrentMute(player.getUniqueId());
-            player.setMute(mute);
+            player.setMute(getCurrentMute(player.getUniqueId()));
         } catch (Exception e) {
             PalaceBungee.getProxyServer().getLogger().log(Level.SEVERE, "Error handling player login", e);
         }
@@ -582,7 +578,7 @@ public class MongoHandler {
                 .append("createdOn", System.currentTimeMillis()).append("invited", new ArrayList<>());
         partyCollection.insertOne(doc);
         doc = partyCollection.find(Filters.eq("leader", leader.toString())).first();
-        return new Party(doc.getObjectId("_id").toHexString(), leader, new HashMap<>(), new HashMap<>());
+        return new Party(doc.getObjectId("_id").toHexString(), leader, PalaceBungee.getUsername(leader), new HashMap<>(), new HashMap<>());
     }
 
     public boolean hasPendingInvite(UUID uuid) {
@@ -889,6 +885,7 @@ public class MongoHandler {
 
     public Mute getCurrentMute(UUID uuid) {
         Document doc = getPlayer(uuid, new Document("mutes", 1));
+        if (doc == null) return null;
         for (Object o : doc.get("mutes", ArrayList.class)) {
             Document muteDoc = (Document) o;
             if (muteDoc == null || !muteDoc.getBoolean("active")) continue;
@@ -1247,8 +1244,8 @@ public class MongoHandler {
         return virtualQueuesCollection.find(Filters.eq("queueId", queueId)).first();
     }
 
-    public void logChatMessage(UUID sender, String message, String channel, long time, boolean okay, String filterCaught, String offendingText) {
-        Document doc = new Document("uuid", sender.toString()).append("message", message).append("channel", channel).append("time", time / 1000).append("okay", okay);
+    public void logChatMessage(UUID sender, String message, String channel, long time, boolean okay, String filterCaught, String offendingText, boolean staff) {
+        Document doc = new Document("uuid", sender.toString()).append("message", message).append("channel", channel).append("time", time / 1000).append("okay", okay).append("staff", staff);
         if (!okay) {
             doc.append("uuid", sender.toString()).append("message", message).append("time", time).append("okay", false).append("filterCaught", filterCaught).append("offendingText", offendingText);
         }
@@ -1257,5 +1254,16 @@ public class MongoHandler {
 
     public void completeTutorial(UUID uuid) {
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("tutorial", true));
+    }
+
+    public List<String> getOnlinePlayerNames() {
+        List<String> names = new ArrayList<>();
+        for (Document doc : playerCollection.find(Filters.eq("online", true)).projection(new Document("username", true))) {
+            try {
+                names.add(doc.getString("username"));
+            } catch (Exception ignored) {
+            }
+        }
+        return names;
     }
 }

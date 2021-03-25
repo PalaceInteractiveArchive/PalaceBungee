@@ -22,6 +22,8 @@ public class LookupCommand extends PalaceCommand {
 
     public LookupCommand() {
         super("lookup", Rank.TRAINEE, "bseen");
+        tabComplete = true;
+        tabCompletePlayers = true;
     }
 
     @Override
@@ -31,29 +33,31 @@ public class LookupCommand extends PalaceCommand {
             return;
         }
         Player tp = PalaceBungee.getPlayer(args[0]);
-        boolean online = tp != null;
-        String name = online ? tp.getUsername() : args[0];
-        UUID uuid = online ? tp.getUniqueId() : PalaceBungee.getMongoHandler().usernameToUUID(name);
+        boolean onProxy = tp != null && tp.getProxiedPlayer().isPresent();
+        String name = onProxy ? tp.getUsername() : args[0];
+        UUID uuid = onProxy ? tp.getUniqueId() : PalaceBungee.getMongoHandler().usernameToUUID(name);
         if (uuid == null) {
             player.sendMessage(ChatColor.RED + "Player not found!");
             return;
         }
         Rank rank;
         List<RankTag> tags;
+        boolean online;
         long lastOnline;
         String ip;
         Mute mute;
         String server;
-        if (online) {
+        if (onProxy) {
             rank = tp.getRank();
             tags = tp.getTags();
             lastOnline = tp.getLoginTime();
             ip = tp.getAddress();
             mute = tp.getMute();
             server = tp.getServerName();
+            online = true;
         } else {
             Document doc = PalaceBungee.getMongoHandler().getPlayer(uuid, new Document("username", 1).append("rank", 1)
-                    .append("tags", 1).append("lastOnline", 1).append("ip", 1).append("server", 1));
+                    .append("tags", 1).append("lastOnline", 1).append("ip", 1).append("server", 1).append("onlineData", 1));
             name = doc.getString("username");
             rank = Rank.fromString(doc.getString("rank"));
             tags = new ArrayList<>();
@@ -67,7 +71,13 @@ public class LookupCommand extends PalaceCommand {
             lastOnline = doc.getLong("lastOnline");
             ip = doc.getString("ip");
             mute = PalaceBungee.getMongoHandler().getCurrentMute(uuid);
-            server = doc.getString("server");
+            online = doc.containsKey("onlineData");
+            if (online) {
+                Document onlineData = doc.get("onlineData", Document.class);
+                server = onlineData.getString("server");
+            } else {
+                server = doc.getString("server");
+            }
 
             Ban ban = PalaceBungee.getMongoHandler().getCurrentBan(uuid, name);
             if (ban != null) {
