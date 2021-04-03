@@ -123,6 +123,7 @@ public class PlayerJoinAndLeave implements Listener {
                 PalaceBungee.getMongoHandler().updateProviderData(player.getUniqueId(), data);
             }
         });
+
     }
 
     @EventHandler
@@ -158,6 +159,9 @@ public class PlayerJoinAndLeave implements Listener {
                 player.sendMessage(ChatColor.YELLOW + "\n\n" + ChatColor.BOLD +
                         "You connected with a new IP address, type " + ChatColor.GREEN + "" + ChatColor.BOLD +
                         "/staff login [password]" + ChatColor.YELLOW + "" + ChatColor.BOLD + " to verify your account.\n");
+            }
+            if (PalaceBungee.getMongoHandler().checkTitanApplications(player.getUniqueId())) {
+                player.sendMessage(ChatColor.AQUA + "\nOne or more of your applications have been responded to.\nRun /apply to view them!\n");
             }
             try {
                 HashMap<UUID, String> requests = PalaceBungee.getMongoHandler().getFriendRequestList(player.getUniqueId());
