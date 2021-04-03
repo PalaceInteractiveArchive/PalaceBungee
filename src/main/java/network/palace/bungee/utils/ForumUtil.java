@@ -272,17 +272,13 @@ public class ForumUtil {
             case COORDINATOR:
                 return 9;
             case BUILDER:
-                return 19;
             case IMAGINEER:
                 return 35;
             case MEDIA:
-                return 37;
             case CM:
                 return 6;
             case TRAINEETECH:
-                return 34;
             case TRAINEEBUILD:
-                return 46;
             case TRAINEE:
                 return 10;
             case VIP:
