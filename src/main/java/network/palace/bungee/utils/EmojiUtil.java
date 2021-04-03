@@ -7,7 +7,7 @@ import java.util.*;
 
 public class EmojiUtil {
     private static final HashMap<String, String> translations = new HashMap<>();
-    public static final Rank emojiRank = Rank.MAJESTIC;
+    public static final Rank emojiRank = Rank.DVC;
 
     static {
         translations.put(":heart:", "❤");

@@ -9,7 +9,7 @@ import network.palace.bungee.handlers.Rank;
 public class UnbanProviderCommand extends PalaceCommand {
 
     public UnbanProviderCommand() {
-        super("unbanprovider", Rank.MOD);
+        super("unbanprovider", Rank.CM);
     }
 
     @Override

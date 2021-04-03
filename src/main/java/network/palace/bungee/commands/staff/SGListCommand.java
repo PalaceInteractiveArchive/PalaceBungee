@@ -14,18 +14,18 @@ import java.util.TreeMap;
 public class SGListCommand extends PalaceCommand {
 
     public SGListCommand() {
-        super("sglist", Rank.SPECIALGUEST);
+        super("sglist", Rank.VIP);
     }
 
     @Override
     public void execute(Player player, String[] args) {
-        TreeMap<Rank, Set<String>> players = PalaceBungee.getMongoHandler().getRankList(rank -> rank.equals(Rank.SPECIALGUEST));
-        Set<String> members = players.get(Rank.SPECIALGUEST);
+        TreeMap<Rank, Set<String>> players = PalaceBungee.getMongoHandler().getRankList(rank -> rank.equals(Rank.VIP));
+        Set<String> members = players.get(Rank.VIP);
         if (members == null || members.isEmpty()) {
             player.sendMessage(ChatColor.RED + "There are no Special Guests online!");
             return;
         }
-        ComponentBuilder comp = new ComponentBuilder("Online Special Guests (" + members.size() + "): ").color(Rank.SPECIALGUEST.getTagColor());
+        ComponentBuilder comp = new ComponentBuilder("Online Special Guests (" + members.size() + "): ").color(Rank.VIP.getTagColor());
         int i = 0;
         for (String s : members) {
             String[] list = s.split(":");

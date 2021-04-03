@@ -15,14 +15,14 @@ import java.util.logging.Level;
 public class BanCommand extends PalaceCommand {
 
     public BanCommand() {
-        super("ban", Rank.MOD);
+        super("ban", Rank.CM);
         tabComplete = true;
         tabCompletePlayers = true;
     }
 
     @Override
     public void execute(Player banner, String[] args) {
-        if (banner.getRank().equals(Rank.MEDIA) || banner.getRank().equals(Rank.TECHNICIAN)) {
+        if (banner.getRank().equals(Rank.MEDIA) || banner.getRank().equals(Rank.IMAGINEER)) {
             banner.sendMessage(ChatColor.RED + "You do not have permission to execute this command!");
             return;
         }

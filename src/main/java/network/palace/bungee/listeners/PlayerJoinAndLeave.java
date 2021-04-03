@@ -53,7 +53,7 @@ public class PlayerJoinAndLeave implements Listener {
         Rank rank;
         if (doc == null) {
             // new player
-            rank = Rank.SETTLER;
+            rank = Rank.GUEST;
             player = new Player(connection.getUniqueId(), connection.getName(), rank, new ArrayList<>(), address, connection.getVersion(), true);
         } else {
             AddressBan addressBan = PalaceBungee.getMongoHandler().getAddressBan(address);

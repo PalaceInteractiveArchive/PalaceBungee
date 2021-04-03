@@ -11,7 +11,7 @@ import java.util.UUID;
 public class UnbanCommand extends PalaceCommand {
 
     public UnbanCommand() {
-        super("unban", Rank.MOD, "pardon");
+        super("unban", Rank.CM, "pardon");
     }
 
     @Override

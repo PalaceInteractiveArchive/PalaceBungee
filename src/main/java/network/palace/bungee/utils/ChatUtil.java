@@ -48,7 +48,7 @@ public class ChatUtil {
             return;
         }
         Rank rank = player.getRank();
-        String msg = player.getRank().getRankId() >= Rank.MOD.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message;
+        String msg = player.getRank().getRankId() >= Rank.CM.getRankId() ? ChatColor.translateAlternateColorCodes('&', message) : message;
 
         String serverName;
         Server s;
@@ -61,8 +61,8 @@ public class ChatUtil {
         BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE).event(getPlayerHover(player, player.getServerName()))
                 .append(serverName).color(ChatColor.GREEN)
                 .append("] ").color(ChatColor.WHITE)
+                .append("[" + rank.getFormattedName() + ChatColor.WHITE + "] ")
                 .append(RankTag.format(player.getTags()))
-                .append(rank.getFormattedName() + " ")
                 .append(player.getUsername() + ": ").color(ChatColor.GRAY)
                 .append(msg, ComponentBuilder.FormatRetention.NONE).color(rank.getChatColor()).create();
 
