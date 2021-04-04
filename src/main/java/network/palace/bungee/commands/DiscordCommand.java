@@ -26,18 +26,30 @@ public class DiscordCommand extends PalaceCommand {
 
     @Override
     public void execute(Player player, String[] args) {
+
+        /*
+          Link message component
+        */
+         BaseComponent[] linkMessage = new ComponentBuilder("\nClick to start linking your Discord account.\n").color(ChatColor.YELLOW).bold(true)
+                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        new ComponentBuilder("Opens a browser window to start the discord linking process.").color(ChatColor.GREEN).create()))
+                .event(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.com/api/oauth2/authorize?client_id=543141358496383048&redirect_uri=https%3A%2F%2Fdev-internal-api.palace.network%2Fdiscord%2Flink&response_type=code&scope=identify&state="
+                + player.getUniqueId() + "")).create();
+
         if (args.length < 1) {
             boolean isLinked = PalaceBungee.getMongoHandler().verifyDiscordLink(player.getUniqueId());
             if (isLinked) {
                 player.sendMessage(ChatColor.RED + "You have discovered a new feature. This does not yet work, eventually you will a message about your linked username.");
             } else {
-                player.sendMessage(ChatColor.GREEN + "You have not yet linked your Discord account. Please run " + ChatColor.YELLOW + ChatColor.BOLD + "/discord link");
+                player.sendMessage(message);
             }
         } else if (args[0].equals("link")) {
 
-            player.sendMessage(ChatColor.AQUA + "Automatic account linking will return in a future update! In the meantime, post your username and rank in " +
-                    ChatColor.YELLOW + "#link-account-requests " + ChatColor.AQUA + "on our discord server and a staff member will assist you.");
-            StringBuilder fullName = new StringBuilder();
+//            player.sendMessage(ChatColor.AQUA + "Automatic account linking will return in a future update! In the meantime, post your username and rank in " +
+//                    ChatColor.YELLOW + "#link-account-requests " + ChatColor.AQUA + "on our discord server and a staff member will assist you.");
+
+            player.sendMessage(linkMessage);
+//            StringBuilder fullName = new StringBuilder();
 //            for (int i = 1; i < args.length; i++) {
 //                fullName.append(args[i]);
 //            }
