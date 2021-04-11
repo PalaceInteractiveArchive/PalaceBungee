@@ -189,6 +189,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new SGListCommand());
         pm.registerCommand(this, new StaffCommand());
         pm.registerCommand(this, new StaffListCommand());
+        pm.registerCommand(this, new CharApproval());
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new AudioCommand());
