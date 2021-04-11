@@ -161,7 +161,7 @@ public class PlayerJoinAndLeave implements Listener {
                 a.color("warning");
                 PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                 BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
-                        .append("CHARACTER").color(ChatColor.DARK_PURPLE).append("] ").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED).append("] ").color(ChatColor.WHITE)
                         .append(player.getUsername()).color(player.getRank().getTagColor())
                         .append(" wishes to login: ").color(ChatColor.AQUA)
                         .append("Approve Login").color(ChatColor.DARK_GREEN).italic(true)

@@ -42,7 +42,7 @@ public class CharApproval extends PalaceCommand {
                 a.color("good");
                 PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                 BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
-                        .append("CHARACTER").color(ChatColor.DARK_PURPLE).append("] ").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED).append("] ").color(ChatColor.WHITE)
                         .append(target.getUsername()).color(target.getRank().getTagColor())
                         .append(" had login approved by: ").color(ChatColor.AQUA)
                         .append(player.getUsername()).color(player.getRank().getTagColor()).create();
@@ -61,7 +61,7 @@ public class CharApproval extends PalaceCommand {
                 a.color("warning");
                 PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
                 BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
-                        .append("CHARACTER").color(ChatColor.DARK_PURPLE).append("] ").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED).append("] ").color(ChatColor.WHITE)
                         .append(target.getUsername()).color(target.getRank().getTagColor())
                         .append(" had login denied by: ").color(ChatColor.AQUA)
                         .append(player.getUsername()).color(player.getRank().getTagColor()).create();
