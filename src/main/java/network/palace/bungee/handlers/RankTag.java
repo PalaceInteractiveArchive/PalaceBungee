@@ -8,6 +8,8 @@ import java.util.List;
 
 @AllArgsConstructor
 public enum RankTag {
+    /* Staff Member of the Week */
+    SMOTW("Staff Member of the Week", "[*]", ChatColor.BLUE, 10),
     /* Dev Team (best team) */
     JRDEV("Jr. Developer Program", "J", ChatColor.DARK_RED, 9),
     /* Media Team */
