@@ -1046,11 +1046,6 @@ public class MongoHandler {
     /*
     Discord Methods
      */
-    public void startDiscordLink(UUID uuid) {
-        Document discordDocument = new Document("discordID", "")
-                .append("refreshToken", "");
-        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("discord", discordDocument));
-    }
 
     public boolean verifyDiscordLink(UUID uuid) {
         Document discordDocument = playerCollection.find(Filters.eq("uuid", uuid.toString())).projection(new Document("discord", true)).first();

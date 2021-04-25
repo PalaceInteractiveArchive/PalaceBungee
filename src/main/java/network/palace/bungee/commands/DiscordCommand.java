@@ -13,6 +13,7 @@ import network.palace.bungee.handlers.Player;
 import network.palace.bungee.mongo.MongoHandler;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Locale;
 
 public class DiscordCommand extends PalaceCommand {
@@ -39,11 +40,11 @@ public class DiscordCommand extends PalaceCommand {
                 BaseComponent[] linkMessage = new ComponentBuilder("\nClick to start linking your Discord account.\n").color(ChatColor.YELLOW).bold(true)
                 .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                         new ComponentBuilder("Opens a browser window to start the discord linking process.").color(ChatColor.GREEN).create()))
-                .event(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.com/api/oauth2/authorize?client_id=543141358496383048&redirect_uri=https%3A%2F%2Fdev-internal-api.palace.network%2Fdiscord%2Flink&response_type=code&scope=identify&state="
-                + player.getUniqueId() + "")).create();
+                .event(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.com/api/oauth2/authorize?client_id=543141358496383048&redirect_uri=https%3A%2F%2Finternal-api.palace.network%2Fdiscord%2Flink&response_type=code&scope=identify&state="
+                + Base64.getEncoder().encodeToString(player.getUniqueId().toString().getBytes()) + "")).create();
 
                 if (isLinked) {
-                    player.sendMessage(ChatColor.GREEN + "Hey " + ChatColor.YELLOW + ChatColor.BOLD + player.getUsername() + ChatColor.GREEN + " your currently linked discord account is " + ChatColor.YELLOW + ChatColor.BOLD + " JohnSmith#1234");
+                    player.sendMessage(ChatColor.GREEN + "Hey " + ChatColor.YELLOW + ChatColor.BOLD + player.getUsername() + ChatColor.GREEN + " you currently have a discord account linked. To unlink, run " + ChatColor.YELLOW + ChatColor.BOLD + "/discord unlink");
                 } else {
                     player.sendMessage(linkMessage);
                 }
