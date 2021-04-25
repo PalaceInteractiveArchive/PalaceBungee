@@ -7,7 +7,7 @@ import network.palace.bungee.handlers.Rank;
 public class MotionCaptureCommand extends PalaceCommand {
 
     public MotionCaptureCommand() {
-        super("mocap", Rank.MOD);
+        super("mocap", Rank.CM);
     }
 
     @Override

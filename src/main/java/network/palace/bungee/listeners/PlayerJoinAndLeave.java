@@ -1,14 +1,14 @@
 package network.palace.bungee.listeners;
 
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.event.EventHandler;
 import network.palace.bungee.PalaceBungee;
 import network.palace.bungee.handlers.*;
@@ -17,11 +17,13 @@ import network.palace.bungee.handlers.moderation.Ban;
 import network.palace.bungee.handlers.moderation.ProviderBan;
 import network.palace.bungee.handlers.moderation.ProviderData;
 import network.palace.bungee.messages.packets.FriendJoinPacket;
+import network.palace.bungee.messages.packets.MessageByRankPacket;
 import network.palace.bungee.slack.SlackAttachment;
 import network.palace.bungee.slack.SlackMessage;
 import network.palace.bungee.utils.IPUtil;
 import org.bson.Document;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.logging.Level;
@@ -53,7 +55,7 @@ public class PlayerJoinAndLeave implements Listener {
         Rank rank;
         if (doc == null) {
             // new player
-            rank = Rank.SETTLER;
+            rank = Rank.GUEST;
             player = new Player(connection.getUniqueId(), connection.getName(), rank, new ArrayList<>(), address, connection.getVersion(), true);
         } else {
             AddressBan addressBan = PalaceBungee.getMongoHandler().getAddressBan(address);
@@ -123,6 +125,7 @@ public class PlayerJoinAndLeave implements Listener {
                 PalaceBungee.getMongoHandler().updateProviderData(player.getUniqueId(), data);
             }
         });
+
     }
 
     @EventHandler
@@ -149,7 +152,35 @@ public class PlayerJoinAndLeave implements Listener {
                     player.sendMessage(ChatColor.RED + "\n\n\nChat is currently muted!\n\n\n");
                 }
             }
-            if (disable) {
+            if (player.getRank() == Rank.CHARACTER) {
+                player.setDisabled(true);
+                player.sendMessage(ChatColor.RED + "Please wait for staff to approve your login");
+                SlackMessage m = new SlackMessage("");
+                SlackAttachment a = new SlackAttachment("*Character* `" + player.getUsername() +
+                        "` connected to the network from IP `" + player.getAddress() + "`");
+                a.color("warning");
+                PalaceBungee.getSlackUtil().sendDashboardMessage(m, Collections.singletonList(a), false);
+                BaseComponent[] components = new ComponentBuilder("[").color(ChatColor.WHITE)
+                        .append("STAFF").color(ChatColor.RED).append("] ").color(ChatColor.WHITE)
+                        .append(player.getUsername()).color(player.getRank().getTagColor())
+                        .append(" wishes to login: ").color(ChatColor.AQUA)
+                        .append("Approve Login").color(ChatColor.DARK_GREEN).italic(true)
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                new ComponentBuilder("Click to approve this login!").color(ChatColor.AQUA).create()))
+                        .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/charlogin " + player.getUsername() + " a"))
+                        .append(" / ").color(ChatColor.WHITE)
+                        .append("Deny Login").color(ChatColor.RED).italic(true)
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                new ComponentBuilder("Click to deny this login and kick!").color(ChatColor.AQUA).create()))
+                        .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/charlogin " + player.getUsername() + " d")).create();
+                try {
+                    PalaceBungee.getMessageHandler().sendMessage(new MessageByRankPacket(ComponentSerializer.toString(components), Rank.TRAINEE, null, false, true), PalaceBungee.getMessageHandler().ALL_PROXIES);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    player.kickPlayer("Error processing login");
+                }
+            }
+            if (disable && player.getRank() != Rank.CHARACTER) {
                 SlackMessage m = new SlackMessage("");
                 SlackAttachment a = new SlackAttachment("*" + rank.getName() + "* `" + player.getUsername() +
                         "` connected from a new IP address `" + player.getAddress() + "`");
@@ -158,6 +189,9 @@ public class PlayerJoinAndLeave implements Listener {
                 player.sendMessage(ChatColor.YELLOW + "\n\n" + ChatColor.BOLD +
                         "You connected with a new IP address, type " + ChatColor.GREEN + "" + ChatColor.BOLD +
                         "/staff login [password]" + ChatColor.YELLOW + "" + ChatColor.BOLD + " to verify your account.\n");
+            }
+            if (PalaceBungee.getMongoHandler().checkTitanApplications(player.getUniqueId())) {
+                player.sendMessage(ChatColor.AQUA + "\nOne or more of your applications have been responded to.\nRun /apply to view them!\n");
             }
             try {
                 HashMap<UUID, String> requests = PalaceBungee.getMongoHandler().getFriendRequestList(player.getUniqueId());

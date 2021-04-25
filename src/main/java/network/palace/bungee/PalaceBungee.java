@@ -1,6 +1,7 @@
 package network.palace.bungee;
 
 import lombok.Getter;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -23,12 +24,20 @@ import network.palace.bungee.messages.MessageHandler;
 import network.palace.bungee.mongo.MongoHandler;
 import network.palace.bungee.utils.*;
 import network.palace.bungee.utils.chat.JaroWinkler;
+import network.palace.bungee.handlers.ShowReminder;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
@@ -102,6 +111,8 @@ public class PalaceBungee extends Plugin {
         partyUtil = new PartyUtil();
         passwordUtil = new PasswordUtil();
         slackUtil = new SlackUtil();
+
+        setupShowReminder();
 
         registerListeners();
         registerCommands();
@@ -178,6 +189,7 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new SGListCommand());
         pm.registerCommand(this, new StaffCommand());
         pm.registerCommand(this, new StaffListCommand());
+        pm.registerCommand(this, new CharApproval());
         /* General Commands */
         pm.registerCommand(this, new ApplyCommand());
         pm.registerCommand(this, new AudioCommand());
@@ -255,5 +267,76 @@ public class PalaceBungee extends Plugin {
         ProxiedPlayer p = getProxyServer().getPlayer(username);
         if (p != null) return p.getUniqueId();
         return mongoHandler.usernameToUUID(username);
+    }
+
+
+    public void setupShowReminder() {
+        LocalDateTime localNow = LocalDateTime.now();
+        ZoneId currentZone = ZoneId.of("America/New_York");
+        ZonedDateTime zonedNow = ZonedDateTime.of(localNow, currentZone);
+        ZonedDateTime zonedNext10 = zonedNow.withHour(9).withMinute(20).withSecond(0);
+        ZonedDateTime zonedNext10_2 = zonedNow.withHour(9).withMinute(30).withSecond(0);
+        ZonedDateTime zonedNext10_3 = zonedNow.withHour(9).withMinute(40).withSecond(0);
+        ZonedDateTime zonedNext14 = zonedNow.withHour(13).withMinute(20).withSecond(0);
+        ZonedDateTime zonedNext14_2 = zonedNow.withHour(13).withMinute(30).withSecond(0);
+        ZonedDateTime zonedNext14_3 = zonedNow.withHour(13).withMinute(40).withSecond(0);
+        ZonedDateTime zonedNext18 = zonedNow.withHour(17).withMinute(20).withSecond(0);
+        ZonedDateTime zonedNext18_2 = zonedNow.withHour(17).withMinute(30).withSecond(0);
+        ZonedDateTime zonedNext18_3 = zonedNow.withHour(17).withMinute(40).withSecond(0);
+        ZonedDateTime zonedNext22 = zonedNow.withHour(21).withMinute(20).withSecond(0);
+        ZonedDateTime zonedNext22_2 = zonedNow.withHour(21).withMinute(30).withSecond(0);
+        ZonedDateTime zonedNext22_3 = zonedNow.withHour(21).withMinute(40).withSecond(0);
+
+        if (zonedNow.compareTo(zonedNext10) > 0) zonedNext10 = zonedNext10.plusDays(1);
+        if (zonedNow.compareTo(zonedNext10_2) > 0) zonedNext10_2 = zonedNext10_2.plusDays(1);
+        if (zonedNow.compareTo(zonedNext10_3) > 0) zonedNext10_3 = zonedNext10_3.plusDays(1);
+        if (zonedNow.compareTo(zonedNext14) > 0) zonedNext14 = zonedNext14.plusDays(1);
+        if (zonedNow.compareTo(zonedNext14_2) > 0) zonedNext14_2 = zonedNext14_2.plusDays(1);
+        if (zonedNow.compareTo(zonedNext14_3) > 0) zonedNext14_3 = zonedNext14_3.plusDays(1);
+        if (zonedNow.compareTo(zonedNext18) > 0) zonedNext18 = zonedNext18.plusDays(1);
+        if (zonedNow.compareTo(zonedNext18_2) > 0) zonedNext18_2 = zonedNext18_2.plusDays(1);
+        if (zonedNow.compareTo(zonedNext18_3) > 0) zonedNext18_3 = zonedNext18_3.plusDays(1);
+        if (zonedNow.compareTo(zonedNext22) > 0) zonedNext22 = zonedNext22.plusDays(1);
+        if (zonedNow.compareTo(zonedNext22_2) > 0) zonedNext22_2 = zonedNext22_2.plusDays(1);
+        if (zonedNow.compareTo(zonedNext22_3) > 0) zonedNext22_3 = zonedNext22_3.plusDays(1);
+
+        long d1 = Duration.between(zonedNow, zonedNext10).getSeconds();
+        long d2 = Duration.between(zonedNow, zonedNext10_2).getSeconds();
+        long d3 = Duration.between(zonedNow, zonedNext10_3).getSeconds();
+        long d4 = Duration.between(zonedNow, zonedNext14).getSeconds();
+        long d5 = Duration.between(zonedNow, zonedNext14_2).getSeconds();
+        long d6 = Duration.between(zonedNow, zonedNext14_3).getSeconds();
+        long d7 = Duration.between(zonedNow, zonedNext18).getSeconds();
+        long d8 = Duration.between(zonedNow, zonedNext18_2).getSeconds();
+        long d9 = Duration.between(zonedNow, zonedNext18_3).getSeconds();
+        long d10 = Duration.between(zonedNow, zonedNext22).getSeconds();
+        long d11 = Duration.between(zonedNow, zonedNext22_2).getSeconds();
+        long d12 = Duration.between(zonedNow, zonedNext22_3).getSeconds();
+
+        ScheduledExecutorService sch = Executors.newScheduledThreadPool(1);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 10am Show in 40 minutes!"), d1,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 10am Show in 30 minutes!"), d2,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 10am Show in 20 minutes!"), d3,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 2pm Show in 40 minutes!"), d4,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 2pm Show in 30 minutes!"), d5,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 2pm Show in 20 minutes!"), d6,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 6pm Show in 40 minutes!"), d7,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 6pm Show in 30 minutes!"), d8,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 6pm Show in 20 minutes!"), d9,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 10pm Show in 40 minutes!"), d10,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 10pm Show in 30 minutes!"), d11,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(new ShowReminder(ChatColor.GREEN + "Please get ready to run the 10pm Show in 20 minutes!"), d12,
+                24 * 60 * 60, TimeUnit.SECONDS);
     }
 }

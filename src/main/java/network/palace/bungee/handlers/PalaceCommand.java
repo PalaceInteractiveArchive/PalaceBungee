@@ -19,11 +19,11 @@ public abstract class PalaceCommand extends Command implements TabExecutor {
     protected boolean tabComplete = false, tabCompletePlayers = false;
 
     public PalaceCommand(String name) {
-        this(name, Rank.SETTLER);
+        this(name, Rank.GUEST);
     }
 
     public PalaceCommand(String name, String... aliases) {
-        this(name, Rank.SETTLER, aliases);
+        this(name, Rank.GUEST, aliases);
     }
 
     public PalaceCommand(String name, Rank rank) {

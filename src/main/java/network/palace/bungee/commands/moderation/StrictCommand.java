@@ -10,7 +10,7 @@ import network.palace.bungee.utils.MiscUtil;
 public class StrictCommand extends PalaceCommand {
 
     public StrictCommand() {
-        super("strict", Rank.MOD);
+        super("strict", Rank.CM);
     }
 
     @Override

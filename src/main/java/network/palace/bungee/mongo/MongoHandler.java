@@ -9,6 +9,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import lombok.Getter;
+import lombok.val;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.Favicon;
 import network.palace.bungee.PalaceBungee;
@@ -42,6 +43,7 @@ public class MongoHandler {
     @Getter private final MongoCollection<Document> chatCollection;
     @Getter private final MongoCollection<Document> resourcePackCollection;
     private final MongoCollection<Document> serversCollection;
+    private final MongoCollection<Document> titanAppsCollection;
     private final MongoCollection<Document> serviceConfigCollection;
     private final MongoCollection<Document> helpRequestsCollection;
     private final MongoCollection<Document> announcementRequestsCollection;
@@ -69,6 +71,7 @@ public class MongoHandler {
         friendsCollection = database.getCollection("friends");
         staffLoginCollection = database.getCollection("stafflogin");
         virtualQueuesCollection = database.getCollection("virtual_queues");
+        titanAppsCollection = database.getCollection("titan_applications");
     }
 
     public void stop() {
@@ -1020,13 +1023,13 @@ public class MongoHandler {
 
     public Rank getRank(String username) {
         Document doc = getPlayer(username, new Document("rank", true));
-        if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
+        if (doc == null || !doc.containsKey("rank")) return Rank.GUEST;
         return Rank.fromString(doc.getString("rank"));
     }
 
     public Rank getRank(UUID uuid) {
         Document doc = getPlayer(uuid, new Document("rank", true));
-        if (doc == null || !doc.containsKey("rank")) return Rank.SETTLER;
+        if (doc == null || !doc.containsKey("rank")) return Rank.GUEST;
         return Rank.fromString(doc.getString("rank"));
     }
 
@@ -1196,6 +1199,19 @@ public class MongoHandler {
     public void setForumLinkingCode(UUID uuid, int member_id, String code) {
         Document forumDoc = new Document("member_id", member_id).append("linking-code", code);
         playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("forums", forumDoc));
+    }
+
+    public void setTitanLogin(UUID uuid, String code) {
+        val date = Calendar.getInstance();
+        date.setTime(new Date());
+        date.add(Calendar.HOUR_OF_DAY, 1);
+        val unix = date.getTime().getTime() / 1000;
+        Document titanDoc = new Document("code", code).append("expires", unix);
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.set("titanLogin", titanDoc));
+    }
+
+    public boolean checkTitanApplications(UUID uuid) {
+        return titanAppsCollection.find(Filters.and(Filters.eq("uuid", uuid.toString()), Filters.eq("notifyInGame", true))).first() != null;
     }
 
     public void setForumAccountData(UUID uuid, int member_id) {

@@ -34,7 +34,7 @@ public class MuteCommand extends PalaceCommand {
             try {
                 long muteTimestamp = DateUtil.parseDateDiff(args[1], true);
                 long length = muteTimestamp - System.currentTimeMillis();
-                if ((player.getRank().equals(Rank.MEDIA) || player.getRank().equals(Rank.TECHNICIAN) || player.getRank().equals(Rank.TRAINEETECH))) {
+                if ((player.getRank().equals(Rank.MEDIA) || player.getRank().equals(Rank.IMAGINEER) || player.getRank().equals(Rank.TRAINEETECH))) {
                     if (length > 1800000) {
                         player.sendMessage(ChatColor.RED + "You can't mute for longer than 30 minutes!");
                         return;
