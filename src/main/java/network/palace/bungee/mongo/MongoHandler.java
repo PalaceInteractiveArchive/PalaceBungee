@@ -1044,6 +1044,20 @@ public class MongoHandler {
     }
 
     /*
+    Discord Methods
+     */
+
+    public boolean verifyDiscordLink(UUID uuid) {
+        Document discordDocument = playerCollection.find(Filters.eq("uuid", uuid.toString())).projection(new Document("discord", true)).first();
+
+        return discordDocument.containsKey("discord");
+    }
+
+    public void removeDiscordLink(UUID uuid) {
+        playerCollection.updateOne(Filters.eq("uuid", uuid.toString()), Updates.unset("discord"));
+    }
+
+    /*
     Password Methods
      */
 
