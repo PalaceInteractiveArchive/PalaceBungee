@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class JoinCommand extends PalaceCommand {
-    private static final LinkedList<String> servers = new LinkedList<>(Arrays.asList("Hub", "WDW", "USO", "Seasonal", "Creative"));
+    private static final LinkedList<String> servers = new LinkedList<>(Arrays.asList("Hub", "WDW", "MK/TTC", "DHS/Epcot", "AK/Typhoon", "USO", "Seasonal", "Creative"));
 
     public JoinCommand() {
         super("join");
@@ -31,7 +31,14 @@ public class JoinCommand extends PalaceCommand {
                     return;
                 }
                 try {
-                    String type = formatName(args[0]);
+                    String serverArg;
+                    if (args[0].equals("WDW")) {
+                        serverArg = "MK/TTC";
+                    } else {
+                        serverArg = args[0];
+                    }
+                    String type = formatName(serverArg);
+
                     Server server = PalaceBungee.getServerUtil().getServerByType(type);
                     if (server == null) {
                         player.sendMessage(ChatColor.RED + "No '" + type + "' server is available right now! Please try again soon.");
