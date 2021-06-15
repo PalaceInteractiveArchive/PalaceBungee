@@ -167,6 +167,8 @@ public class PalaceBungee extends Plugin {
         pm.registerCommand(this, new IPCommand());
         pm.registerCommand(this, new KickCommand());
         pm.registerCommand(this, new LookupCommand());
+        /* Remove functionality after July 1st */
+        pm.registerCommand(this, new BseenDeprecatedCommand());
         pm.registerCommand(this, new ModlogCommand());
         pm.registerCommand(this, new MuteChatCommand());
         pm.registerCommand(this, new MuteCommand());

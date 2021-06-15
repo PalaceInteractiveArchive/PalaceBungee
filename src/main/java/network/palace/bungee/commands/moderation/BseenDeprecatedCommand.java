@@ -18,16 +18,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LookupCommand extends PalaceCommand {
+public class BseenDeprecatedCommand extends PalaceCommand {
 
-    public LookupCommand() {
-        super("lookup", Rank.TRAINEE);
+    public BseenDeprecatedCommand() {
+        super("bseen", Rank.TRAINEE);
         tabComplete = true;
         tabCompletePlayers = true;
     }
 
+
     @Override
     public void execute(Player player, String[] args) {
+        player.sendMessage(ChatColor.RED + "Hey, you! Following an announcement in Discord, " + ChatColor.BOLD + "/bseen" + ChatColor.RESET + ChatColor.RED + " is being deprecated on July 1st 2021. Please use /lookup instead.");
+
         if (args.length < 1) {
             player.sendMessage(ChatColor.RED + "/lookup [Username]");
             return;
@@ -124,5 +127,6 @@ public class LookupCommand extends PalaceCommand {
                         new ComponentBuilder("Click to join this server!").color(ChatColor.GREEN)
                                 .create())).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                         "/server " + server)).create());
+
     }
 }
